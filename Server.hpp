@@ -11,7 +11,8 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
-
+#include <vector>
+#include "Poll.hpp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -23,6 +24,7 @@
 #define CYAN    "\033[36m"      /* Cyan */
 #define WHITE   "\033[37m"      /* White */
 
+class Poll;
 class Server {
 	private: 
 		int			_port;
@@ -36,22 +38,22 @@ class Server {
 		// utils
 		void	sendBuf(int fd, const char *buf, int len);
 		void	error(std::string const &s);
+
+		
 		void	setupSockAddr_in(void);
 		void	setupSocket(void);
 
 		void	selectLogic(void);
 		void	select_SetNewConnection(int &fdmax, fd_set *masterSet, fd_set *recipientSet);
 		void	select_HandleExistConnection(int fdToHandle, int &fdmax, fd_set *masterSet, fd_set *recipientSet);
-
-		void	pollLogic(void);
-		void	poll_SetNewConnection(pollfd *readFds, int &nfds, pollfd *outfds);
-		void	poll_HandleExistConnection(int fdToHandle, pollfd *fds, int &nfdsx, pollfd *outfds);
-
+	
 	public: 
 		Server(void);
 		~Server(void);
 
 		void start(void);
+		int		getListener(void) const;
+		int		acceptNewConnection();
 		
 
 

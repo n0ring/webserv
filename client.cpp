@@ -10,6 +10,7 @@
 #include <vector>
 #include <atomic>
 #include <thread>
+#include <sys/poll.h>
 
 #define PORT 8080
 
@@ -38,7 +39,7 @@ void readMsg(int fd) {
 			std::cout << "connect closed" << std::endl;
 			exit(0);
 		}
-		std::cout << buf << std::endl;
+		std::cout << buf;
 		bzero(buf, 1024);
 	}
 }

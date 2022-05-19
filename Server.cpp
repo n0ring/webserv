@@ -25,8 +25,9 @@ Server::~Server(void) {
 }
 
 void Server::start() {
-	// selectLogic();
-	pollLogic();
+	Poll pollObj(*this);
+
+	pollObj.launch();
 }
 
 void	Server::setupSocket(void) {
@@ -52,6 +53,15 @@ void	Server::setupSockAddr_in(void) {
 	// address->sin_addr.s_addr = htons(INADDR_ANY);
 	address->sin_port = htons(_port);
 }
+
+int		Server::getListener(void) const {
+	return this->_listener;
+}
+
+int		Server::acceptNewConnection() {
+	return accept(this->_listener, &this->_address, &this->_addrlen);
+}
+
 
 void	Server::error(std::string const &s) {
 	perror(s.c_str());
@@ -141,96 +151,4 @@ void	Server::select_HandleExistConnection(int fdToHandle, int &fdmax, fd_set *ma
 /*************************************************/
 /************* END OF SELECT OPTION **************/
 /*************************************************/
-
-
-/*************************************************/
-/****************** POLL OPTION ******************/
-/*************************************************/
-
-
-
-void sendToAll(int nfds, pollfd *fds, char *buf, int author) {
-	for (int i = 0; i < nfds - 1; i++) {
-		std::cout << "Check " << i << " " << fds[i].fd << std::endl;
-		std::string responce ("message from ");
-		responce.append(std::to_string(author));
-		responce.append(": ");
-		responce.append(buf);
-		responce.append("\n");
-		send(fds[i].fd, responce.c_str(), responce.length(), 0);
-	}
-}
-
-void	Server::poll_HandleExistConnection(int fdToHandle, pollfd *fds, int &nfds, pollfd *outfds) {
-	char buf[1024];
-	bzero(buf, 1024);
-	if (fds[fdToHandle].revents == POLLIN) {
-		int rec = recv(fds[fdToHandle].fd, buf, 1024, 0);
-		if (rec == -1) {
-			error("recv");
-			return ;
-		}
-		if (rec == 0) {
-			// del from list fds
-		}
-		std::cout << GREEN << buf << RESET << std::endl;
-		sendToAll(nfds, outfds, buf, fds[fdToHandle].fd);
-	}
-}
-
-
-void	Server::pollLogic(void) {
-	pollfd fds[200], outfds[200]; 
-	int		nfds = 1, rec, currentSize;
-	int timeout = 3 * 60 * 1000; // 3 min
-
-	bzero(fds, sizeof(fds));
-	bzero(outfds, sizeof(outfds));
-	fds[0].fd = this->_listener;
-	fds[0].events = POLLIN;
-
-	while (true) {
-		rec = poll(fds, nfds, timeout);
-		if (rec < 0) {
-			error("poll");
-			break ;
-		}
-		currentSize = nfds;
-		for (int i = 0; i < currentSize; i++) {
-			// std::cout << "check fd #" << i << " " << fds[i].fd << std::endl; 
-			if (fds[i].revents == 0) continue;
-			if (fds[i].revents != POLLIN && fds[i].revents != POLLOUT) {
-				std::cerr << "Not expeted revent with " << fds[i].fd << "->" << fds[i].revents << std::endl;
-				return ;
-			}
-			if (fds[i].fd == this->_listener) {
-				poll_SetNewConnection(fds, nfds, outfds);
-			}
-			else {
-				poll_HandleExistConnection(i, fds, nfds, outfds);
-			}
-		}
-	}
-}
-
-void	Server::poll_SetNewConnection(pollfd *fds, int &nfds, pollfd *outfds) {
-	int newSocket;
-	do
-	{
-		newSocket = accept(this->_listener, &this->_address, &this->_addrlen);
-		if (newSocket < 0) {
-			if (errno != EWOULDBLOCK) {
-              perror("  accept() failed");
-			  exit(-1);
-            }
-			break ;
-		}
-		fds[nfds].fd = newSocket;
-		fds[nfds].events = POLLIN;
-		outfds[nfds - 1].fd = newSocket;
-		outfds[nfds - 1].events = POLLOUT;
-		nfds++;
-	} while (newSocket != -1);
-	
-}
 
