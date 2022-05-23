@@ -11,9 +11,6 @@ Poll::~Poll(void) {
 	for (; it != fds.end(); it++) {
 		close(it->fd);
 	}
-	for (it = outfds.begin(); it != outfds.end(); it++) {
-		close(it->fd);
-	}
 };
 
 
@@ -26,21 +23,6 @@ void delNumber(std::vector<pollfd> &v, int i) {
 	v.erase(it);
 }
 
-void Poll::sendToAll(char *buf, int author) {
-	std::vector<pollfd>::iterator it = outfds.begin();
-	std::string responce ("message from ");
-
-	responce.append(std::to_string(author));
-	responce.append(": ");
-	responce.append(buf);
-	responce.append("\n");
-	for (; it != outfds.end(); it++) {
-		send(it->fd, responce.c_str(), responce.length(), 0);
-	}
-}
-
-
-
 pollfd Poll::make_fd(int fd, int event) {
 	pollfd newfd;
 	newfd.fd = fd;
@@ -50,26 +32,12 @@ pollfd Poll::make_fd(int fd, int event) {
 	return newfd;
 }
 
-void Poll::deleteFd(int fdToDel) {
-	std::vector<pollfd>::iterator it = this->outfds.begin();
-	for (; it != this->outfds.end(); it++) {
-		if (it->fd == fdToDel) {
-			break;
-		}
-	}
-	if (it != this->outfds.end()) {
-		this->outfds.erase(it);
-	}
-	it = this->fds.begin();
-	for (; it != this->fds.end(); it++) {
-		if (it->fd == fdToDel) {
-			break;
-		}
-	}
+void Poll::deleteFd(int index) {
+	std::vector<pollfd>::iterator it = this->fds.begin() + index;
 	if (it != this->fds.end()) {
+		close(it->fd);
 		this->fds.erase(it);
 	}
-	close(fdToDel);
 	this->nfds--;
 }
 
@@ -90,8 +58,9 @@ void	Poll::launch(void) {
 		for (int i = 0; i < curren_size; i++) {
 			if (this->fds[i].revents == 0) continue;
 			if (this->fds[i].revents != POLLIN) {
-				this->deleteFd(this->fds[i].fd);
-				break ;
+				close(this->fds[i].fd);
+				this->fds.erase(this->fds.begin() + i);
+				break; // change this. 
 			}
 			if (this->fds[i].fd == this->_server.getListener()) {
 				setNewConnection();
@@ -118,7 +87,6 @@ void	Poll::setNewConnection() {
 			break ;
 		}
 		this->fds.push_back(make_fd(newSocket, POLLIN));
-		this->outfds.push_back(make_fd(newSocket, POLLOUT));
 		std::cout << "added new connect: " << newSocket <<  " " << fds.size() << std::endl;
 		nfds++;
 	} while (newSocket != -1);	
@@ -134,9 +102,9 @@ void	Poll::handleExistConnection(pollfd &fdToHandle) {
 			return ;
 		}
 		if (rec == 0) {
-			this->deleteFd(fdToHandle.fd);
+			// remove fd. connection close;
 		}
 		std::cout << GREEN << buf << RESET << std::endl;
-		sendToAll(buf, fdToHandle.fd);
+		send(fdToHandle.fd, buf, 1024, 0);
 	}
 }

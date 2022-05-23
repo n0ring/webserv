@@ -20,16 +20,14 @@ class Poll
 private:
 	Server &_server;
 	std::vector<pollfd> fds;
-	std::vector<pollfd> outfds;
 	int					nfds;
 	int					timeout;
 
 
 	void	setNewConnection();
 	void	handleExistConnection(pollfd &fdToHandle);
-	void	sendToAll(char *buf, int author);
 	pollfd	make_fd(int fd, int event);
-	void	deleteFd(int fdToDel);
+	void	deleteFd(int index);
 public:
 	Poll(Server &server);
 	~Poll();
