@@ -67,6 +67,8 @@ void startConnection(void) {
 	std::string suff;
 
 	int client_fd = socket(PF_INET, SOCK_STREAM, 0);
+
+
 	check(client_fd, "socket");
 	check(connect(client_fd, (struct sockaddr *) &address, (socklen_t ) addrlen), "connect");
 		std::cout << "connect success" << std::endl;

@@ -13,6 +13,7 @@
 #include <poll.h>
 #include <vector>
 #include "Poll.hpp"
+#include "Select.hpp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -25,6 +26,7 @@
 #define WHITE   "\033[37m"      /* White */
 
 class Poll;
+class Select;
 class Server {
 	private: 
 		int			_port;

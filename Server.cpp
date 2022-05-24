@@ -28,6 +28,9 @@ void Server::start() {
 	Poll pollObj(*this);
 
 	pollObj.launch();
+
+	// Select selectObj(*this);
+	// selectObj.launch();
 }
 
 void	Server::setupSocket(void) {
@@ -59,7 +62,12 @@ int		Server::getListener(void) const {
 }
 
 int		Server::acceptNewConnection() {
-	return accept(this->_listener, &this->_address, &this->_addrlen);
+	int newSocket =  accept(this->_listener, &this->_address, &this->_addrlen);
+	if (newSocket < 0) {
+		return -1;
+	}
+	fcntl(newSocket, F_SETFL, O_NONBLOCK);
+	return newSocket;
 }
 
 

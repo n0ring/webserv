@@ -1,4 +1,4 @@
-SRC		=	main.cpp Server.cpp Poll.cpp
+SRC		=	main.cpp Server.cpp Poll.cpp Connection.cpp
 OBJ		=	$(SRC:.cpp=.o)
 NAME	=	webserv
 CC		=	c++
