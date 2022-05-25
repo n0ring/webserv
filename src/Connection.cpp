@@ -1,6 +1,6 @@
 #include "Connection.hpp"
 
-#define BUFFER 2048
+#define BUFFER 3
 
 Connection::Connection(void) : _listennerFd(0), _fd(0) {
 	this->_writed = 0;
@@ -38,7 +38,6 @@ int Connection::receiveData() {
 	char buf[BUFFER];
 	bzero(buf, BUFFER);
 	int ret = recv(this->_fd, buf, BUFFER, 0);
-	std::cout << "recieved: " << ret << std::endl;
 	if (ret == -1) {
 		perror("recv");
 		return -1;
@@ -55,31 +54,31 @@ int Connection::receiveData() {
 
 void Connection::handleRequest() {
 	std::cout << "handle-> " << this->buffer_in << std::endl;
-	// this->buffer_out = this->buffer_in;
-	this->buffer_out = "HTTP/1.1 200 OK\n\
-	Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
-	Server: huyaache/2.2.14 (Win32)\n\
-	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
-	Content-Length: 88\n\
-	Content-Type: text/html\n\
-	Connection: Closed\n\n\
-	<html>\n\
-	<body>\n\
-	<h1>Hello, World!</h1>\n\
-	</body>\n\
-	</html>\n";
+	this->buffer_out = this->buffer_in;
+	// this->buffer_out = "HTTP/1.1 200 OK\n\
+	// Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
+	// Server: huyaache/2.2.14 (Win32)\n\
+	// Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
+	// Content-Length: 88\n\
+	// Content-Type: text/html\n\
+	// Connection: Closed\n\n\
+	// <html>\n\
+	// <body>\n\
+	// <h1>Hello, World!</h1>\n\
+	// </body>\n\
+	// </html>\n";
  	this->_needToWrite = this->buffer_out.length();
 	this->buffer_in.clear();
 	this->_bufToSend = (char *) this->buffer_out.c_str();
 	this->_isDataHandled = true;
-	this->resetReadStatus();
+	this->_isStartRead = false;
 }
 
 
 int Connection::sendData() {
 	if (this->_writed >= this->_needToWrite) {
 		this->buffer_out.clear();
-		this->resetHandleStatus();
+		this->_isDataHandled = false;
 		this->_writed = 0;
 		this->_needToWrite = 0;
 		return 0;
@@ -91,12 +90,12 @@ int Connection::sendData() {
 		perror("send");
 		return -1;
 	}
-	std::cout << "sended " << ret << std::endl;
 	this->_writed += ret;
 	return ret;
 }
 
-bool Connection::getReadStatus() const {
+
+bool Connection::isReadStarted() const {
 	return this->_isStartRead;
 }
 
@@ -104,18 +103,6 @@ bool Connection::getReadStatus() const {
 bool Connection::getHandleStatus() const {
 	return this->_isDataHandled;
 }
-
-
-void	Connection::resetReadStatus() {
-	this->_isStartRead = false;
-}
-
-void	Connection::resetHandleStatus() {
-	this->_isDataHandled = false;
-}
-
-
-
 
 
 Connection::~Connection(void) {}

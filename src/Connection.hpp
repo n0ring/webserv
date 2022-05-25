@@ -14,20 +14,22 @@ class Connection {
 		bool		_isDataHandled;
 		char		*_bufToSend;
 
+//		request (server, text)
+//		resoince (server, text)
+
 	public:
 		Connection(int listenner, int fd);
 		Connection();
 		Connection(Connection const &other);
 		Connection & operator=(Connection const &other);
 		~Connection(void);
-		int getFd() const;
-		int receiveData();
-		void handleRequest(); // func to server?? 
-		int sendData();
-		bool	getReadStatus() const;
-		bool	getHandleStatus() const;
-		void	resetReadStatus();
-		void	resetHandleStatus();
 
-		// proccessing (POLLIN, POLLOUT);
+		int		receiveData();
+		void	handleRequest(); // func to server?? 
+		int		sendData();
+
+
+		int		getFd() const;
+		bool	isReadStarted() const;
+		bool	getHandleStatus() const;
 };

@@ -1,5 +1,14 @@
 #include "Poll.hpp"
 
+void showVector(std::vector<pollfd> v) {
+	std::vector<pollfd>::iterator it = v.begin();
+	std::cout << "{ ";
+	for (; it != v.end(); it++) {
+		std::cout << "[ " << it->fd << " : " << (it->events == POLLIN ? "IN" : "OUT") << " ] ";
+	}
+	std::cout << "}" << std::endl;
+}
+
 Poll::Poll(Server &server) : _server(server) {
 	this->nfds = 1;
 	this->timeout = 1 * 60 * 1000; // 1 min
@@ -22,7 +31,7 @@ pollfd Poll::make_fd(int fd, int event) {
 	return newfd;
 }
 
-void Poll::delByFd(int fd) {
+void Poll::removeConnection(int fd) {
 	close(fd);
 	std::map<int, Connection >::iterator it = this->_connections.begin();
 	for (; it != this->_connections.end(); it++) {
@@ -40,29 +49,25 @@ struct greaterFd : std::binary_function <T,T,bool> {
 
 void	Poll::launch(void) {
 	int		rec, curren_size;
+	showVector(this->fds);
+
 
 	while (true) {
-		// std::cout << "start poll" << std::endl;
-		rec = poll(&(fds[0]), this->nfds, timeout);
+		rec = poll(&(this->fds[0]), this->nfds, timeout);
 		if (rec < 0) {
 			perror("poll");
 			break ;
 		}
-		if (rec == 0) {
-			std::cout << "timeout" << std::endl;
-			break ;
-		}
 		curren_size = this->nfds;
 		for (int i = 0; i < curren_size; i++) {
-			// std::cout << this->fds[i].fd << " : " << this->fds[i].revents << std::endl;
 			if (this->fds[i].revents == 0) {
-				if (this->_connections[this->fds[i].fd].getReadStatus()) { // read over. handle req
+				if (this->_connections[this->fds[i].fd].isReadStarted()) { // read over. handle req
 					this->_connections[this->fds[i].fd].handleRequest();
-				} 
+				}
 				continue;
 			}
 			if (this->fds[i].revents != POLLIN  && this->fds[i].revents != POLLOUT) {
-				this->delByFd(this->fds[i].fd);
+				this->removeConnection(this->fds[i].fd);
 				this->fds[i].fd = -1;
 				continue;
 			}
@@ -73,12 +78,7 @@ void	Poll::launch(void) {
 				handleExistConnection(i);
 			}
 		}
-		// del -1 fd in stupid way. 
-		std::sort(this->fds.begin(), this->fds.end(), greaterFd<int>());
-		while (this->fds.back().fd == -1) {
-			this->fds.pop_back();
-			this->nfds--;
-		}
+		removeUselessFd();
 	}
 }
 
@@ -95,10 +95,9 @@ void	Poll::setNewConnection() {
 			break ;
 		}
 		this->fds.push_back(make_fd(newSocket, POLLIN));
-		this->_connections.insert(std::make_pair(newSocket,
-			Connection(this->_server.getListener(), newSocket)));
-		std::cout << "added new connect: " << newSocket <<  " size now: " << fds.size() << std::endl;
-		this->nfds ++;
+		this->addConnection(newSocket, this->_server.getListener());
+		showVector(this->fds);
+		this->nfds++;
 	} while (newSocket != -1);	
 }	
 
@@ -107,9 +106,10 @@ void	Poll::handleExistConnection(int index) {
 	Connection &connectToHandle = this->_connections[fdToHandle.fd];
 
 	if (fdToHandle.revents == POLLIN) {
-		if ( connectToHandle.getReadStatus() == false) {
+		if ( connectToHandle.isReadStarted() == false) {
 			this->fds.push_back(make_fd(fdToHandle.fd, POLLOUT));
 			this->nfds++;
+			showVector(this->fds);
 		}
 		connectToHandle.receiveData();
 	}
@@ -120,4 +120,17 @@ void	Poll::handleExistConnection(int index) {
 		}
 	}
 	fdToHandle.revents = 0;
+}
+
+
+void	Poll::addConnection(int fd, int listener) {
+	this->_connections.insert(std::make_pair(fd, Connection(listener, fd)));
+}
+
+void	Poll::removeUselessFd(void) {
+	std::sort(this->fds.begin(), this->fds.end(), greaterFd<int>());
+	while (this->fds.back().fd == -1) {
+		this->fds.pop_back();
+		this->nfds--;
+	}
 }

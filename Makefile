@@ -1,9 +1,13 @@
-SRC		=	main.cpp Server.cpp Poll.cpp Connection.cpp
-OBJ		=	$(SRC:.cpp=.o)
+SRC		=	$(addprefix src/, main.cpp Server.cpp Poll.cpp Connection.cpp)
+OBJDIR	=	obj
+SRCDIR	=	src
+OBJ		=	$(addprefix  obj/, $(notdir  $(SRC:.cpp=.o)))
+
 NAME	=	webserv
 CC		=	c++
 CFLAGS	=	-Wall -Wextra -Werror -MD -MP -std=c++98
-DEPENDS :=	$(SRC:.cpp=.d)
+DEPENDS :=	$(addprefix  obj/, $(notdir  $(SRC:.cpp=.d)))
+
 
 
 .PHONY	:	all re clean fclean
@@ -13,8 +17,8 @@ all		:	$(NAME)
 $(NAME)	:	$(OBJ) Makefile
 			$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
-%.o		:	%.cpp
-			$(CC) $(CFLAGS) -c $< -o ${<:.cpp=.o}
+$(OBJDIR)/%.o		:	$(SRCDIR)/%.cpp
+			$(CC) $(CFLAGS) -c -o $@ $<
 
 clean	:	
 			rm -f $(OBJ) $(DEPENDS)
