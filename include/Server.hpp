@@ -11,8 +11,11 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <algorithm>
 #include <vector>
 #include "Poll.hpp"
+#include "ServerConfig.hpp"
+#include "utils.hpp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -28,35 +31,20 @@ class Poll;
 class Select;
 class Server {
 	private: 
-		int			_port;
-		int			_listener;
-		sockaddr	_address;
-		socklen_t	_addrlen;
-		std::string	_ip;
-		int 		_backlog;
+		// int			_listener;
+	
+		std::vector<ServerConfig>	_configs;
+		std::vector<int>			_listeners;
 
-
-		// utils
-		void	sendBuf(int fd, const char *buf, int len);
-		void	error(std::string const &s);
-
-		
-		void	setupSockAddr_in(void);
-		void	setupSocket(void);
-
-		void	selectLogic(void);
-		void	select_SetNewConnection(int &fdmax, fd_set *masterSet, fd_set *recipientSet);
-		void	select_HandleExistConnection(int fdToHandle, int &fdmax, fd_set *masterSet, fd_set *recipientSet);
 	
 	public: 
 		Server(void);
 		~Server(void);
 
-		void start(void);
-		int		getListener(void) const;
-		int		acceptNewConnection();
-		
+		void			start(void);
+		void			setListenersPoll(std::vector<pollfd> &v);
 
-
+		bool 			isFdListener(int fd);
+		ServerConfig	&getConfig(int fd) ;
 
 };

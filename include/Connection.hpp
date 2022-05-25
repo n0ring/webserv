@@ -5,7 +5,6 @@ class Connection {
 	private:
 		int			_listennerFd;
 		int			_fd;
-		// int  		_readed;
 		int			_writed;
 		int			_needToWrite;
 		std::string buffer_in;

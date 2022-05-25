@@ -19,7 +19,7 @@ class Server;
 class Poll
 {
 	private:
-		Server						&_server;
+		Server&						_server;
 		std::vector<pollfd>			fds;
 		std::map<int, Connection>	_connections;
 		int							nfds;
@@ -27,7 +27,7 @@ class Poll
 
 
 
-		void	setNewConnection();
+		void	setNewConnection(int listener);
 		void	handleExistConnection(int index);
 		pollfd	make_fd(int fd, int event);
 		void	removeConnection(int fd);

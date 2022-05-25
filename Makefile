@@ -1,11 +1,11 @@
-SRC		=	$(addprefix src/, main.cpp Server.cpp Poll.cpp Connection.cpp)
+SRC		=	$(addprefix src/, main.cpp Server.cpp Poll.cpp Connection.cpp ServerConfig.cpp)
 OBJDIR	=	obj
 SRCDIR	=	src
 OBJ		=	$(addprefix  obj/, $(notdir  $(SRC:.cpp=.o)))
 
 NAME	=	webserv
 CC		=	c++
-CFLAGS	=	-Wall -Wextra -Werror -MD -MP -std=c++98
+CFLAGS	=	-Wall -Wextra -Werror -MD -MP -std=c++98 -I include
 DEPENDS :=	$(addprefix  obj/, $(notdir  $(SRC:.cpp=.d)))
 
 
