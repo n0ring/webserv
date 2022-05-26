@@ -27,7 +27,7 @@ class Poll
 
 
 
-		void	setNewConnection(int listener);
+		void	setNewConnection(pollfd& listenerPollfd);
 		void	handleExistConnection(int index);
 		pollfd	make_fd(int fd, int event);
 		void	removeConnection(int fd);

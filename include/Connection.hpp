@@ -1,5 +1,8 @@
+#pragma once 
+
 #include <iostream>
 #include <sys/socket.h>
+
 
 class Connection {
 	private:
@@ -9,9 +12,8 @@ class Connection {
 		int			_needToWrite;
 		std::string buffer_in;
 		std::string buffer_out;
-		bool		_isStartRead;
-		bool		_isDataHandled;
 		char		*_bufToSend;
+		bool		_isDataHandled;
 
 //		request (server, text)
 //		resoince (server, text)
@@ -29,6 +31,7 @@ class Connection {
 
 
 		int		getFd() const;
-		bool	isReadStarted() const;
 		bool	getHandleStatus() const;
+
+		bool	isReading() const;
 };

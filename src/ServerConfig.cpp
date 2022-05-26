@@ -32,7 +32,6 @@ int ServerConfig::setup(void) {
 	this->setupSocket();
 	this->setupSockAddr_in();
 
-	std::cout << "bind: " << this->_listener << " " << this->_port << std::endl;
 	int	rec = bind(this->_listener, &_address, this->_addrlen);
 	if (rec == -1) {
 		perror("bind");
@@ -50,8 +49,6 @@ int ServerConfig::setup(void) {
 
 void	ServerConfig::setupSocket(void) {
 	this->_listener = socket(PF_INET, SOCK_STREAM, 0); // maybe add second socket for udp
-	std::cout << "socket: " << this->_listener << " with " << this->_port << std::endl;
-	
 	if (this->_listener == -1) {
 		perror("socket");
 		exit(-1);

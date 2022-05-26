@@ -1,9 +1,12 @@
 #include "Poll.hpp"
 
-void showVector(std::vector<pollfd> v, Server &server) {
+void showVector(std::vector<pollfd> v, Server &server, int n) {
 	std::vector<pollfd>::iterator it = v.begin();
-	std::cout << "current fds in poll: { ";
-	for (; it != v.end(); it++) {
+	std::cout << "current fds in poll:" << v.size() << " nfds=" << n <<  " { ";
+	for (; it != v.end() && n != 0; it++, n--) {
+		if (it->events == 0 || it->fd == -1) {
+			std::cout << RED << "ALERT WE are FUCKED" << std::endl;
+		}
 		if (server.isFdListener(it->fd)) {
 			std::cout << GREEN;
 		}
@@ -14,7 +17,6 @@ void showVector(std::vector<pollfd> v, Server &server) {
 }
 
 Poll::Poll(Server &server) : _server(server) {
-	this->nfds = 1;
 	this->timeout = 1 * 60 * 1000; // 1 min
 }
 
@@ -25,32 +27,40 @@ Poll::~Poll(void) {
 	}
 };
 
-void	Poll::launch(void) {
-	int		rec, curren_size;
-	this->_server.setListenersPoll(this->fds);
+/*
+poll after ending recv get event on copy fd with event POLLOUT (its always ready),
+but in loop we check first fd with event IN.
+so if status reading that read if over.can handle now
+*/
 
+void	Poll::launch(void) {
+	int		curren_size;
+	this->_server.setListenersPoll(this->fds);
+	this->nfds = this->fds.size();
+	if (this->nfds == 0) {
+		std::cerr << "No active servers." << std::endl;
+		return ;
+	}
 	while (true) {
-		showVector(this->fds, this->_server);
-		rec = poll(&(this->fds[0]), this->nfds, -1);
-		if (rec < 0) {
-			perror("poll");
-			break ;
+		if (poll(&(this->fds[0]), this->nfds, -1) < 0 ) {
+			return perror("poll");
 		}
 		curren_size = this->nfds;
 		for (int i = 0; i < curren_size; i++) {
 			if (this->fds[i].revents == 0) {
-				if (this->_connections[this->fds[i].fd].isReadStarted()) { // read over. handle req
+				if (this->_connections[this->fds[i].fd].isReading()) { // read over. handle req
 					this->_connections[this->fds[i].fd].handleRequest();
 				}
 				continue;
 			}
-			if (this->fds[i].revents != POLLIN  && this->fds[i].revents != POLLOUT) {
+			if (this->fds[i].revents != POLLIN  && this->fds[i].revents != POLLOUT) { // connection close 
+				close(this->fds[i].fd);
 				this->removeConnection(this->fds[i].fd);
 				this->fds[i].fd = -1;
-				continue;
+				break ;
 			}
 			if (this->_server.isFdListener(this->fds[i].fd)) {
-				setNewConnection(this->fds[i].fd);
+				setNewConnection(this->fds[i]);
 			}
 			else {
 				handleExistConnection(i);
@@ -60,41 +70,52 @@ void	Poll::launch(void) {
 	}
 }
 
-void	Poll::setNewConnection(int listener) {
-	int newSocket;
-	ServerConfig &serverConfig = this->_server.getConfig(listener);
+void	Poll::setNewConnection(pollfd& listenerPollfd) {
+	int newSocket = 0;
+	ServerConfig &serverConfig = this->_server.getConfig(listenerPollfd.fd);
 	do
 	{
 		newSocket = serverConfig.acceptNewConnection();
 		if (newSocket <= 0) {
 			if (errno != EWOULDBLOCK) {
 				perror("  accept() failed");
-				exit(-1);
+				listenerPollfd.revents = 0;
+				return ;
             }
 			break ;
 		}
 		this->fds.push_back(make_fd(newSocket, POLLIN));
 		this->addConnection(newSocket, serverConfig.getListener());
-
 		this->nfds++;
+		// showVector(this->fds, this->_server, this->nfds);
 	} while (newSocket != -1);	
 }	
 
-void	Poll::handleExistConnection(int index) {
-	pollfd &fdToHandle = this->fds[index];
-	Connection &connectToHandle = this->_connections[fdToHandle.fd];
 
+/*
+recieve or send
+*/
+void	Poll::handleExistConnection(int index) {
+	// check for exist connection. if not that means it closed and delete. change fd to -1;
+	pollfd&		fdToHandle		= this->fds[index];
+	Connection&	connectToHandle	= this->_connections[fdToHandle.fd];
+
+	if (connectToHandle.getFd() == -42) {
+		fdToHandle.fd = -1;
+		return ;
+	}
 	if (fdToHandle.revents == POLLIN) {
-		if ( connectToHandle.isReadStarted() == false) {
+		if ( connectToHandle.isReading() == false ) { // no good
 			this->fds.push_back(make_fd(fdToHandle.fd, POLLOUT));
 			this->nfds++;
+			// showVector(this->fds, this->_server, this->nfds);
 		}
-		connectToHandle.receiveData();
-	}
-	if (fdToHandle.revents == POLLOUT && connectToHandle.getHandleStatus()) {
-		int ret = connectToHandle.sendData();
-		if (ret == 0) { // end of send
-			fdToHandle.fd = -1; // need to del
+		if (connectToHandle.receiveData() <= 0 ) {
+			this->fds.back().fd = -1;
+		}
+	} else if (fdToHandle.revents == POLLOUT && connectToHandle.isReading() == false) {
+		if (connectToHandle.sendData() <= 0) {
+			fdToHandle.fd = -1;
 		}
 	}
 	fdToHandle.revents = 0;
@@ -106,10 +127,10 @@ void	Poll::addConnection(int fd, int listener) {
 }
 
 void Poll::removeConnection(int fd) {
-	close(fd);
 	std::map<int, Connection >::iterator it = this->_connections.begin();
 	for (; it != this->_connections.end(); it++) {
 		if (it->second.getFd() == fd) {
+			std::cout << RED << "remove connection: with fd: " << it->first << RESET << std::endl;
 			this->_connections.erase(it);
 			break ;
 		}

@@ -13,6 +13,7 @@
 #include <sys/poll.h>
 
 #define PORT 8080
+#define SOK 1000
 
 // req: /index.html HTTP/1.1
 
@@ -32,10 +33,12 @@ void check(int val, std::string process) {
 	}
 }
 
-void readMsg(int fd) {
-	while (true) {
+void readMsg(std::vector<int>& v) {
+	int n = 100;
+	char buf[1024];
+	for (int i = 0; i < 100; i++) {
 		char buf[1024];
-		if (recv(fd, buf, 1024, 0) <= 0) {
+		if (recv(v[i], buf, 1024, 0) <= 0) {
 			std::cout << "connect closed" << std::endl;
 			exit(0);
 		}
@@ -44,21 +47,26 @@ void readMsg(int fd) {
 	}
 }
 
-void writeMsg(int fd) {
+void writeMsg(std::vector<int>& v) {
 	std::string			str;
-	while (true) {
-		// std::cout << "you: ";
-		std::getline(std::cin, str);
-		check(send(fd, str.c_str(), str.length(), 0), "send");
+	for (int i = 0; i < 100; i++) {
+		send(v[i], "hello", 5, 0);
 	}
+	// while (true) {
+	// 	// std::cout << "you: ";
+	// 	std::getline(std::cin, str);
+	// 	check(send(fd, str.c_str(), str.length(), 0), "send");
+	// }
 }
+
+
 
 void startConnection(void) {
 	struct sockaddr_in	address;
 	char				req[1024];
 	int					addrlen		= sizeof(address);
 	std::vector<std::thread> threads;
-
+	std::vector<int>	sockets;
 	// int yes=1;
 	// check(
 	// 	setsockopt(server_fd,SOL_SOCKET,SO_REUSEADDR, &yes, sizeof(int)), "setsockopt");
@@ -66,16 +74,30 @@ void startConnection(void) {
 	setSockAddr_in(&address);
 	std::string suff;
 
-	int client_fd = socket(PF_INET, SOCK_STREAM, 0);
+	//  int client_fd = socket(PF_INET, SOCK_STREAM, 0);
+	for (int i = 0; i < SOK; i++) {
+		sockets.push_back(socket(PF_INET, SOCK_STREAM, 0));
+	}
 
+	for (int i  = 0; i < SOK; i++) {
+		connect(sockets[i], (struct sockaddr *) &address, (socklen_t ) addrlen);
+	}
+	// check(client_fd, "socket");
+	// check(connect(client_fd, (struct sockaddr *) &address, (socklen_t ) addrlen), "connect");
+	// 	std::cout << "connect success" << std::endl;
+	// threads.push_back(std::thread(readMsg, sockets));
+	// threads.push_back(std::thread(writeMsg, sockets));
+	// threads[0].join();
+	// threads[0].detach();
 
-	check(client_fd, "socket");
-	check(connect(client_fd, (struct sockaddr *) &address, (socklen_t ) addrlen), "connect");
-		std::cout << "connect success" << std::endl;
-	threads.push_back(std::thread(readMsg, client_fd));
-	threads.push_back(std::thread(writeMsg, client_fd));
-	threads[0].join();
-	threads[0].detach();
+	for (int i = 0; i < SOK; i++) {
+		for (int k = 0; k < 1000; k++) {
+			send(sockets[i], "hello", 5, 0);
+		}
+	}
+		for (int i = 0; i < 100; i++) {
+			close(sockets[i]);
+		}
 }
 
 int main(void) {
