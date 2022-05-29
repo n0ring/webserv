@@ -13,8 +13,8 @@ void Server::start() {
 	Poll pollObj(*this);
 	// 1 loop? 
 	this->_configs.push_back(ServerConfig(8080, "127.0.0.1", 10));
-	this->_configs.push_back(ServerConfig(8081, "127.0.0.1", 10));
-	this->_configs.push_back(ServerConfig(8082, "127.0.0.1", 10));
+	// this->_configs.push_back(ServerConfig(8081, "127.0.0.1", 10));
+	// this->_configs.push_back(ServerConfig(8082, "127.0.0.1", 10));
 
 	// 2. setupServers in loop
 	for (int i = 0; i < (int) this->_configs.size(); i++) {

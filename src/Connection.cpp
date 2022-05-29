@@ -33,6 +33,18 @@ int Connection::getFd() const {
 	return this->_fd;
 }
 
+bool isOver(std::string req) {
+	int last = req.length() - 1;
+	if (req.length() < 4) {
+		return false;
+	}
+	if (req[last] == 10 && req[last - 1] == 13
+	 	&& req[last - 2] == 10 && req[last - 3] == 13) {
+		return true;
+	}
+	return false;
+}
+
 int Connection::receiveData() {
 	char buf[BUFFER];
 	bzero(buf, BUFFER);
@@ -46,12 +58,19 @@ int Connection::receiveData() {
 		return 0;
 	}
 	this->buffer_in.append(buf, ret);
+	if (isOver(this->buffer_in)) {
+		return 0;
+	}
 	return ret;
 }
 
 void Connection::handleRequest() {
-	// std::cout << "handle-> " << this->buffer_in << std::endl;
-	std::cout << "handle request"  << std::endl;
+	std::cout << "handle request "<< std::endl;
+	// for (int i = 0; i < (int) this->buffer_in.length(); i++) {
+	// 	std::cout << (int) this->buffer_in[i] << " ";
+	// }
+	// std::cout << std::endl;
+	// std::cout << "handle request"  << std::endl;
 	// this->buffer_out.append("response: ");
 	// this->buffer_out.append(this->buffer_in); // change to real handle
 	this->buffer_out = "HTTP/1.1 200 OK\n\
@@ -64,6 +83,9 @@ void Connection::handleRequest() {
 	<html>\n\
 	<body>\n\
 	<h1>Hello, World!</h1>\n\
+	<div>\n\
+    <img src=\"/something.jpg\" alt="" />\n\
+	</div>\n\
 	</body>\n\
 	</html>\n";
  	this->_needToWrite = this->buffer_out.length();
@@ -91,6 +113,9 @@ int Connection::sendData() {
 		return -1;
 	}
 	this->_writed += ret;
+	if (this->_writed >= this->_needToWrite) {
+		return 0;
+	}
 	return ret;
 }
 

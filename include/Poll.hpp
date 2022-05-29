@@ -13,6 +13,7 @@
 #include <map>
 #include "Server.hpp"
 #include "Connection.hpp"
+#include "Cp.hpp"
 
 class Server;
 
@@ -20,6 +21,7 @@ class Poll
 {
 	private:
 		Server&						_server;
+		Cp							ConnectionPoll;
 		std::vector<pollfd>			fds;
 		std::map<int, Connection>	_connections;
 		int							nfds;
@@ -29,7 +31,7 @@ class Poll
 
 		void	setNewConnection(pollfd& listenerPollfd);
 		void	handleExistConnection(int index);
-		pollfd	make_fd(int fd, int event);
+		// pollfd	make_fd(int fd, int event);
 		void	removeConnection(int fd);
 		void	addConnection(int fd, int listener);
 		void	removeUselessFd(void);

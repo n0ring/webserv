@@ -1,5 +1,5 @@
 SRC		=	$(addprefix src/,	main.cpp Server.cpp Poll.cpp Connection.cpp\
-								ServerConfig.cpp)
+								ServerConfig.cpp Cp.cpp)
 OBJDIR	=	obj
 SRCDIR	=	src
 OBJ		=	$(addprefix  obj/, $(notdir  $(SRC:.cpp=.o)))
