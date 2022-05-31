@@ -5,51 +5,82 @@ Server::Server(void)  { }
 Server::~Server(void) { }
 
 
+void showVector(std::vector<pollfd> v, Server &server, int n) {
+	std::vector<pollfd>::iterator it = v.begin();
+	std::cout << "current fds in poll:" << v.size() << " nfds=" << n <<  " { ";
+	for (; it != v.end() && n != 0; it++, n--) {
+		if (it->events == 0 || it->fd == -1) {
+			std::cout << RED << "ALERT WE are FUCKED" << std::endl;
+		}
+		if (server.isFdListener(it->fd)) {
+			std::cout << GREEN;
+		}
+		std::cout << "[ " << it->fd << ": " << (it->events == POLLIN ? "IN" : "OUT") << " ] ";
+		std::cout << RESET;
+	}
+	std::cout << "}" << std::endl;
+}
+
 /*
 1. create serverConfig objects while parsing 
 2. in loop setup them (socket, addrset, listen bind)
 */
-void Server::start() {
-	Poll pollObj(*this);
-	// 1 loop? 
-	this->_configs.push_back(ServerConfig(8080, "127.0.0.1", 10));
-	// this->_configs.push_back(ServerConfig(8081, "127.0.0.1", 10));
-	// this->_configs.push_back(ServerConfig(8082, "127.0.0.1", 10));
+void Server::setupServers(std::string configName) {
+	Parser parser(configName);
 
-	// 2. setupServers in loop
+	parser.createServerConfigs(this->_configs);
+	// this->_configs.push_back(ServerConfig(8080, "127.0.0.1", 10));
+	
 	for (int i = 0; i < (int) this->_configs.size(); i++) {
-		this->_listeners.push_back(this->_configs[i].setup());
+		this->fds.push_back(make_fd(this->_configs[i].setup(), POLLIN));
 	}
+}
 
-	pollObj.launch();
 
+void	Server::start(std::string configName) {
+	std::vector<pollfd>::iterator it;
+
+	this->setupServers(configName);
+	while (true) { //////////// !!!!!!!!
+		this->nfds = this->fds.size();
+		showVector(this->fds, *this, this->nfds);
+		if (poll(&(this->fds[0]), this->nfds, NO_TIMEOUT) < 0 ) {
+			return perror("poll");
+		}
+		it = this->fds.begin();
+		while (it != this->fds.end()) {
+			if (it->revents == 0) {
+				it++;
+				continue;
+			}
+			else if (it->revents != POLLIN && it->revents != POLLOUT) {
+				this->ConnectionPool.onClientDisconnect(it, this->fds);
+				continue;
+			}
+			if (this->isFdListener(it->fd)) {
+				this->ConnectionPool.onClientConnect(this->getConfig(it->fd), this->fds, it);
+			}
+			else {
+				this->ConnectionPool.onClientDataExchange(it);
+				// handleExistConnection(i);
+			}
+			it++;
+		}
+	}
 }
 
 bool 	Server::isFdListener(int fd) {
-	std::vector<int>::iterator res = std::find(this->_listeners.begin(),
-		this->_listeners.end(), fd);
-	if (res == this->_listeners.end()) {
-		return false;
-	}
-	return true;
-}
-
-pollfd make_fd(int fd, int event) {
-	pollfd newfd;
-	newfd.fd = fd;
-	newfd.events = event;
-	newfd.revents = 0;
-
-	return newfd;
-}
-
-void Server::setListenersPoll(std::vector<pollfd> &v) {
 	std::vector<ServerConfig>::iterator it = this->_configs.begin();
 	std::vector<ServerConfig>::iterator ite = this->_configs.end();
-	for (; it != ite; it++) {
-		v.push_back(make_fd(it->getListener(), POLLIN));
+	while (it != ite) {
+		if (fd == it->getListener()) {
+			return true;
+		}
+		it++;		
 	}
+	return false;
 }
+
 
 ServerConfig & Server::getConfig(int fd) { // if not found we sooooo fucked
 	std::vector<ServerConfig>::iterator it = this->_configs.begin();

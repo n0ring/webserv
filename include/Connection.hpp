@@ -13,10 +13,7 @@ class Connection {
 		std::string buffer_in;
 		std::string buffer_out;
 		char		*_bufToSend;
-		bool		_isDataHandled;
 
-//		request (server, text)
-//		resoince (server, text)
 
 	public:
 		Connection(int listenner, int fd);
@@ -29,9 +26,5 @@ class Connection {
 		void	handleRequest(); // func to server?? 
 		int		sendData();
 
-
 		int		getFd() const;
-		bool	getHandleStatus() const;
-
-		bool	isReading() const;
 };

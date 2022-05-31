@@ -5,14 +5,12 @@
 Connection::Connection(void) : _listennerFd(-42), _fd(-42) {
 	this->_writed = 0;
 	this->_needToWrite = 0;
-	this->_isDataHandled = false;
 	this->_bufToSend = NULL;
 }
 
 Connection::Connection(int listenner, int fd) : _listennerFd(listenner), _fd(fd) {
 	this->_writed = 0;
 	this->_needToWrite = 0;
-	this->_isDataHandled = false;
 }
 
 Connection::Connection(Connection const &other) : _listennerFd(other._listennerFd),
@@ -33,7 +31,7 @@ int Connection::getFd() const {
 	return this->_fd;
 }
 
-bool isOver(std::string req) {
+bool isRecieveOver(std::string req) {
 	int last = req.length() - 1;
 	if (req.length() < 4) {
 		return false;
@@ -58,7 +56,8 @@ int Connection::receiveData() {
 		return 0;
 	}
 	this->buffer_in.append(buf, ret);
-	if (isOver(this->buffer_in)) {
+	if (isRecieveOver(this->buffer_in)) {
+		this->handleRequest();
 		return 0;
 	}
 	return ret;
@@ -66,13 +65,6 @@ int Connection::receiveData() {
 
 void Connection::handleRequest() {
 	std::cout << "handle request "<< std::endl;
-	// for (int i = 0; i < (int) this->buffer_in.length(); i++) {
-	// 	std::cout << (int) this->buffer_in[i] << " ";
-	// }
-	// std::cout << std::endl;
-	// std::cout << "handle request"  << std::endl;
-	// this->buffer_out.append("response: ");
-	// this->buffer_out.append(this->buffer_in); // change to real handle
 	this->buffer_out = "HTTP/1.1 200 OK\n\
 	Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
 	Server: huyaache/2.2.14 (Win32)\n\
@@ -90,20 +82,11 @@ void Connection::handleRequest() {
 	</html>\n";
  	this->_needToWrite = this->buffer_out.length();
 	this->_bufToSend = (char *) this->buffer_out.c_str();
-	// this->buffer_out.clear();
-	this->_isDataHandled = true;
 	this->buffer_in.clear();
 }
 
 
 int Connection::sendData() {
-	if (this->_writed >= this->_needToWrite) {
-		this->_isDataHandled = false;
-		this->_writed = 0;
-		this->_needToWrite = 0;
-		this->buffer_out.clear();
-		return 0;
-	}
 	int bufferSize = this->_needToWrite - this->_writed > BUFFER ? BUFFER 
 		: this->_needToWrite - this->_writed;
 	int ret = send(this->_fd, this->_bufToSend + this->_writed, bufferSize, 0); // MSG_MORE FLAG?
@@ -114,18 +97,13 @@ int Connection::sendData() {
 	}
 	this->_writed += ret;
 	if (this->_writed >= this->_needToWrite) {
+		this->_writed = 0;
+		this->_needToWrite = 0;
+		this->buffer_out.clear();
+		this->_bufToSend = NULL;
 		return 0;
 	}
 	return ret;
-}
-
-
-bool Connection::getHandleStatus() const {
-	return this->_isDataHandled;
-}
-
-bool Connection::isReading(void) const {
-	return !(this->buffer_in.empty());
 }
 
 

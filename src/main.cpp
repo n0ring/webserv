@@ -1,7 +1,13 @@
 #include "Server.hpp"
 
-int main(void) {
+int main(int argc, char **argv) {
 	Server server;
-
-	server.start();
+	if (argc != 2) {
+		server.start("/Users/namina/21/webServer/config.conf");
+	}
+	else {
+		server.start(argv[1]);
+	}
+	return 0;
 }
+

@@ -13,9 +13,10 @@
 #include <poll.h>
 #include <algorithm>
 #include <vector>
-#include "Poll.hpp"
+#include "Cp.hpp"
 #include "ServerConfig.hpp"
 #include "utils.hpp"
+#include "Parser.hpp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -27,24 +28,25 @@
 #define CYAN    "\033[36m"      /* Cyan */
 #define WHITE   "\033[37m"      /* White */
 
-class Poll;
-class Select;
+#define NO_TIMEOUT -1
+
+
 class Server {
 	private: 
 		// int			_listener;
 	
 		std::vector<ServerConfig>	_configs;
-		std::vector<int>			_listeners;
+		// std::vector<int>			_listeners;
+		Cp							ConnectionPool;
+		std::vector<pollfd>			fds;
+		int							nfds;
 
-	
+		void			setupServers(std::string configName);
+		ServerConfig	&getConfig(int fd);
 	public: 
 		Server(void);
 		~Server(void);
 
-		void			start(void);
-		void			setListenersPoll(std::vector<pollfd> &v);
-
-		bool 			isFdListener(int fd);
-		ServerConfig	&getConfig(int fd) ;
-
+		bool 			isFdListener(int fd); // to private
+		void			start(std::string configName);
 };
