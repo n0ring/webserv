@@ -10,10 +10,8 @@ ServerConfig::ServerConfig(int port, std::string ip, int bl) : _port(port),
 
 }
 
-
 ServerConfig::ServerConfig(ServerConfig const &other) : _port(other._port),
 	_ip(other._ip), _backlog(other._backlog) {
-
 }
 
 ServerConfig & ServerConfig::operator=(ServerConfig const &other) {
@@ -42,10 +40,8 @@ int ServerConfig::setup(void) {
 		perror("listen");
 		return (-1);
 	}
-
 	return this->_listener;
 }
-
 
 void	ServerConfig::setupSocket(void) {
 	this->_listener = socket(PF_INET, SOCK_STREAM, 0); // maybe add second socket for udp

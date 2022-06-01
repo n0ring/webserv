@@ -4,7 +4,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <netinet/in.h> // sockaddr_in
+#include <vector>
  #include <arpa/inet.h>  // inet_addr
+
+
+
+struct location {
+	bool						isFormats;
+	std::vector<std::string>	names;
+	std::string					root;
+	std::vector<std::string>	methods; // ints
+	std::string					autoindex;
+};
 
 class ServerConfig {
 	private:
@@ -14,7 +25,9 @@ class ServerConfig {
 		int			_listener;
 		sockaddr	_address; 
 		socklen_t	_addrlen;
+		
 
+		
 		void	setupSocket(void);
 		void	setupSockAddr_in(void);
 
@@ -29,4 +42,5 @@ class ServerConfig {
 		int	setup(void);
 		int	getListener(void) const;
 		int	acceptNewConnection();
+
 };

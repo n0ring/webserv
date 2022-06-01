@@ -32,7 +32,6 @@ void	Cp::onClientDisconnect(std::vector<pollfd>::iterator& iter, std::vector<pol
 	iter = fds.erase(iter);
 }
 
-
 void	Cp::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 	int ret;
 	if (iter->revents == POLLIN) {

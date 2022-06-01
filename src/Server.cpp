@@ -26,9 +26,9 @@ void showVector(std::vector<pollfd> v, Server &server, int n) {
 2. in loop setup them (socket, addrset, listen bind)
 */
 void Server::setupServers(std::string configName) {
-	Parser parser(configName);
+	Parser parser;
 
-	parser.createServerConfigs(this->_configs);
+	parser.parseConfig(this->_configs, configName);
 	// this->_configs.push_back(ServerConfig(8080, "127.0.0.1", 10));
 	
 	for (int i = 0; i < (int) this->_configs.size(); i++) {
@@ -39,9 +39,13 @@ void Server::setupServers(std::string configName) {
 
 void	Server::start(std::string configName) {
 	std::vector<pollfd>::iterator it;
+	bool							readyForWork = false;
 
 	this->setupServers(configName);
-	while (true) { //////////// !!!!!!!!
+	if (this->_configs.size() > 0) {
+		readyForWork = true;
+	}
+	while (readyForWork) { //////////// !!!!!!!!
 		this->nfds = this->fds.size();
 		showVector(this->fds, *this, this->nfds);
 		if (poll(&(this->fds[0]), this->nfds, NO_TIMEOUT) < 0 ) {
@@ -62,7 +66,6 @@ void	Server::start(std::string configName) {
 			}
 			else {
 				this->ConnectionPool.onClientDataExchange(it);
-				// handleExistConnection(i);
 			}
 			it++;
 		}

@@ -10,16 +10,13 @@
 // parseRequest
 
 class Parser {
-	private:
-		std::string		_configName;
-		std::ifstream	_ifs;
-
 
 	public:
-		Parser(std::string);
+		Parser();
 		~Parser(void) {}
-		void createServerConfigs(std::vector<ServerConfig> &configsObjs);
+		void parseConfig(std::vector<ServerConfig> &configsObjs, std::string configName);
 		void splitConfigToServers(std::string config, std::vector<std::string>& confs);
+		void splitParamsByName(std::string config, std::vector<std::string>& configsVector, std::string paramName);
 
 
 };

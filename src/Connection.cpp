@@ -57,6 +57,7 @@ int Connection::receiveData() {
 	}
 	this->buffer_in.append(buf, ret);
 	if (isRecieveOver(this->buffer_in)) {
+		std::cout << this->buffer_in << std::endl;
 		this->handleRequest();
 		return 0;
 	}
