@@ -65,7 +65,7 @@ void	Server::start(std::string configName) {
 				this->ConnectionPool.onClientConnect(this->getConfig(it->fd), this->fds, it);
 			}
 			else {
-				this->ConnectionPool.onClientDataExchange(it);
+				this->ConnectionPool.onClientDataExchange(it, this->getConfig(it->fd));
 			}
 			it++;
 		}

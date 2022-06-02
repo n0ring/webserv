@@ -32,8 +32,9 @@ void	Cp::onClientDisconnect(std::vector<pollfd>::iterator& iter, std::vector<pol
 	iter = fds.erase(iter);
 }
 
-void	Cp::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
+void	Cp::onClientDataExchange(std::vector<pollfd>::iterator& iter, ServerConfig& viHost) {
 	int ret;
+	(void) viHost;
 	if (iter->revents == POLLIN) {
 		ret = this->_pool[iter->fd].receiveData();
 		if (ret == 0) {

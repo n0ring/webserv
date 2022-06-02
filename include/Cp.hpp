@@ -18,6 +18,7 @@ class Cp {
 		void	onClientConnect(ServerConfig &serverConfig, std::vector<pollfd>& fds,
 							std::vector<pollfd>::iterator& iter);
 		void	onClientDisconnect(std::vector<pollfd>::iterator& iter, std::vector<pollfd> &fds);
-		void	onClientDataExchange(std::vector<pollfd>::iterator& iter);
+		void	onClientDataExchange(std::vector<pollfd>::iterator& iter,
+									ServerConfig &vHost);
 		void	onClientError(int event);
 };

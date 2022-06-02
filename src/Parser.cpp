@@ -32,7 +32,7 @@ ServerConfig createObj(std::string configText) {
 			}
 		}
 	}
-	// serverConfig.toString();
+	serverConfig.toString();
 	return serverConfig;
 }
 
@@ -40,6 +40,7 @@ void Parser::parseConfig(std::vector<ServerConfig> &configsObjs, std::string con
 	std::vector<std::string>			configsVector;
 	std::vector<std::string>::iterator	it, ite;
 	std::string							configStr;
+	ServerConfig						configObj;
 
 	convertFileToString(configName, configStr);
 	deleteComments(configStr);
@@ -53,7 +54,9 @@ void Parser::parseConfig(std::vector<ServerConfig> &configsObjs, std::string con
 	it = configsVector.begin();
 	ite = configsVector.end();
 	for (; it != ite; it++) {
-		configsObjs.push_back(createObj(*it));
+		configObj = createObj(*it);
+		configObj.validate();
+		configsObjs.push_back(configObj);
 	}
 }
 
