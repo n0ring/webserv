@@ -1,3 +1,4 @@
+
 #pragma once
 #include <iostream>
 #include <sys/socket.h>
@@ -7,6 +8,9 @@
 #include <vector>
 #include <arpa/inet.h>  // inet_addr
 #include "utils.hpp" // parserUtils deleteComment, sPPlit, getLine
+#include "Request.hpp"
+#include "Responce.hpp"
+#define LOCATION_PARAM "location"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -46,7 +50,7 @@ struct location {
 	}
 };
 
-class ServerConfig {
+class VHost {
 	private:
 		int			_port; // form cfg
 		std::string	_ip; // from cfg
@@ -62,21 +66,27 @@ class ServerConfig {
 		void	setupSocket(void);
 		void	setupSockAddr_in(void);
 
-
 	public:
-		ServerConfig(void);
-		ServerConfig(int port, std::string ip, int bl);
-		ServerConfig(ServerConfig const &other);
-		ServerConfig &operator=(ServerConfig const &other);
-		~ServerConfig(void);
+		VHost(void);
+		VHost(VHost const &other);
+		VHost(int port, std::string ip, int bl);
+		VHost &operator=(VHost const &other);
+		~VHost(void);
 
-		void setNewLocation(std::vector<std::string> params);
-		void setLocationParam(std::vector<std::string> params);
-		void setServerParams(std::vector<std::string> params);
-		void validate();
-		int	setup(void);
-		int	getListener(void) const;
-		int	acceptNewConnection();
+		// setup before start
+		void	setNewLocation(std::vector<std::string> params);
+		void	setLocationParam(std::vector<std::string> params);
+		void	setServerParams(std::vector<std::string> params);
+		void	validate();
+		int		setup(void);
 
+		// procccccesssssss..
+		int			getListener(void) const;
+		int			acceptNewConnection();
+		void		handleRequest(Request& request, Responce& responce);
+		location&	getLocation(std::string route);
+
+
+		// delete this
 		void toString();
 };

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <stack>
-#include "ServerConfig.hpp"
+#include "VHost.hpp"
 
 
 // change names to public names
@@ -15,7 +15,7 @@ class Parser {
 	public:
 		Parser() {};
 		~Parser(void) {}
-		void parseConfig(std::vector<ServerConfig> &configsObjs,
+		void parseConfig(std::vector<VHost> &configsObjs,
 							std::string configName);
 		void splitConfigToServers(std::string config,
 							std::vector<std::string>& confs);

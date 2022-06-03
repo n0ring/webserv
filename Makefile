@@ -1,9 +1,12 @@
 SRC		=	$(addprefix src/,	main.cpp\
 								Server.cpp\
 								Connection.cpp\
-								ServerConfig.cpp\
-								Cp.cpp\
+								VHost_start.cpp\
+								VHost_processing.cpp\
+								ConnectonPool.cpp\
 								Parser.cpp\
+								Request.cpp\
+								Responce.cpp\
 								utils.cpp)
 
 OBJDIR	=	obj

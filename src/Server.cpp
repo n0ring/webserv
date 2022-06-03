@@ -28,11 +28,11 @@ void showVector(std::vector<pollfd> v, Server &server, int n) {
 void Server::setupServers(std::string configName) {
 	Parser parser;
 
-	parser.parseConfig(this->_configs, configName);
+	parser.parseConfig(this->_vHosts, configName);
 	// this->_configs.push_back(ServerConfig(8080, "127.0.0.1", 10));
 	
-	for (int i = 0; i < (int) this->_configs.size(); i++) {
-		this->fds.push_back(make_fd(this->_configs[i].setup(), POLLIN));
+	for (int i = 0; i < (int) this->_vHosts.size(); i++) {
+		this->fds.push_back(make_fd(this->_vHosts[i].setup(), POLLIN));
 	}
 }
 
@@ -40,9 +40,8 @@ void Server::setupServers(std::string configName) {
 void	Server::start(std::string configName) {
 	std::vector<pollfd>::iterator it;
 	bool							readyForWork = false;
-
 	this->setupServers(configName);
-	if (this->_configs.size() > 0) {
+	if (this->_vHosts.size() > 0) {
 		readyForWork = true;
 	}
 	while (readyForWork) { //////////// !!!!!!!!
@@ -62,10 +61,11 @@ void	Server::start(std::string configName) {
 				continue;
 			}
 			if (this->isFdListener(it->fd)) {
-				this->ConnectionPool.onClientConnect(this->getConfig(it->fd), this->fds, it);
+				this->ConnectionPool.onClientConnect(this->getVHost(it->fd), this->fds, it);
 			}
 			else {
-				this->ConnectionPool.onClientDataExchange(it, this->getConfig(it->fd));
+				int vHostFd = this->ConnectionPool.getConnectionListener(it->fd);
+				this->ConnectionPool.onClientDataExchange(it, this->getVHost(vHostFd));
 			}
 			it++;
 		}
@@ -73,8 +73,8 @@ void	Server::start(std::string configName) {
 }
 
 bool 	Server::isFdListener(int fd) {
-	std::vector<ServerConfig>::iterator it = this->_configs.begin();
-	std::vector<ServerConfig>::iterator ite = this->_configs.end();
+	std::vector<VHost>::iterator it = this->_vHosts.begin();
+	std::vector<VHost>::iterator ite = this->_vHosts.end();
 	while (it != ite) {
 		if (fd == it->getListener()) {
 			return true;
@@ -85,9 +85,9 @@ bool 	Server::isFdListener(int fd) {
 }
 
 
-ServerConfig & Server::getConfig(int fd) { // if not found we sooooo fucked
-	std::vector<ServerConfig>::iterator it = this->_configs.begin();
-	std::vector<ServerConfig>::iterator ite = this->_configs.end();
+VHost & Server::getVHost(int fd) { // if not found we sooooo fucked
+	std::vector<VHost>::iterator it = this->_vHosts.begin();
+	std::vector<VHost>::iterator ite = this->_vHosts.end();
 	for (; it != ite; it++) {
 		if (it->getListener() == fd) {
 			break ;

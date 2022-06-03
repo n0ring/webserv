@@ -3,22 +3,24 @@
 #include <map>
 #include <vector>
 #include <poll.h>
-#include "ServerConfig.hpp"
+#include "VHost.hpp"
 #include "Connection.hpp"
 #include "utils.hpp"
 
-class Cp {
+class ConnectionPool {
 	private:
 		std::map<int, Connection>	_pool;
 
 	public:
-		Cp();
-		~Cp(void);
+		ConnectionPool();
+		~ConnectionPool(void);
 
-		void	onClientConnect(ServerConfig &serverConfig, std::vector<pollfd>& fds,
+		void	onClientConnect(VHost &serverConfig, std::vector<pollfd>& fds,
 							std::vector<pollfd>::iterator& iter);
 		void	onClientDisconnect(std::vector<pollfd>::iterator& iter, std::vector<pollfd> &fds);
 		void	onClientDataExchange(std::vector<pollfd>::iterator& iter,
-									ServerConfig &vHost);
+									VHost &vHost);
 		void	onClientError(int event);
+
+		int		getConnectionListener(int fd);
 };

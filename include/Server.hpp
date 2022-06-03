@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <vector>
 #include "Cp.hpp"
-#include "ServerConfig.hpp"
+#include "VHost.hpp"
 #include "utils.hpp"
 #include "Parser.hpp"
 
@@ -35,14 +35,13 @@ class Server {
 	private: 
 		// int			_listener;
 	
-		std::vector<ServerConfig>	_configs;
-		// std::vector<int>			_listeners;
-		Cp							ConnectionPool;
+		std::vector<VHost>	_vHosts;
+		ConnectionPool							ConnectionPool;
 		std::vector<pollfd>			fds;
 		int							nfds;
 
 		void			setupServers(std::string configName);
-		ServerConfig	&getConfig(int fd);
+		VHost	&getVHost(int fd);
 	public: 
 		Server(void);
 		~Server(void);

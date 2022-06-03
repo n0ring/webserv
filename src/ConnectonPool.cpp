@@ -1,12 +1,12 @@
 #include "Cp.hpp"
 
-Cp::Cp() {}
+ConnectionPool::ConnectionPool() {}
 
-Cp::~Cp(void) {
+ConnectionPool::~ConnectionPool(void) {
 	this->_pool.clear();
 }
 
-void	Cp::onClientConnect(ServerConfig& serverConfig, std::vector<pollfd>& fds,
+void	ConnectionPool::onClientConnect(VHost& serverConfig, std::vector<pollfd>& fds,
 			std::vector<pollfd>::iterator& iter) {
 	int newSocket = 0;
 	int pos = std::distance(fds.begin(), iter);
@@ -26,19 +26,27 @@ void	Cp::onClientConnect(ServerConfig& serverConfig, std::vector<pollfd>& fds,
 	iter = fds.begin() + pos; // need to update iter because realloc in vector 
 }
 
-void	Cp::onClientDisconnect(std::vector<pollfd>::iterator& iter, std::vector<pollfd> &fds) { // take iterator &
+void	ConnectionPool::onClientDisconnect(std::vector<pollfd>::iterator& iter,
+			std::vector<pollfd> &fds) { // take iterator &
 	close(iter->fd);
 	this->_pool.erase(iter->fd);
 	iter = fds.erase(iter);
 }
 
-void	Cp::onClientDataExchange(std::vector<pollfd>::iterator& iter, ServerConfig& viHost) {
+void	ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter,
+												VHost& viHost) {
 	int ret;
-	(void) viHost;
+	if (this->_pool.count(iter->fd) == 0 && viHost.getListener() == -1) {
+		std::cerr << "This should never happend" << std::endl;
+		// do something here for delete vhost 
+	}
 	if (iter->revents == POLLIN) {
-		ret = this->_pool[iter->fd].receiveData();
+		ret = this->_pool[iter->fd].receiveData(); // check isExist? 
 		if (ret == 0) {
 			std::cout << "requst received" << std::endl;
+			viHost.handleRequest(this->_pool[iter->fd].getRequestObj(),
+				this->_pool[iter->fd].getResponceObj());
+			this->_pool[iter->fd].prepareResponceToSend();
 			iter->events = POLLOUT;
 		}
 		if (ret < 0) {
@@ -55,4 +63,11 @@ void	Cp::onClientDataExchange(std::vector<pollfd>::iterator& iter, ServerConfig&
 		}
 	}
 	iter->revents = 0;
+}
+
+int ConnectionPool::getConnectionListener(int fd) {
+	if (this->_pool.count(fd) == 0) {
+		return -1;
+	}
+	return this->_pool[fd].getListener();
 }

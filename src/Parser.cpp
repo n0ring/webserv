@@ -7,11 +7,10 @@
 
 // check constacts for configServes
 // check for errors in config (how parsers react)
-
-ServerConfig createObj(std::string configText) { 
+VHost createObj(std::string configText) { 
 	size_t						startPos = 0;
 	std::vector<std::string>	currentParams;
-	ServerConfig				serverConfig;
+	VHost				serverConfig;
 	std::string					line;
 
 	while (startPos < configText.length()) {
@@ -32,15 +31,15 @@ ServerConfig createObj(std::string configText) {
 			}
 		}
 	}
-	serverConfig.toString();
+	// serverConfig.toString();
 	return serverConfig;
 }
 
-void Parser::parseConfig(std::vector<ServerConfig> &configsObjs, std::string configName) {
+void Parser::parseConfig(std::vector<VHost> &configsObjs, std::string configName) {
 	std::vector<std::string>			configsVector;
 	std::vector<std::string>::iterator	it, ite;
 	std::string							configStr;
-	ServerConfig						configObj;
+	VHost								configObj;
 
 	convertFileToString(configName, configStr);
 	deleteComments(configStr);

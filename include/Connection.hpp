@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <sys/socket.h>
-
-
+#include "Request.hpp"
+#include "Responce.hpp"
 class Connection {
 	private:
 		int			_listennerFd;
@@ -13,6 +13,11 @@ class Connection {
 		std::string buffer_in;
 		std::string buffer_out;
 		char		*_bufToSend;
+		Request		_request;
+		Responce	_responce;
+
+		// requestObj
+		// responceObj
 
 
 	public:
@@ -23,8 +28,11 @@ class Connection {
 		~Connection(void);
 
 		int		receiveData();
-		void	handleRequest(); // func to server?? 
+		void	prepareResponceToSend(); // func to server?? 
 		int		sendData();
 
-		int		getFd() const;
+		int			getFd() const;
+		int			getListener(void) const;
+		Request&	getRequestObj();
+		Responce&	getResponceObj();
 };

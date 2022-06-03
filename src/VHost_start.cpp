@@ -1,23 +1,24 @@
-#include "ServerConfig.hpp"
+#include "VHost.hpp"
 
-ServerConfig::ServerConfig(void) {
+VHost::VHost(void) {
 	this->_maxBody = -1;
 	this->_port = -1;
+	this->_listener = -1;
 }
 
-ServerConfig::~ServerConfig(void) {
+VHost::~VHost(void) {
 	close(this->_listener);
 }
 
-ServerConfig::ServerConfig(int port, std::string ip, int bl) : _port(port),
+VHost::VHost(int port, std::string ip, int bl) : _port(port),
 		_ip(ip), _backlog(bl) {
 }
 
-ServerConfig::ServerConfig(ServerConfig const &other) {
+VHost::VHost(VHost const &other) {
 	*this = other;
 }
 
-ServerConfig & ServerConfig::operator=(ServerConfig const &other) {
+VHost & VHost::operator=(VHost const &other) {
 	if (this != &other) {
 		this->_port = other._port;
 		this->_ip = other._ip;
@@ -27,11 +28,12 @@ ServerConfig & ServerConfig::operator=(ServerConfig const &other) {
 		this->_listener = other._listener;
 		this->_address = other._address;
 		this->_addrlen = other._addrlen;
+		this->locations= other.locations;
 	}
 	return *this;
 }
 
-int ServerConfig::setup(void) {
+int VHost::setup(void) {
 	this->setupSocket();
 	this->setupSockAddr_in();
 
@@ -49,7 +51,7 @@ int ServerConfig::setup(void) {
 	return this->_listener;
 }
 
-void	ServerConfig::setupSocket(void) {
+void	VHost::setupSocket(void) {
 	this->_listener = socket(PF_INET, SOCK_STREAM, 0); // maybe add second socket for udp
 	if (this->_listener == -1) {
 		perror("socket");
@@ -60,7 +62,7 @@ void	ServerConfig::setupSocket(void) {
 	setsockopt(_listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 }
 
-void	ServerConfig::setupSockAddr_in(void) {
+void	VHost::setupSockAddr_in(void) {
 	sockaddr_in *address;
 	
 	bzero(&(this->_address), sizeof(this->_address));
@@ -73,12 +75,7 @@ void	ServerConfig::setupSockAddr_in(void) {
 	address->sin_port = htons(this->_port);
 }
 
-
-int ServerConfig::getListener(void) const {
-	return this->_listener;
-}
-
-int		ServerConfig::acceptNewConnection() {
+int		VHost::acceptNewConnection() {
 	int newSocket =  accept(this->_listener, &this->_address, &this->_addrlen);
 	if (newSocket < 0) {
 		return -1;
@@ -88,7 +85,7 @@ int		ServerConfig::acceptNewConnection() {
 	return newSocket;
 }
 
-void ServerConfig::setNewLocation(std::vector<std::string> params) {
+void VHost::setNewLocation(std::vector<std::string> params) {
 	typedef std::vector<std::string>::size_type size_type;
 	location loc;
 	for (size_type i = 1; i < params.size() && params[i].compare("{"); i++) {
@@ -97,7 +94,7 @@ void ServerConfig::setNewLocation(std::vector<std::string> params) {
 	this->locations.push_back(loc);
 }
 
-void ServerConfig::setServerParams(std::vector<std::string> params) {
+void VHost::setServerParams(std::vector<std::string> params) {
 	if (params.size() != 2) {
 		std::cout << "incorrect paramr pair" << std::endl;
 		return ;
@@ -117,7 +114,7 @@ void ServerConfig::setServerParams(std::vector<std::string> params) {
 	}
 }
 
-void ServerConfig::setLocationParam(std::vector<std::string> params) {
+void VHost::setLocationParam(std::vector<std::string> params) {
 	if (params.size() < 2) return ;
 
 	if (params.front().compare("root") == 0) {
@@ -136,7 +133,7 @@ void ServerConfig::setLocationParam(std::vector<std::string> params) {
 	}
 }
 
-void ServerConfig::validate() {
+void VHost::validate() {
 	bool isValid = true;
 	if (this->_ip.empty()) {
 		isValid = false;
@@ -148,7 +145,11 @@ void ServerConfig::validate() {
 	}
 	if (this->_maxBody == -1) {
 		isValid = false;
-		std::cerr << "Max body size found" << std::endl;		
+		std::cerr << "Max body size not found" << std::endl;		
+	}
+	if (this->locations.size() == 0) {
+		isValid = false;
+		std::cerr << "Locations not found" << std::endl;		
 	}
 	if (!isValid) {
 		exit(-1);
@@ -156,7 +157,8 @@ void ServerConfig::validate() {
 }
 
 
-void ServerConfig::toString() {
+
+void VHost::toString() {
 	std::cout << "<--Server Config-->" << std::endl;
 	std::cout << "Port: " << this->_port << std::endl;
 	std::cout << "Ip: " << this->_ip << std::endl;

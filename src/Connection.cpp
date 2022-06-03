@@ -57,33 +57,22 @@ int Connection::receiveData() {
 	}
 	this->buffer_in.append(buf, ret);
 	if (isRecieveOver(this->buffer_in)) {
-		std::cout << this->buffer_in << std::endl;
-		this->handleRequest();
+		this->_request.parseStr(this->buffer_in);
 		return 0;
 	}
 	return ret;
 }
 
-void Connection::handleRequest() {
-	std::cout << "handle request "<< std::endl;
-	this->buffer_out = "HTTP/1.1 200 OK\n\
-	Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
-	Server: huyaache/2.2.14 (Win32)\n\
-	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
-	Content-Length: 88\n\
-	Content-Type: text/html\n\
-	Connection: Closed\n\n\
-	<html>\n\
-	<body>\n\
-	<h1>Hello, World!</h1>\n\
-	<div>\n\
-    <img src=\"/something.jpg\" alt="" />\n\
-	</div>\n\
-	</body>\n\
-	</html>\n";
+void Connection::prepareResponceToSend() { // prepare responce to send
+	// send it to VHost
+	// VHost::processing request and return responce obj
+	// obj.toString -> buffer_out ->buffToSend
+
+	this->buffer_in.clear();
+	std::cout << "prepare responce data "<< std::endl;
+	this->buffer_out = this->_responce.getHeader() + this->_responce.getBody();
  	this->_needToWrite = this->buffer_out.length();
 	this->_bufToSend = (char *) this->buffer_out.c_str();
-	this->buffer_in.clear();
 }
 
 
@@ -109,3 +98,7 @@ int Connection::sendData() {
 
 
 Connection::~Connection(void) {}
+
+Request& Connection::getRequestObj() {return this->_request; }
+Responce& Connection::getResponceObj() {return this->_responce; }
+int Connection::getListener() const {return this->_listennerFd; }
