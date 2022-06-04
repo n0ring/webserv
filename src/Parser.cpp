@@ -10,7 +10,7 @@
 VHost createObj(std::string configText) { 
 	size_t						startPos = 0;
 	std::vector<std::string>	currentParams;
-	VHost				serverConfig;
+	VHost						vHost;
 	std::string					line;
 
 	while (startPos < configText.length()) {
@@ -19,27 +19,27 @@ VHost createObj(std::string configText) {
 		if (currentParams.size() < 2) continue;
 		if (currentParams.front().compare(LOCATION_PARAM)) {
 			removeSemicolon(currentParams.back(), line);
-			serverConfig.setServerParams(currentParams);
+			vHost.setServerParams(currentParams);
 		} else {
-			serverConfig.setNewLocation(currentParams);
+			vHost.setNewLocation(currentParams);
 			while (true) {
 				line = getLine(configText, startPos);
 				currentParams = sPPlit(line);
 				if (currentParams.back().compare("}") == 0) break ;
 				removeSemicolon(currentParams.back(), line);
-				serverConfig.setLocationParam(currentParams);
+				vHost.setLocationParam(currentParams);
 			}
 		}
 	}
 	// serverConfig.toString();
-	return serverConfig;
+	return vHost;
 }
 
 void Parser::parseConfig(std::vector<VHost> &configsObjs, std::string configName) {
 	std::vector<std::string>			configsVector;
 	std::vector<std::string>::iterator	it, ite;
 	std::string							configStr;
-	VHost								configObj;
+	VHost								vHostObj;
 
 	convertFileToString(configName, configStr);
 	deleteComments(configStr);
@@ -53,9 +53,9 @@ void Parser::parseConfig(std::vector<VHost> &configsObjs, std::string configName
 	it = configsVector.begin();
 	ite = configsVector.end();
 	for (; it != ite; it++) {
-		configObj = createObj(*it);
-		configObj.validate();
-		configsObjs.push_back(configObj);
+		vHostObj = createObj(*it);
+		vHostObj.validate();
+		configsObjs.push_back(vHostObj);
 	}
 }
 

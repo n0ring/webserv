@@ -7,10 +7,12 @@
 #include <netinet/in.h> // sockaddr_in
 #include <vector>
 #include <arpa/inet.h>  // inet_addr
+#include <algorithm>
 #include "utils.hpp" // parserUtils deleteComment, sPPlit, getLine
 #include "Request.hpp"
 #include "Responce.hpp"
 #define LOCATION_PARAM "location"
+
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -22,16 +24,40 @@
 #define CYAN    "\033[36m"      /* Cyan */
 #define WHITE   "\033[37m"      /* White */
 
-struct location {
-	typedef std::vector<std::string>::size_type size_type;
-	bool						isFormats;
-	std::vector<std::string>	names;
-	std::string					root;
-	std::vector<std::string>	methods; // ints
-	std::string					autoindex;
-	std::string					index;
+class location {
+	private:
+		friend class VHost; 
+		typedef std::vector<std::string>::size_type size_type;
+		bool						isFormats;
+		std::vector<std::string>	names;
+		std::string					root;
+		std::vector<std::string>	methods; // ints
+		std::string					autoindex;
+		std::string					index;
 
-	void toString() {
+	public:
+		bool isLocationMatch(std::string &route) {
+			std::vector<std::string>::iterator start = this->names.begin();
+			std::vector<std::string>::iterator end = this->names.end();
+			if ((*start).compare("*") == 0) {
+				start++;
+			}
+			if (std::find(start, end, route) != end) {
+				return true;
+			}
+			return false;
+		}
+
+		std::string getFileName(std::vector<std::string> &params) {
+			if (params.size() == 3) { // has file
+				return (this->root + params[2] + params[1] + params[0]);
+			} 
+			else { // only dir
+				return this->root + "/" + this->index;
+			}
+		}
+
+		void toString() {
 		std::cout << GREEN << "Location: { " << RESET << std::endl;
 		std::cout << "Names: [ ";
 		for (size_type i = 0; i < this->names.size(); i++) {
@@ -84,7 +110,7 @@ class VHost {
 		int			getListener(void) const;
 		int			acceptNewConnection();
 		void		handleRequest(Request& request, Responce& responce);
-		location&	getLocation(std::string route);
+		location&	getLocation(std::vector<std::string>& params);
 
 
 		// delete this

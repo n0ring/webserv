@@ -29,7 +29,7 @@ std::string & Request::getRoute(void)  { return this->_route; }
 
 
 
-// GET /something.jpg HTTP/1.1
+// GET /something.jpg HTTP/1.1 
 // Host: localhost:8080
 // Connection: keep-alive
 // sec-ch-ua: " Not A;Brand";v="99", "Chromium";v="98", "Google Chrome";v="98"

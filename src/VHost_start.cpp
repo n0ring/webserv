@@ -134,6 +134,8 @@ void VHost::setLocationParam(std::vector<std::string> params) {
 }
 
 void VHost::validate() {
+	// check index in dirs location 
+	// 
 	bool isValid = true;
 	if (this->_ip.empty()) {
 		isValid = false;
