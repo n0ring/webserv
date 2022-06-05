@@ -102,15 +102,19 @@ void VHost::setServerParams(std::vector<std::string> params) {
 	
 	if (params.front().compare("host") == 0) {
 		this->_ip = params.back();
+		return ;
 	}
 	if (params.front().compare("port") == 0) {
 		this->_port = std::stoi(params.back());
+		return ;
 	}
 	if (params.front().compare("server_names") == 0) {
 		this->_serverName = params.back();
+		return ;
 	}
 	if (params.front().compare("max_client_body_size") == 0) {
 		this->_maxBody = std::stoi(params.back());
+		return ;
 	}
 }
 
@@ -119,23 +123,29 @@ void VHost::setLocationParam(std::vector<std::string> params) {
 
 	if (params.front().compare("root") == 0) {
 		this->locations.back().root = params.back();
+		return ;
 	}
 	if (params.front().compare("index") == 0) {
 		this->locations.back().index = params.back();
+		return ;
 	}
 	if (params.front().compare("methods") == 0) {
 		for (size_t i = 1; i < params.size(); i++) {
 			this->locations.back().methods.push_back(params[i]);
+		return ;
 		}
 	}
 	if (params.front().compare("autoindex") == 0) {
 		this->locations.back().autoindex = params.back();
+		return ;
 	}
 }
 
 void VHost::validate() {
 	// check index in dirs location 
-	// 
+	// check for names > 1 if [0] != *
+	// check for file formats != dirs
+	// root has to start with /
 	bool isValid = true;
 	if (this->_ip.empty()) {
 		isValid = false;

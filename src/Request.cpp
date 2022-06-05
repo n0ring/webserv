@@ -23,6 +23,8 @@ void Request::parseStr(std::string reqStr) {
 	this->_route = params[1];
 }
 
+
+
 std::string & Request::getRoute(void)  { return this->_route; }
 
 

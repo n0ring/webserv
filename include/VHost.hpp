@@ -28,7 +28,6 @@ class location {
 	private:
 		friend class VHost; 
 		typedef std::vector<std::string>::size_type size_type;
-		bool						isFormats;
 		std::vector<std::string>	names;
 		std::string					root;
 		std::vector<std::string>	methods; // ints
@@ -49,12 +48,19 @@ class location {
 		}
 
 		std::string getFileName(std::vector<std::string> &params) {
-			if (params.size() == 3) { // has file
-				return (this->root + params[2] + params[1] + params[0]);
+			std::string fileName;
+			if (params.size() == 3) { // has file  root + dir 
+				fileName = this->root + "/" + params[1] + "." + params[0];
 			} 
 			else { // only dir
-				return this->root + "/" + this->index;
+				fileName = this->root + "/" + this->index;
 			}
+			if (fileName[0] == '/') fileName.erase(0, 1);
+			return fileName;
+		}
+
+		bool isFormars() {
+			return this->names.size() > 1;
 		}
 
 		void toString() {
@@ -93,6 +99,8 @@ class VHost {
 		void	setupSockAddr_in(void);
 
 	public:
+		typedef std::vector<location>::iterator locations_iter;
+		
 		VHost(void);
 		VHost(VHost const &other);
 		VHost(int port, std::string ip, int bl);
@@ -110,7 +118,7 @@ class VHost {
 		int			getListener(void) const;
 		int			acceptNewConnection();
 		void		handleRequest(Request& request, Responce& responce);
-		location&	getLocation(std::vector<std::string>& params);
+		locations_iter	getLocation(std::vector<std::string>& params);
 
 
 		// delete this

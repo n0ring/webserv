@@ -15,54 +15,57 @@ int VHost::getListener(void) const {
 
 // /index/dir/some
 
-void setRouteParams(std::string route, std::vector<std::string>& params) {
-	int startPos = route.length() - 1;
-	int endPos = startPos + 1;
-	while (startPos >= 0) {
-		if (route[startPos] == '/' || route[startPos] == '.') {
-			break ;
-		}
-		startPos--;
+void setRouteParams(std::string& route, std::vector<std::string>& params) {
+	size_t extStart, fStart;
+	extStart = route.find_last_of(".");
+	fStart = route.find_last_of("/");
+	if (extStart != std::string::npos) {
+		fStart++;
+		params.push_back(route.substr(extStart + 1));
+		params.push_back(route.substr(fStart, extStart - fStart));
+		if (fStart > 0) fStart--;
+		params.push_back(route.substr(0, fStart));
 	}
-	if (startPos < 0) { return ; }
-	if (route[startPos] == '.') { // if filename in route
-		params.push_back(route.substr(startPos));
-		endPos = startPos;
-		while (startPos >= 0) {
-			if (route[startPos] == '/') {
-				startPos++;
-				break ;
-			}
-			startPos--;
-		}
-		if (startPos < 0) { return ;}
-		params.push_back(route.substr(startPos, endPos - startPos));
-		endPos = startPos > ROUTE_FIRST ? --startPos : startPos; // one dir or not
+	else {
+		params.push_back(route);
 	}
-	params.push_back(route.substr(0, endPos));
 }
 
 // 3 params - has file
 // 1 param - only dir
 
-location& VHost::getLocation(std::vector<std::string>& params) {
+// check for file ext - first loop
+// check for dirs - sec loop if after first end
+VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams) {
 	std::vector<location>::iterator it = this->locations.begin();
 	std::vector<location>::iterator ite = this->locations.end();
-	std::string route = params.size() == 3 ? params[0].substr(1) : params[0];
-	for (; it != ite; it++) {
-		if (it->isLocationMatch(route)) {
+
+	for (; it != ite; it++) { 
+		if (it->isLocationMatch(routeParams[0])) {
 			break;
 		}
 	}
-	if (it == ite) {
-		return this->locations[0];
+	if (it != ite) {
+		return it;
 	}
-	return *it;
+	if (routeParams.size() == 3) { // check for dirs if before for files
+		it = this->locations.begin();
+		for (; it != ite; it++) {
+			if (it->isLocationMatch(routeParams[2])) {
+				break;
+			}
+		}
+	}
+	return it;
 }
+
+
 
 void VHost::handleRequest(Request& request, Responce& responce) {
 	std::vector<std::string>	routeParams;
 	std::string					body;
+	VHost::locations_iter		currentLoc;
+	std::string					fileToSend;
 
 	setRouteParams(request.getRoute(), routeParams);
 
@@ -73,17 +76,35 @@ void VHost::handleRequest(Request& request, Responce& responce) {
 		std::cout << RED << "This shouldn't have happened. Call your admin (or mom) and run. And God help us\n" << RESET;
 		return ;
 	}
-	location currentRoute = this->getLocation(routeParams);
-	currentRoute.toString();
-	std::cout << "fileName for search: " << currentRoute.getFileName(routeParams) << std::endl;
+	
+	
+	currentLoc =  this->getLocation(routeParams);
+	// validate request (location, method, file)
+	
+	if (currentLoc == this->locations.end()) {
+		fileToSend.append("www/errors/404.html");
+	} else {
+		fileToSend = currentLoc->getFileName(routeParams);
+		currentLoc->toString();
+
+	}
+	
+	std::cout << "file To send: " << fileToSend << std::endl;
 	// getlocation
 	// valid location
 	// findFile
-	// convertFileToString(fileName, body);
+
+		std::ifstream ifs;
+		ifs.open(fileToSend, std::ifstream::in);
+		if (ifs.is_open() == false) {
+			ifs.open("www/errors/404.html", std::ifstream::in);
+			if (ifs.is_open() == false) exit(1);
+		}
+		body.assign((std::istreambuf_iterator<char>(ifs)),
+						std::istreambuf_iterator<char>());
+		ifs.close();
 
 
-	std::string fileName = currentRoute.getFileName(routeParams).erase(0, 1);
-	convertFileToString(fileName, body);
 	responce.setHeader(g_head);
 	responce.setBody(body);
 }

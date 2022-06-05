@@ -14,7 +14,7 @@ void convertFileToString(std::string &configName, std::string &config) {
 	std::ifstream ifs(configName);
 	if (ifs.is_open() == false) {
 		std::cerr << "incorrect file name: " << configName << std::endl;
-		exit(-1);
+		exit(1);
 	}
 	config.assign((std::istreambuf_iterator<char>(ifs)),
 						std::istreambuf_iterator<char>());

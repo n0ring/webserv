@@ -6,6 +6,7 @@ class Responce {
 	private:
 		std::string _header;
 		std::string	_body;
+		// fd to send
 
 	public:
 		Responce(void) {};
