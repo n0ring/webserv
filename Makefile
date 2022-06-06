@@ -36,7 +36,7 @@ fclean			:	clean
 					rm -f $(NAME)
 
 x				:	all
-					./$(NAME)
+					./$(NAME) config.conf
 
 leaks			:	all
 					leaks --atExit -- ./$(NAME)

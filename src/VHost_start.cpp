@@ -121,7 +121,7 @@ void VHost::setServerParams(std::vector<std::string> params) {
 void VHost::setLocationParam(std::vector<std::string> params) {
 	if (params.size() < 2) return ;
 
-	if (params.front().compare("root") == 0) {
+	if (params.front().compare("root") == 0) { // need to del
 		this->locations.back().root = params.back();
 		truncStr(this->locations.back().root);
 		return ;
