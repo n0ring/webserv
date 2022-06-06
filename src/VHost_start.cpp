@@ -123,6 +123,7 @@ void VHost::setLocationParam(std::vector<std::string> params) {
 
 	if (params.front().compare("root") == 0) {
 		this->locations.back().root = params.back();
+		truncStr(this->locations.back().root);
 		return ;
 	}
 	if (params.front().compare("index") == 0) {
@@ -146,6 +147,7 @@ void VHost::validate() {
 	// check for names > 1 if [0] != *
 	// check for file formats != dirs
 	// root has to start with /
+	// valid methods (only 3)
 	bool isValid = true;
 	if (this->_ip.empty()) {
 		isValid = false;
@@ -180,6 +182,4 @@ void VHost::toString() {
 	for (std::vector<location>::size_type i = 0; i < this->locations.size(); i++) {
 		this->locations[i].toString();
 	}
-
-
 }

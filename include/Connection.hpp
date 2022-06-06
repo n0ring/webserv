@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include "Request.hpp"
 #include "Responce.hpp"
+
+
 class Connection {
 	private:
 		int			_listennerFd;
@@ -11,8 +13,6 @@ class Connection {
 		int			_writed;
 		int			_needToWrite;
 		std::string buffer_in;
-		std::string buffer_out;
-		char		*_bufToSend;
 		Request		_request;
 		Responce	_responce;
 

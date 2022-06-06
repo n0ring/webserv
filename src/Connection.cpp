@@ -1,11 +1,9 @@
 #include "Connection.hpp"
 
-#define BUFFER 2048
 
 Connection::Connection(void) : _listennerFd(-42), _fd(-42) {
 	this->_writed = 0;
 	this->_needToWrite = 0;
-	this->_bufToSend = NULL;
 }
 
 Connection::Connection(int listenner, int fd) : _listennerFd(listenner), _fd(fd) {
@@ -16,7 +14,6 @@ Connection::Connection(int listenner, int fd) : _listennerFd(listenner), _fd(fd)
 Connection::Connection(Connection const &other) : _listennerFd(other._listennerFd),
 	_fd(other._fd), _writed(other._writed)
 	{
-
 }
 
 Connection & Connection::operator=(Connection const &other) {
@@ -31,7 +28,7 @@ int Connection::getFd() const {
 	return this->_fd;
 }
 
-bool isRecieveOver(std::string req) {
+bool isRecieveOver(std::string req) { // need to refactor
 	int last = req.length() - 1;
 	if (req.length() < 4) {
 		return false;
@@ -43,9 +40,9 @@ bool isRecieveOver(std::string req) {
 	return false;
 }
 
-int Connection::receiveData() {
+int Connection::receiveData() { 
 	char buf[BUFFER];
-	bzero(buf, BUFFER);
+	bzero(buf, BUFFER); // delete
 	int ret = recv(this->_fd, buf, BUFFER, 0);
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
@@ -63,42 +60,36 @@ int Connection::receiveData() {
 	return ret;
 }
 
-void Connection::prepareResponceToSend() { // prepare responce to send
-	// send it to VHost
-	// VHost::processing request and return responce obj
-	// obj.toString -> buffer_out ->buffToSend
-
+void Connection::prepareResponceToSend() {
 	this->buffer_in.clear();
-	std::cout << "prepare responce data "<< std::endl;
-	this->buffer_out = this->_responce.getHeader() + this->_responce.getBody();
- 	this->_needToWrite = this->buffer_out.length();
-	this->_bufToSend = (char *) this->buffer_out.c_str();
+	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
 }
 
-
 int Connection::sendData() {
-	int bufferSize = this->_needToWrite - this->_writed > BUFFER ? BUFFER 
-		: this->_needToWrite - this->_writed;
-	int ret = send(this->_fd, this->_bufToSend + this->_writed, bufferSize, 0); // MSG_MORE FLAG?
-	// check how its broken on buff 1
-	if (ret == -1) {
+	char	buf[BUFFER];
+	size_t	readyToSend = 0;
+	int		sended;
+	
+	bzero(buf, BUFFER);
+	
+	readyToSend = this->_responce.fillBuffer(buf);
+	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
+	if (sended == -1) {
 		perror("send");
 		return -1;
 	}
-	this->_writed += ret;
+	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) {
 		this->_writed = 0;
 		this->_needToWrite = 0;
-		this->buffer_out.clear();
-		this->_bufToSend = NULL;
+		this->_responce.closeFile();
 		return 0;
 	}
-	return ret;
+	return sended;
 }
 
 
 Connection::~Connection(void) {}
-
 Request& Connection::getRequestObj() {return this->_request; }
 Responce& Connection::getResponceObj() {return this->_responce; }
 int Connection::getListener() const {return this->_listennerFd; }

@@ -5,7 +5,7 @@ std::string g_head = "HTTP/1.1 200 OK\n\
 	Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
 	Server: huyaache/2.2.14 (Win32)\n\
 	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
-	Content-Length: 88\n\
+	Content-Length: 420\n\
 	Content-Type: text/html\n\
 	Connection: Closed\n\n";
 
@@ -77,7 +77,6 @@ void VHost::handleRequest(Request& request, Responce& responce) {
 		return ;
 	}
 	
-	
 	currentLoc =  this->getLocation(routeParams);
 	// validate request (location, method, file)
 	
@@ -86,25 +85,21 @@ void VHost::handleRequest(Request& request, Responce& responce) {
 	} else {
 		fileToSend = currentLoc->getFileName(routeParams);
 		currentLoc->toString();
-
 	}
 	
 	std::cout << "file To send: " << fileToSend << std::endl;
 	// getlocation
-	// valid location
+	// valid location (method)
 	// findFile
 
-		std::ifstream ifs;
-		ifs.open(fileToSend, std::ifstream::in);
-		if (ifs.is_open() == false) {
-			ifs.open("www/errors/404.html", std::ifstream::in);
-			if (ifs.is_open() == false) exit(1);
+
+	// setResponce
+	// openfile//
+	if (!responce.prepareFileToSend(fileToSend.c_str())) {
+		if (responce.prepareFileToSend("www/errors/404.html") == false)  {
+			exit(1);
 		}
-		body.assign((std::istreambuf_iterator<char>(ifs)),
-						std::istreambuf_iterator<char>());
-		ifs.close();
-
-
+	}
 	responce.setHeader(g_head);
-	responce.setBody(body);
+	// responce.setBody(body);
 }

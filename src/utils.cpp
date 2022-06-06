@@ -71,3 +71,12 @@ void removeSemicolon(std::string& s, std::string& line) {
 		exit(-1);
 	}
 }
+
+void truncStr(std::string &s) {
+	if (s[0] == '/') {
+		s.erase(0, 1);
+	}
+	if (s[s.length() - 1] == '/') {
+		s.erase(s.length() - 1);
+	}
+}
