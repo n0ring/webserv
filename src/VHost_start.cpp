@@ -148,6 +148,7 @@ void VHost::validate() {
 	// check for file formats != dirs
 	// root has to start with /
 	// valid methods (only 3)
+	// not same ports
 	bool isValid = true;
 	if (this->_ip.empty()) {
 		isValid = false;

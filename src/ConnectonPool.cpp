@@ -38,19 +38,26 @@ void	ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter,
 	int ret;
 	if (this->_pool.count(iter->fd) == 0 && viHost.getListener() == -1) {
 		std::cerr << "This should never happend" << std::endl;
-		// do something here for delete vhost 
+		// do something here for delete connection 
 	}
+
 	if (iter->revents == POLLIN) {
-		ret = this->_pool[iter->fd].receiveData(); // check isExist? 
-		if (ret == 0) {
-			std::cout << "requst received" << std::endl;
+		// handle 
+		ret = this->_pool[iter->fd].receiveData();
+		if (ret < 0) {
+			// delete from pool? 
+		}
+		if (ret == 0) { // end of transfer
+			// handle header.
 			viHost.handleRequest(this->_pool[iter->fd].getRequestObj(),
 				this->_pool[iter->fd].getResponceObj());
 			this->_pool[iter->fd].prepareResponceToSend();
 			iter->events = POLLOUT;
 		}
-		if (ret < 0) {
-			// delete from pool? 
+		if (ret > 0) { // transfer in process
+			if (this->_pool[iter->fd].getRequestObj().getMethod() == "POST") {
+				// set destination file or buffer.
+			}
 		}
 	}
 	if (iter->revents == POLLOUT) {

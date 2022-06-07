@@ -28,7 +28,11 @@ void Request::parseStr(std::string reqStr) {
 std::string & Request::getRoute(void)  { return this->_route; }
 
 
-
+void Request::resetObj(void) {
+	this->_method.clear();
+	this->_route.clear();
+	this->_ip.clear();
+}
 
 
 // GET /something.jpg HTTP/1.1 

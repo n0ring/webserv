@@ -40,10 +40,15 @@ bool isRecieveOver(std::string req) { // need to refactor
 	return false;
 }
 
-int Connection::receiveData() { 
+int Connection::receiveData() {  // viHost
 	char buf[BUFFER];
 	bzero(buf, BUFFER); // delete
 	int ret = recv(this->_fd, buf, BUFFER, 0);
+
+
+// if method == POST and saveMode == file 
+// on every iter send to file. 
+
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -53,7 +58,13 @@ int Connection::receiveData() {
 		return 0;
 	}
 	this->buffer_in.append(buf, ret);
-	if (isRecieveOver(this->buffer_in)) {
+	std::cout << this->buffer_in << std::endl;
+	// if header is not set
+	// handle header (try to set header)
+	// if header set
+		// handle body
+		// fd of buf
+	if (ret < BUFFER || isRecieveOver(this->buffer_in)) {
 		this->_request.parseStr(this->buffer_in);
 		return 0;
 	}
@@ -62,6 +73,7 @@ int Connection::receiveData() {
 
 void Connection::prepareResponceToSend() {
 	this->buffer_in.clear();
+	this->_responce.createHeader();
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
 }
 
@@ -82,7 +94,8 @@ int Connection::sendData() {
 	if (this->_writed >= this->_needToWrite) {
 		this->_writed = 0;
 		this->_needToWrite = 0;
-		this->_responce.closeFile();
+		this->_request.resetObj();
+		this->_responce.resetObj();
 		return 0;
 	}
 	return sended;

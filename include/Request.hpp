@@ -18,5 +18,5 @@ class Request {
 		void parseStr(std::string reqStr);
 
 		std::string &getRoute(void);
-
+		void resetObj(void);
 };

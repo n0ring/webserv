@@ -1,13 +1,7 @@
 #include "VHost.hpp"
 
 #define ROUTE_FIRST 1
-std::string g_head = "HTTP/1.1 200 OK\n\
-	Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
-	Server: huyaache/2.2.14 (Win32)\n\
-	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
-	Content-Length: 420\n\
-	Content-Type: text/html\n\
-	Connection: Closed\n\n";
+
 
 int VHost::getListener(void) const {
 	return this->_listener;
@@ -77,11 +71,17 @@ void VHost::handleRequest(Request& request, Responce& responce) {
 		return ;
 	}
 	
+
+// if some mistakes on this level setResponceCode(error) return;
+// step by step processing request and fill responceObj
+
 	currentLoc =  this->getLocation(routeParams);
 	// validate request (location, method, file)
 	
 	if (currentLoc == this->locations.end()) {
 		fileToSend.append("www/errors/404.html");
+		responce.setCode(404);
+		return ;
 	} else {
 		fileToSend = currentLoc->getFileName(routeParams);
 		currentLoc->toString();
@@ -96,10 +96,11 @@ void VHost::handleRequest(Request& request, Responce& responce) {
 	// setResponce
 	// openfile//
 	if (!responce.prepareFileToSend(fileToSend.c_str())) {
+		responce.setCode(404);
+		return ;
 		if (responce.prepareFileToSend("www/errors/404.html") == false)  {
 			exit(1);
 		}
 	}
-	responce.setHeader(g_head);
-	// responce.setBody(body);
+	responce.setCode(200);
 }

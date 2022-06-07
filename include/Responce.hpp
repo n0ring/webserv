@@ -3,7 +3,8 @@
 #include <iostream> // string io
 #include <fstream> // ifstream
 
-#define BUFFER 2048
+#define BUFFER 2028
+
 
 class Responce {
 	private:
@@ -14,18 +15,29 @@ class Responce {
 		size_t			headerSended;
 		size_t			bodySended;
 
+		int				code;
+		int				contentLength;
+		std::string		contentType;
+
+
 	public:
 		Responce(void) : headerSended(0), bodySended(0) {};
 		~Responce(void) {};
 
 
 		void		setHeader(std::string header);
-
+		
 		bool prepareFileToSend(const  char *fileName);
 		
+		void setCode(int c);
+
 		size_t getFileSize();
 		size_t getHeaderSize();
 
 		size_t	fillBuffer(char *buf);
-		void	closeFile();
+		void	resetObj();
+
+
+		void	createHeader();
 };
+
