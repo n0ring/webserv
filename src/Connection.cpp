@@ -59,17 +59,32 @@ int Connection::receiveData() {  // viHost
 	}
 	this->buffer_in.append(buf, ret);
 	std::cout << this->buffer_in << std::endl;
+
 	// if header is not set
-	// handle header (try to set header)
+		// handle header (try to set header)
 	// if header set
+			// vHostObj.processHeader()check for rights methods d   ? fd or buffer
 		// handle body
 		// fd of buf
+
+
+
+	// if error from header. stop? 
+	// send status from here to connect pool for manage input output.
 	if (ret < BUFFER || isRecieveOver(this->buffer_in)) {
 		this->_request.parseStr(this->buffer_in);
 		return 0;
 	}
 	return ret;
 }
+
+// problem: cant use buffer on GET DELETE POST (can be file)
+// if post will be with file. need to save it into new file
+// for this need to parse and process header 
+
+// options: read for one byte till get a \n. and after (-----)
+// get handler and process it -+-+-+-+-+
+// 
 
 void Connection::prepareResponceToSend() {
 	this->buffer_in.clear();
