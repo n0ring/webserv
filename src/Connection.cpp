@@ -1,18 +1,14 @@
+#include <unistd.h>
 #include "Connection.hpp"
 
-
-Connection::Connection(void) : _listennerFd(-42), _fd(-42) {
-	this->_writed = 0;
-	this->_needToWrite = 0;
-}
-
-Connection::Connection(int listenner, int fd) : _listennerFd(listenner), _fd(fd) {
+Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenner),
+				_fd(fd), _vHost(vH) {
 	this->_writed = 0;
 	this->_needToWrite = 0;
 }
 
 Connection::Connection(Connection const &other) : _listennerFd(other._listennerFd),
-	_fd(other._fd), _writed(other._writed)
+	_fd(other._fd),  _vHost(other._vHost), _writed(other._writed)
 	{
 }
 
@@ -20,6 +16,7 @@ Connection & Connection::operator=(Connection const &other) {
 	if (this != &other) {
 		this->_listennerFd = other._listennerFd;
 		this->_fd = other._fd;
+		this->_vHost = other._vHost;
 	}
 	return *this;
 }
@@ -43,36 +40,38 @@ bool isRecieveOver(std::string req) { // need to refactor
 int Connection::receiveData() {  // viHost
 	char buf[BUFFER];
 	bzero(buf, BUFFER); // delete
-	int ret = recv(this->_fd, buf, BUFFER, 0);
-
-
-// if method == POST and saveMode == file 
-// on every iter send to file. 
-
+	int ret;
+	
+	if (false) {
+		// save buffer to file. only with POST and file
+	}
+	else {
+		ret = recv(this->_fd, buf, BUFFER, 0);
+		this->buffer_in.append(buf, ret);
+	}
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
 		return -1;
 	}
-	if (ret == 0) {
-		return 0;
+	if (this->_request.getHeader().empty()) {
+			this->_request.setHeader(this->buffer_in);
 	}
-	this->buffer_in.append(buf, ret);
-	std::cout << this->buffer_in << std::endl;
-
-	// if header is not set
-		// handle header (try to set header)
-	// if header set
-			// vHostObj.processHeader()check for rights methods d   ? fd or buffer
-		// handle body
-		// fd of buf
-
-
-
-	// if error from header. stop? 
-	// send status from here to connect pool for manage input output.
-	if (ret < BUFFER || isRecieveOver(this->buffer_in)) {
-		this->_request.parseStr(this->buffer_in);
+	if (this->_request.getHeader().empty() == false
+		&& this->_request.getCurrentCode() == 0) {
+		this->_vHost.processHeader(this->_request);
+	}
+	// if header found and not handled by vHost
+		// vHostObj.processHeader()check for rights methods d   ? fd or buffer
+				// where to save next package
+	//
+	// save body to buffer_in || fileToSave
+	
+	if (this->_request.getCurrentCode() >= 400 
+		|| ret < BUFFER
+		|| isRecieveOver(this->buffer_in)) {
+		this->_vHost.setResponce(this->_request, this->_responce);
+		this->prepareResponceToSend();
 		return 0;
 	}
 	return ret;
@@ -107,10 +106,13 @@ int Connection::sendData() {
 	}
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) {
+		this->_responce.resetObj();
+		if (this->_request.getCurrentCode() >= 400) {
+			return -1;
+		}
 		this->_writed = 0;
 		this->_needToWrite = 0;
 		this->_request.resetObj();
-		this->_responce.resetObj();
 		return 0;
 	}
 	return sended;

@@ -11,11 +11,17 @@
 		Welcome to The Dark Forest!
 	</h1>
 	
-	<a href="udp.png"><img src="three_body.jpeg" alt=""></a>
-	<img src="udp.png" alt="">
+	<!-- <a href="udp.png"><img src="three_body.jpeg" alt=""></a>
+	<img src="udp.png" alt=""> -->
 	<!-- <img src="stars.jpg" alt=""> -->
-	<form action="POST">
-		<button>send</button>
-	</form>
+	<form method="post" enctype="multipart/form-data">
+		<div>
+		  <label for="file">Choose file to upload</label>
+		  <input type="file" id="file" name="file" multiple>
+		</div>
+		<div>
+		  <button>Submit</button>
+		</div>
+	   </form>
 </body>
 </html>

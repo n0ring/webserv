@@ -46,7 +46,7 @@ void	Server::start(std::string configName) {
 	}
 	while (readyForWork) { //////////// !!!!!!!!
 		this->nfds = this->fds.size();
-		// showVector(this->fds, *this, this->nfds);
+		showVector(this->fds, *this, this->nfds);
 		if (poll(&(this->fds[0]), this->nfds, NO_TIMEOUT) < 0 ) {
 			return perror("poll");
 		}
@@ -64,8 +64,10 @@ void	Server::start(std::string configName) {
 				this->ConnectionPool.onClientConnect(this->getVHost(it->fd), this->fds, it);
 			}
 			else {
-				int vHostFd = this->ConnectionPool.getConnectionListener(it->fd);
-				this->ConnectionPool.onClientDataExchange(it, this->getVHost(vHostFd));
+				if (this->ConnectionPool.onClientDataExchange(it) == -1) {
+					this->ConnectionPool.onClientDisconnect(it, this->fds);
+					continue;
+				}
 			}
 			it++;
 		}

@@ -18,9 +18,6 @@ class ConnectionPool {
 		void	onClientConnect(VHost &serverConfig, std::vector<pollfd>& fds,
 							std::vector<pollfd>::iterator& iter);
 		void	onClientDisconnect(std::vector<pollfd>::iterator& iter, std::vector<pollfd> &fds);
-		void	onClientDataExchange(std::vector<pollfd>::iterator& iter,
-									VHost &vHost);
+		int		onClientDataExchange(std::vector<pollfd>::iterator& iter);
 		void	onClientError(int event);
-
-		int		getConnectionListener(int fd);
 };

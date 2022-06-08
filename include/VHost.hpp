@@ -47,6 +47,12 @@ class location {
 			return false;
 		}
 
+		bool isMethodAllow(std::string& method) {
+			std::vector<std::string>::iterator it;
+			it = std::find(this->methods.begin(), this->methods.end(), method);
+			return it != this->methods.end();
+		}
+
 		std::string getFileName(std::vector<std::string> &params) {
 			std::string fileName;
 			if (params.size() == 3) { // has file  root + dir 
@@ -117,7 +123,10 @@ class VHost {
 		// procccccesssssss..
 		int			getListener(void) const;
 		int			acceptNewConnection();
-		void		handleRequest(Request& request, Responce& responce);
+
+		void processHeader(Request& request);
+
+		void		setResponce(Request& request, Responce& responce);
 		locations_iter	getLocation(std::vector<std::string>& params);
 
 

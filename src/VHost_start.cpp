@@ -133,8 +133,8 @@ void VHost::setLocationParam(std::vector<std::string> params) {
 	if (params.front().compare("methods") == 0) {
 		for (size_t i = 1; i < params.size(); i++) {
 			this->locations.back().methods.push_back(params[i]);
-		return ;
 		}
+		return ;
 	}
 	if (params.front().compare("autoindex") == 0) {
 		this->locations.back().autoindex = params.back();

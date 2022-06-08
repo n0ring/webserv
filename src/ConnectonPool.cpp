@@ -6,13 +6,13 @@ ConnectionPool::~ConnectionPool(void) {
 	this->_pool.clear();
 }
 
-void	ConnectionPool::onClientConnect(VHost& serverConfig, std::vector<pollfd>& fds,
+void	ConnectionPool::onClientConnect(VHost& vHost, std::vector<pollfd>& fds,
 			std::vector<pollfd>::iterator& iter) {
 	int newSocket = 0;
 	int pos = std::distance(fds.begin(), iter);
 
 	while (newSocket != -1) {
-		newSocket = serverConfig.acceptNewConnection();
+		newSocket = vHost.acceptNewConnection();
 		if (newSocket <= 0) {
 			if (errno != EWOULDBLOCK) {
 				perror("  accept() failed");
@@ -20,57 +20,48 @@ void	ConnectionPool::onClientConnect(VHost& serverConfig, std::vector<pollfd>& f
 			break ;
 		}
 		fds.push_back(make_fd(newSocket, POLLIN));
-		this->_pool.insert(std::make_pair(newSocket, Connection(serverConfig.getListener(), newSocket)));
+		this->_pool.insert(std::make_pair(newSocket, Connection( vHost.getListener(), newSocket, vHost )));
 		std::cout << "connect added: " << this->_pool.size() << std::endl;
 	}
 	iter = fds.begin() + pos; // need to update iter because realloc in vector 
 }
 
 void	ConnectionPool::onClientDisconnect(std::vector<pollfd>::iterator& iter,
-			std::vector<pollfd> &fds) { // take iterator &
+			std::vector<pollfd> &fds) { // take iterator &make 
 	close(iter->fd);
 	this->_pool.erase(iter->fd);
 	iter = fds.erase(iter);
 }
 
-void	ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter,
-												VHost& viHost) {
+int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 	int ret;
-	if (this->_pool.count(iter->fd) == 0 && viHost.getListener() == -1) {
-		std::cerr << "This should never happend" << std::endl;
-		// do something here for delete connection 
+	std::map<int, Connection>::iterator it_connection;
+	it_connection = this->_pool.find(iter->fd);
+	if (it_connection == this->_pool.end()) {
+		std::cout << "connetion not found for some reasons..." << std::endl;
+		return -1;
 	}
-	// end of receive 
-	// receive continue
 	if (iter->revents == POLLIN) {
 		// handle 
-		ret = this->_pool[iter->fd].receiveData();
+		ret = it_connection->second.receiveData();
 		if (ret < 0) {
-			// delete from pool? 
+			
 		}
-		if (ret == 0) { // end of transfer
-			// prepare responce.
-			viHost.handleRequest(this->_pool[iter->fd].getRequestObj(),
-				this->_pool[iter->fd].getResponceObj());
-			this->_pool[iter->fd].prepareResponceToSend();
+		if (ret == 0) {
 			iter->events = POLLOUT;
 		}
 	}
 	if (iter->revents == POLLOUT) {
-		ret = this->_pool[iter->fd].sendData();
+		ret = it_connection->second.sendData();
 		if (ret == 0) {
 			iter->events = POLLIN;
+			std::cout << "send is over\n";
 		}
 		if (ret == -1) {
-			// delete from pool?
+			std::cout << "send 405 is over\n";
+			return -1;
 		}
 	}
 	iter->revents = 0;
-}
-
-int ConnectionPool::getConnectionListener(int fd) {
-	if (this->_pool.count(fd) == 0) {
-		return -1;
-	}
-	return this->_pool[fd].getListener();
+	return 0;
 }

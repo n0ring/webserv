@@ -53,54 +53,43 @@ VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams)
 	return it;
 }
 
-
-
-void VHost::handleRequest(Request& request, Responce& responce) {
+void VHost::processHeader(Request& request) {
 	std::vector<std::string>	routeParams;
-	std::string					body;
 	VHost::locations_iter		currentLoc;
-	std::string					fileToSend;
 
 	setRouteParams(request.getRoute(), routeParams);
-
-	for (int i = 0; i < (int) routeParams.size(); i++) {
-		std::cout << "params " << i << " " << routeParams[i] << std::endl;
-	}
-	if (routeParams.empty()) {
-		std::cout << RED << "This shouldn't have happened. Call your admin (or mom) and run. And God help us\n" << RESET;
-		return ;
-	}
-	
-
-// if some mistakes on this level setResponceCode(error) return;
-// step by step processing request and fill responceObj
-
 	currentLoc =  this->getLocation(routeParams);
-	// validate request (location, method, file)
 	
 	if (currentLoc == this->locations.end()) {
-		fileToSend.append("www/errors/404.html");
-		responce.setCode(404);
+		request.setCurrentCode(404);
+		std::cout << "location not found " << std::endl; 
 		return ;
-	} else {
-		fileToSend = currentLoc->getFileName(routeParams);
-		currentLoc->toString();
 	}
-	
-	std::cout << "file To send: " << fileToSend << std::endl;
-	// getlocation
-	// valid location (method)
-	// findFile
+	if (currentLoc->isMethodAllow(request.getMethod()) == false) {
+		request.setCurrentCode(405);
+		std::cout << "method not allowed " << std::endl; 
+		return ;
+	}
+	request.setFileToSend(currentLoc->getFileName(routeParams));
+
+	request.setCurrentCode(200);
+}
 
 
-	// setResponce
-	// openfile//
-	if (!responce.prepareFileToSend(fileToSend.c_str())) {
+void VHost::setResponce(Request& request, Responce& responce) {
+	std::string					body;
+	std::string					fileToSend;
+
+	if (request.getCurrentCode() >= 400) {
+		request.setFileToSend("www/errors/404.html");
+	}
+	if (!responce.prepareFileToSend(request.getFileToSend().c_str())) {
 		responce.setCode(404);
 		return ;
 		if (responce.prepareFileToSend("www/errors/404.html") == false)  {
 			exit(1);
 		}
 	}
-	responce.setCode(200);
+	std::cout << "file To send: " << request.getFileToSend()  << std::endl;
+	responce.setCode(request.getCurrentCode());
 }
