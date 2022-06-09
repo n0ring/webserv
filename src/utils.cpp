@@ -44,8 +44,24 @@ std::vector<std::string> sPPlit(std::string s) {
 		res.push_back(s.substr(start, end - start));
 		start = end + 1;
 	}
-
 	return res;
+}
+
+std::pair<std::string, std::string> splitInPair(std::string &line) {
+	size_t divider = line.find(" ");
+	std::string first, second;
+	if (divider == std::string::npos) {
+		return std::make_pair("", "");
+	}
+	first = line.substr(0, divider);
+	second = line.substr(divider + 1);
+	if (first[first.length() - 1] == ':') {
+		first.erase(first.end() - 1);
+	}
+	if (second[second.length() - 1] == '\n') {
+		second.erase(second.end() - 1);
+	}
+	return std::make_pair(first, second);
 }
 
 std::string getLine(std::string& str, size_t& startPos) {

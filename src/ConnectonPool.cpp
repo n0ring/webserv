@@ -51,14 +51,14 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 			iter->events = POLLOUT;
 		}
 	}
-	if (iter->revents == POLLOUT) {
+	else if (iter->revents == POLLOUT) {
 		ret = it_connection->second.sendData();
 		if (ret == 0) {
 			iter->events = POLLIN;
 			std::cout << "send is over\n";
 		}
 		if (ret == -1) {
-			std::cout << "send 405 is over\n";
+			std::cout << "send error is over\n";
 			return -1;
 		}
 	}

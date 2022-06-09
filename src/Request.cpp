@@ -1,35 +1,35 @@
 #include "Request.hpp"
 
 
-Request::Request(Request const & other) : _method(other._method),
-			_route(other._route), _ip(other._ip), _currentCode(0) { }
+Request::Request(Request const & other) : _ip(other._ip), _currentCode(0) { }
 
 
 Request & Request::operator=(Request const &other) {
 	if (this != &other) {
-		this->_method = other._method;
 		this->_ip = other._ip;
-		this->_route = other._route;
 	}
 	return *this;
 }
 
 
-std::string & Request::getRoute(void)  { return this->_route; }
-
+std::string& Request::getParamByName(std::string paramName) {
+	return this->_headerParams[paramName];
+}
 
 void Request::resetObj(void) {
-	this->_method.clear();
-	this->_route.clear();
 	this->_ip.clear();
 	this->_header.clear();
 	this->_fileToSave= -1;
 	this->_currentCode = 0;
+	this->_headerParams.clear();
 }
 
 std::string& Request::getHeader(void) { return this->_header; }
 
 void Request::setHeader(std::string& buf_in) {
+	if (this->_header.empty() == false) {
+		return ;
+	}
 	size_t endHeader = buf_in.find(END_OF_HEADER);
 	if (endHeader != std::string::npos) {
 		this->_header = buf_in.substr(0, endHeader + 1);
@@ -44,12 +44,21 @@ void Request::parseHeader() {
 	std::vector<std::string>	params;
 
 	params = sPPlit(getLine(this->_header, start));
-	this->_method = params[0];
-	this->_route = params[1];
-	std::cout << "request: " << this->_method << " " << this->_route << std::endl;
+	if (params.size() < 3) {
+		this->_currentCode = 505;
+		return ;
+	}
+	this->_headerParams.insert(std::make_pair("Method", params[0]));
+	this->_headerParams.insert(std::make_pair("Route", params[1]));
+	if (params[2].compare(SUPPORTED_PROTOCOL)) {
+		this->_currentCode = 505;
+		return ;
+	}
+	while (start < this->_header.length()) {
+		line = getLine(this->_header, start);
+		this->_headerParams.insert(splitInPair(line));
+	}
 }
-
-
 
 // GET / HTTP/1.1 
 // Host: localhost:8080

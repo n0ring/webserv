@@ -1,19 +1,23 @@
 #pragma once 
 
 #include <iostream>
+#include <map>
 #include "utils.hpp" // sPPlit getline
 
 #define END_OF_HEADER "\r\n\r\n"
 #define END_OF_HEADER_SHIFT 4
+#define SUPPORTED_PROTOCOL "HTTP/1.1"
 class Request {
 	private:
-		std::string _method;
-		std::string	_route; // (location)
 		std::string	_ip;
 
 		std::string	_header;
+		std::map<std::string, std::string> _headerParams;
+
+
 		std::string _fileToSend;
 		int			_fileToSave;
+
 
 		int			_currentCode;
 
@@ -27,19 +31,17 @@ class Request {
 		Request(Request const &other);
 		Request &operator=(Request const &other);
 
-
-		std::string &getRoute(void);
-
 		std::string& getHeader(void);
 		void	setHeader(std::string& buf_in);
 		void	parseHeader();
-		void resetObj(void);
+		void	resetObj(void);
 
 		std::string& getFileToSend() { return this->_fileToSend; }
-		void setFileToSend(std::string fileName) { 
+		void setFileNameToSend(std::string fileName) { 
 			this->_fileToSend = fileName;
 		}
 		void setCurrentCode(int code) { this->_currentCode = code; }
 		int getCurrentCode() { return  this->_currentCode; }
-		std::string& getMethod(void) { return this->_method; }
+
+		std::string& getParamByName(std::string paramName);
 };

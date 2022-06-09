@@ -3,7 +3,7 @@
 #include <iostream> // string io
 #include <fstream> // ifstream
 
-#define BUFFER 200000
+#define BUFFER 2048
 
 
 class Responce {

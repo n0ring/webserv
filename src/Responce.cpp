@@ -62,8 +62,7 @@ void Responce::createHeader(void) {
 	this->_header.append(" ");
 	this->_header.append(std::to_string(this->code));
 	this->_header.append(" ");
-	if (this->code != 404)
-		this->_header.append("OK");
+	this->_header.append("OK");
 	this->_header.append("\n");
 
 	this->_header.append("Date: Mon, 27 Jul 2009 12:28:53 GMT\n\

@@ -14,3 +14,4 @@ void removeSemicolon(std::string& s, std::string& line);
 std::vector<std::string> sPPlit(std::string s);
 std::string getLine(std::string& str, size_t& startPos);
 void truncStr(std::string &s);
+std::pair<std::string, std::string> splitInPair(std::string &line);

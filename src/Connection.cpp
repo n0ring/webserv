@@ -25,7 +25,7 @@ int Connection::getFd() const {
 	return this->_fd;
 }
 
-bool isRecieveOver(std::string req) { // need to refactor
+bool isRecieveOver(std::string req) { // need to refactor or delete
 	int last = req.length() - 1;
 	if (req.length() < 4) {
 		return false;
@@ -37,16 +37,20 @@ bool isRecieveOver(std::string req) { // need to refactor
 	return false;
 }
 
+/*
+During receive data need to set and process header. 
+after pricess header set params for receive next data pack
+(place to save, continue or not)
+*/
 int Connection::receiveData() {  // viHost
 	char buf[BUFFER];
-	bzero(buf, BUFFER); // delete
 	int ret;
 	
+	ret = recv(this->_fd, buf, BUFFER, 0);
 	if (false) {
-		// save buffer to file. only with POST and file
+		// save buffer to file. only with POST and file content
 	}
 	else {
-		ret = recv(this->_fd, buf, BUFFER, 0);
 		this->buffer_in.append(buf, ret);
 	}
 	if (ret == -1) {
@@ -54,36 +58,20 @@ int Connection::receiveData() {  // viHost
 		perror("recv");
 		return -1;
 	}
-	if (this->_request.getHeader().empty()) {
-			this->_request.setHeader(this->buffer_in);
-	}
-	if (this->_request.getHeader().empty() == false
+	this->_request.setHeader(this->buffer_in);
+	if (this->_request.getHeader().empty() == false 
 		&& this->_request.getCurrentCode() == 0) {
-		this->_vHost.processHeader(this->_request);
+			this->_vHost.processHeader(this->_request);
 	}
-	// if header found and not handled by vHost
-		// vHostObj.processHeader()check for rights methods d   ? fd or buffer
-				// where to save next package
-	//
-	// save body to buffer_in || fileToSave
-	
 	if (this->_request.getCurrentCode() >= 400 
 		|| ret < BUFFER
 		|| isRecieveOver(this->buffer_in)) {
-		this->_vHost.setResponce(this->_request, this->_responce);
-		this->prepareResponceToSend();
+			this->_vHost.setResponce(this->_request, this->_responce);
+			this->prepareResponceToSend();
 		return 0;
 	}
 	return ret;
 }
-
-// problem: cant use buffer on GET DELETE POST (can be file)
-// if post will be with file. need to save it into new file
-// for this need to parse and process header 
-
-// options: read for one byte till get a \n. and after (-----)
-// get handler and process it -+-+-+-+-+
-// 
 
 void Connection::prepareResponceToSend() {
 	this->buffer_in.clear();
@@ -105,14 +93,14 @@ int Connection::sendData() {
 		return -1;
 	}
 	this->_writed += sended;
-	if (this->_writed >= this->_needToWrite) {
+	if (this->_writed >= this->_needToWrite) { // end of sending 
 		this->_responce.resetObj();
-		if (this->_request.getCurrentCode() >= 400) {
-			return -1;
-		}
 		this->_writed = 0;
 		this->_needToWrite = 0;
 		this->_request.resetObj();
+		if (this->_request.getCurrentCode() >= 400) {
+			return -1;
+		}
 		return 0;
 	}
 	return sended;
