@@ -29,7 +29,7 @@ void setRouteParams(std::string& route, std::vector<std::string>& params) {
 // 1 param - only dir
 
 // check for file ext - first loop
-// check for dirs - sec loop if after first end
+// check for dirs - sec loop if after first not found file ext
 VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams) {
 	std::vector<location>::iterator it = this->locations.begin();
 	std::vector<location>::iterator ite = this->locations.end();
@@ -72,28 +72,6 @@ void VHost::processHeader(Request& request) {
 
 // set actions for every method? 
 
-
 	request.setFileNameToSend(currentLoc->getFileName(inputRouteParams));
 	request.setCurrentCode(200);
-}
-
-
-void VHost::setResponce(Request& request, Responce& responce) {
-	std::string					body;
-	std::string					fileToSend;
-
-	if (request.getCurrentCode() == 0) {
-		std::cout << "HTTP not found " << std::endl; 
-		request.setCurrentCode(505);
-	}
-	if (request.getCurrentCode() >= 400) { // set erorr page
-		request.setFileNameToSend("www/errors/404.html");
-	}
-	if (!responce.prepareFileToSend(request.getFileToSend().c_str())) {
-		std::cerr << "file not open" << std::endl;
-		responce.setCode(404);
-		responce.prepareFileToSend("www/errors/404.html"); // if can't open set default
-	}
-	std::cout << "file To send: " << request.getFileToSend()  << std::endl;
-	responce.setCode(request.getCurrentCode());
 }

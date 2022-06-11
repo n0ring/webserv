@@ -34,4 +34,5 @@ class Connection {
 		Request&	getRequestObj();
 		Responce&	getResponceObj();
 		VHost&		getVhost(void) { return this->_vHost; }
+		void		setResponce();
 };

@@ -126,7 +126,6 @@ class VHost {
 
 		void processHeader(Request& request);
 
-		void		setResponce(Request& request, Responce& responce);
 		locations_iter	getLocation(std::vector<std::string>& params);
 
 

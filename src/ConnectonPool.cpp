@@ -53,6 +53,7 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 		}
 	}
 	else if (iter->revents == POLLOUT) {
+		// prepare data (start cgi if need. set responce)
 		ret = it_connection->second.sendData();
 		if (ret == 0) {
 			iter->events = POLLIN;

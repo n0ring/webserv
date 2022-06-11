@@ -39,7 +39,7 @@ bool isRecieveOver(std::string req) { // need to refactor or delete
 
 /*
 During receive data need to set and process header. 
-after pricess header set params for receive next data pack
+after process header set params for receive next data pack
 (place to save, continue or not)
 */
 int Connection::receiveData() {  // viHost
@@ -59,19 +59,34 @@ int Connection::receiveData() {  // viHost
 		return -1;
 	}
 	this->_request.setHeader(this->buffer_in);
-	if (this->_request.getHeader().empty() == false 
-		&& this->_request.getCurrentCode() == 0) {
+	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
 			this->_vHost.processHeader(this->_request);
 	}
-	if (this->_request.getCurrentCode() >= 400 
-		|| ret < BUFFER
-		|| isRecieveOver(this->buffer_in)) {
-			this->_vHost.setResponce(this->_request, this->_responce);
-			this->prepareResponceToSend();
+	if (_request.getCurrentCode() >= 400 || ret < BUFFER || isRecieveOver(buffer_in)) {
+		this->setResponce();
+		this->prepareResponceToSend();
 		return 0;
 	}
 	return ret;
 }
+
+void	Connection::setResponce() {
+	if (this->_request.getCurrentCode() == 0) {
+		std::cout << "HTTP not found " << std::endl; 
+		this->_request.setCurrentCode(505);
+	}
+	if (this->_request.getCurrentCode() >= 400) { // set erorr page
+		this->_request.setFileNameToSend("www/errors/404.html");
+	}
+	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend().c_str())) {
+		std::cerr << "file not open" << std::endl;
+		this->_responce.setCode(404);
+		this->_responce.prepareFileToSend("www/errors/404.html"); // if can't open set default
+	}
+	std::cout << "file To send: " << this->_request.getFileToSend()  << std::endl;
+	this->_responce.setCode(this->_request.getCurrentCode());
+}
+
 
 void Connection::prepareResponceToSend() {
 	this->buffer_in.clear();
@@ -85,7 +100,8 @@ int Connection::sendData() {
 	int		sended;
 	
 	bzero(buf, BUFFER);
-	
+
+	// check here is cgi is over
 	readyToSend = this->_responce.fillBuffer(buf);
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
 	if (sended == -1) {

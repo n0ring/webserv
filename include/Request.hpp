@@ -14,13 +14,11 @@ class Request {
 		std::string	_header;
 		std::map<std::string, std::string> _headerParams;
 
-
 		std::string _fileToSend;
 		int			_fileToSave;
 
-
 		int			_currentCode;
-
+		bool		_isCGI;
 	
 	public:
 		Request(void) {
