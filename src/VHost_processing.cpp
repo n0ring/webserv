@@ -54,13 +54,11 @@ VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams)
 }
 
 void VHost::processHeader(Request& request) {
-	std::vector<std::string>	routeParams;
+	std::vector<std::string>	inputRouteParams;
 	VHost::locations_iter		currentLoc;
 
-	// setRouteParams(request.getRoute(), routeParams);
-	setRouteParams(request.getParamByName("Route"), routeParams);
-	currentLoc =  this->getLocation(routeParams);
-	
+	setRouteParams(request.getParamByName("Route"), inputRouteParams);
+	currentLoc =  this->getLocation(inputRouteParams);
 	if (currentLoc == this->locations.end()) {
 		request.setCurrentCode(404);
 		std::cout << "location not found " << std::endl; 
@@ -71,7 +69,11 @@ void VHost::processHeader(Request& request) {
 		std::cout << "method not allowed " << std::endl; 
 		return ;
 	}
-	request.setFileNameToSend(currentLoc->getFileName(routeParams));
+
+// set actions for every method? 
+
+
+	request.setFileNameToSend(currentLoc->getFileName(inputRouteParams));
 	request.setCurrentCode(200);
 }
 
@@ -80,15 +82,17 @@ void VHost::setResponce(Request& request, Responce& responce) {
 	std::string					body;
 	std::string					fileToSend;
 
-	if (request.getCurrentCode() >= 400) {
+	if (request.getCurrentCode() == 0) {
+		std::cout << "HTTP not found " << std::endl; 
+		request.setCurrentCode(505);
+	}
+	if (request.getCurrentCode() >= 400) { // set erorr page
 		request.setFileNameToSend("www/errors/404.html");
 	}
 	if (!responce.prepareFileToSend(request.getFileToSend().c_str())) {
 		std::cerr << "file not open" << std::endl;
 		responce.setCode(404);
-		if (responce.prepareFileToSend("www/errors/404.html") == false)  {
-			exit(1);
-		}
+		responce.prepareFileToSend("www/errors/404.html"); // if can't open set default
 	}
 	std::cout << "file To send: " << request.getFileToSend()  << std::endl;
 	responce.setCode(request.getCurrentCode());

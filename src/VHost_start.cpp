@@ -99,7 +99,6 @@ void VHost::setServerParams(std::vector<std::string> params) {
 		std::cout << "incorrect paramr pair" << std::endl;
 		return ;
 	}
-	
 	if (params.front().compare("host") == 0) {
 		this->_ip = params.back();
 		return ;

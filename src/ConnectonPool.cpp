@@ -45,7 +45,8 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 		// handle 
 		ret = it_connection->second.receiveData();
 		if (ret < 0) {
-			
+			std::cout << "receive data error\n";
+			return -1;
 		}
 		if (ret == 0) {
 			iter->events = POLLOUT;
