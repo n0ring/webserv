@@ -16,7 +16,6 @@ class Connection {
 		std::string buffer_in;
 		Request		_request;
 		Responce	_responce;
-		bool		_isRequestHandled;
 
 		// fileToSave. 
 

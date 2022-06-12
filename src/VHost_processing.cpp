@@ -1,7 +1,7 @@
 #include "VHost.hpp"
 
+#include <unistd.h> // access
 #define ROUTE_FIRST 1
-
 
 int VHost::getListener(void) const {
 	return this->_listener;
@@ -53,9 +53,82 @@ VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams)
 	return it;
 }
 
+void setPathToApp(std::string& pathToApp, std::string& fileToExec) {
+	std::ifstream	ifs;
+	char		c;
+	std::string	line;
+
+	ifs.open(fileToExec);
+	if (!ifs.is_open()) {
+		std::cout << "cgi file not open" << std::endl;
+		return ;
+	}
+	while (!ifs.eof()) {
+		c = ifs.get();
+		if (c == '\n') {
+			if (line.find("#!") == std::string::npos) {
+				line.clear();
+				continue;
+			}
+			break;
+		}
+		else {
+			line.push_back(c);
+		}
+	}
+	if (line.find("#!") != std::string::npos) {
+		pathToApp = line.substr(line.find("/"));
+	}
+}
+
+void setEnv(char **env) {
+	env[0] = (char *) std::string("PATH=").append(getenv("PATH")).c_str();
+	env[1] = NULL;
+}
+
+std::string	VHost::cgiStart(location &loc) { // return name file to read and send
+	int					ofd;
+	std::string			pathApp;
+	int					pid;
+	std::vector<char *>	argv;
+	char*				env[2];
+	std::string			fileToExec = loc.root + "/" + loc.cgi;
+
+	
+	setPathToApp(pathApp, fileToExec);
+	if (access(pathApp.c_str(), X_OK) == 0) {
+		argv.push_back((char *) pathApp.c_str());
+	}
+	argv.push_back((char *) fileToExec.c_str());
+	argv.push_back(NULL);
+	setEnv(env);
+	pid = fork();
+	if (pid == -1) {
+		perror("fork");
+		return "";
+	}
+	if (pid == 0)  {
+		ofd = open(TMP_FILE, O_RDWR | O_CREAT | O_TRUNC, 777);
+		if (ofd == -1) {
+			perror("open tmp file");
+			exit(1);
+		}
+		dup2(ofd, STDOUT_FILENO);
+		if (execve(argv[0], &(argv[0]), env)  == -1) {
+			close(ofd);
+			perror("execve");
+			exit(1);
+		}
+	} else {
+		waitpid(pid, NULL, 0);
+	}
+	return TMP_FILE;
+}
+
 void VHost::processHeader(Request& request) {
 	std::vector<std::string>	inputRouteParams;
 	VHost::locations_iter		currentLoc;
+	std::string					fileToSend;
 
 	setRouteParams(request.getParamByName("Route"), inputRouteParams);
 	currentLoc =  this->getLocation(inputRouteParams);
@@ -69,9 +142,13 @@ void VHost::processHeader(Request& request) {
 		std::cout << "method not allowed " << std::endl; 
 		return ;
 	}
-
-// set actions for every method? 
-
-	request.setFileNameToSend(currentLoc->getFileName(inputRouteParams));
+	if (currentLoc->isCgi()) {
+		std::cout << "CGI" << std::endl;
+		request.setFileNameToSend(this->cgiStart(*currentLoc));
+	}
+	else {
+		request.setFileNameToSend(currentLoc->getFileName(inputRouteParams));
+	}
 	request.setCurrentCode(200);
+	// set actions for every method? 
 }

@@ -12,7 +12,7 @@
 #include "Request.hpp"
 #include "Responce.hpp"
 #define LOCATION_PARAM "location"
-
+#define TMP_FILE "tmp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -33,6 +33,7 @@ class location {
 		std::vector<std::string>	methods; // ints
 		std::string					autoindex;
 		std::string					index;
+		std::string					cgi;
 
 	public:
 		bool isLocationMatch(std::string &route) {
@@ -68,6 +69,8 @@ class location {
 		bool isFormars() {
 			return this->names.size() > 1;
 		}
+
+		bool isCgi() { return  !(this->cgi.empty()); }
 
 		void toString() {
 		std::cout << GREEN << "Location: { " << RESET << std::endl;
@@ -123,8 +126,10 @@ class VHost {
 		// procccccesssssss..
 		int			getListener(void) const;
 		int			acceptNewConnection();
+		void		setResponce(Request& request, Responce &responce);
 
-		void processHeader(Request& request);
+		void	processHeader(Request& request);
+		std::string	cgiStart(location &loc);
 
 		locations_iter	getLocation(std::vector<std::string>& params);
 

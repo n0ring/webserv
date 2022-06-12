@@ -70,5 +70,7 @@ void Responce::createHeader(void) {
 	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
 	Content-Length: 420\n\
 	Content-Type: text/html\n\
-	Connection: Closed\n\n");
+	Connection: Closed\n");
+
+	this->_header.append("Content-Type: text/html\n\n");
 }

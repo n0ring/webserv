@@ -117,26 +117,31 @@ void VHost::setServerParams(std::vector<std::string> params) {
 	}
 }
 
-void VHost::setLocationParam(std::vector<std::string> params) {
-	if (params.size() < 2) return ;
+void VHost::setLocationParam(std::vector<std::string> inputParams) {
+	if (inputParams.size() < 2) return ;
 
-	if (params.front().compare("root") == 0) { // need to del
-		this->locations.back().root = params.back();
+	if (inputParams.front().compare("root") == 0) { // need to del
+		this->locations.back().root = inputParams.back();
 		truncStr(this->locations.back().root);
 		return ;
 	}
-	if (params.front().compare("index") == 0) {
-		this->locations.back().index = params.back();
+	if (inputParams.front().compare("index") == 0) {
+		this->locations.back().index = inputParams.back();
 		return ;
 	}
-	if (params.front().compare("methods") == 0) {
-		for (size_t i = 1; i < params.size(); i++) {
-			this->locations.back().methods.push_back(params[i]);
+	if (inputParams.front().compare("methods") == 0) {
+		for (size_t i = 1; i < inputParams.size(); i++) {
+			this->locations.back().methods.push_back(inputParams[i]);
 		}
 		return ;
 	}
-	if (params.front().compare("autoindex") == 0) {
-		this->locations.back().autoindex = params.back();
+	if (inputParams.front().compare("autoindex") == 0) {
+		this->locations.back().autoindex = inputParams.back();
+		return ;
+	}
+
+	if (inputParams.front().compare("cgi") == 0) {
+		this->locations.back().cgi = inputParams.back();
 		return ;
 	}
 }
@@ -169,8 +174,6 @@ void VHost::validate() {
 		exit(-1);
 	}
 }
-
-
 
 void VHost::toString() {
 	std::cout << "<--Server Config-->" << std::endl;

@@ -49,12 +49,11 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 			return -1;
 		}
 		if (ret == 0) {
+			it_connection->second.prepareResponceToSend();
 			iter->events = POLLOUT;
 		}
 	}
 	else if (iter->revents == POLLOUT) {
-		// prepare data (start cgi if need. set responce)
-		it_connection->second.handleRequest();
 		ret = it_connection->second.sendData();
 		if (ret == 0) {
 			iter->events = POLLIN;

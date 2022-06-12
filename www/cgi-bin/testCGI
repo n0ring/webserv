@@ -1,0 +1,10 @@
+
+#!/bin/bash
+
+
+echo "<h3>"
+echo "<pre>"
+cal
+date
+echo "</pre>"
+echo "</h3>"
