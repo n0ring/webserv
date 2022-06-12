@@ -5,6 +5,7 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 				_fd(fd), _vHost(vH) {
 	this->_writed = 0;
 	this->_needToWrite = 0;
+	this->_isRequestHandled = false;
 }
 
 Connection::Connection(Connection const &other) : _listennerFd(other._listennerFd),
@@ -60,17 +61,25 @@ int Connection::receiveData() {  // viHost
 	}
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
-			this->_vHost.processHeader(this->_request);
+		this->_vHost.processHeader(this->_request);
 	}
 	if (_request.getCurrentCode() >= 400 || ret < BUFFER || isRecieveOver(buffer_in)) {
-		this->setResponce();
-		this->prepareResponceToSend();
 		return 0;
 	}
 	return ret;
 }
 
+void	Connection::handleRequest() {
+	// is handle over? 
+	if (this->_isRequestHandled) { // cgi over
+		return ;
+	}
+	this->setResponce();
+	this->prepareResponceToSend();
+}
+
 void	Connection::setResponce() {
+	this->_isRequestHandled = true;
 	if (this->_request.getCurrentCode() == 0) {
 		std::cout << "HTTP not found " << std::endl; 
 		this->_request.setCurrentCode(505);

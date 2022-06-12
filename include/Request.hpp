@@ -18,7 +18,7 @@ class Request {
 		int			_fileToSave;
 
 		int			_currentCode;
-		bool		_isCGI;
+		// bool		_isCGI;
 	
 	public:
 		Request(void) {

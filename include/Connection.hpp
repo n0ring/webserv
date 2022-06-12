@@ -16,6 +16,7 @@ class Connection {
 		std::string buffer_in;
 		Request		_request;
 		Responce	_responce;
+		bool		_isRequestHandled;
 
 		// fileToSave. 
 
@@ -35,4 +36,5 @@ class Connection {
 		Responce&	getResponceObj();
 		VHost&		getVhost(void) { return this->_vHost; }
 		void		setResponce();
+		void		handleRequest();
 };
