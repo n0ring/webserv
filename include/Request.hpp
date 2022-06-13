@@ -18,12 +18,13 @@ class Request {
 		int			_fileToSave;
 
 		int			_currentCode;
-		// bool		_isCGI;
+		int			_cgiPid;
 	
 	public:
 		Request(void) {
 			this->_fileToSave = -1;
 			this->_currentCode = 0;
+			this->_cgiPid = -1;
 		};
 		~Request(void) {};
 		Request(Request const &other);
@@ -42,4 +43,6 @@ class Request {
 		int getCurrentCode() { return  this->_currentCode; }
 
 		std::string& getParamByName(std::string paramName);
+		int				getCgiPid(void) {return this->_cgiPid; }
+		void setCgiPid(int pid) { this->_cgiPid = pid; }
 };

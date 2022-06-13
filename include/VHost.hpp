@@ -129,7 +129,7 @@ class VHost {
 		void		setResponce(Request& request, Responce &responce);
 
 		void	processHeader(Request& request);
-		std::string	cgiStart(location &loc);
+		int		cgiStart(location &loc);
 
 		locations_iter	getLocation(std::vector<std::string>& params);
 

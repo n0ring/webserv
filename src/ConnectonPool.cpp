@@ -49,8 +49,8 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 			return -1;
 		}
 		if (ret == 0) {
-			it_connection->second.prepareResponceToSend();
 			iter->events = POLLOUT;
+			it_connection->second.prepareResponceToSend();
 		}
 	}
 	else if (iter->revents == POLLOUT) {

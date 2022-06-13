@@ -1,7 +1,8 @@
 #include "Request.hpp"
 
 
-Request::Request(Request const & other) : _ip(other._ip), _currentCode(0) { }
+Request::Request(Request const & other) : _ip(other._ip),
+	_currentCode(0), _cgiPid(other._cgiPid) { }
 
 
 Request & Request::operator=(Request const &other) {
@@ -19,9 +20,11 @@ std::string& Request::getParamByName(std::string paramName) {
 void Request::resetObj(void) {
 	this->_ip.clear();
 	this->_header.clear();
-	this->_fileToSave= -1;
-	this->_currentCode = 0;
 	this->_headerParams.clear();
+	this->_fileToSave= -1;
+	this->_fileToSend.clear();
+	this->_currentCode = 0;
+	this->_cgiPid = -1;
 }
 
 std::string& Request::getHeader(void) { return this->_header; }
@@ -36,6 +39,9 @@ void Request::setHeader(std::string& buf_in) {
 		this->parseHeader();
 		buf_in.erase(0, endHeader + END_OF_HEADER_SHIFT);
 	}
+	std::cout << "-----------header--------------------" << std::endl;
+	std::cout << this->_header << std::endl;
+	std::cout << "-----------end of header-------------" << std::endl;
 }
 
 void Request::parseHeader() {
@@ -59,6 +65,7 @@ void Request::parseHeader() {
 		this->_headerParams.insert(splitInPair(line));
 	}
 }
+
 
 // GET / HTTP/1.1 
 // Host: localhost:8080

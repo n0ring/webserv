@@ -55,9 +55,7 @@ void Responce::setCode(int c) {
 }
 
 
-
-
-void Responce::createHeader(void) {
+void Responce::createHeader(int cgiPid) {
 	this->_header.append("HTTP/1.1");
 	this->_header.append(" ");
 	this->_header.append(std::to_string(this->code));
@@ -65,12 +63,16 @@ void Responce::createHeader(void) {
 	this->_header.append("OK");
 	this->_header.append("\n");
 
-	this->_header.append("Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
-	Server: huyaache/2.2.14 (Win32)\n\
-	Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n\
-	Content-Length: 420\n\
-	Content-Type: text/html\n\
-	Connection: Closed\n");
-
-	this->_header.append("Content-Type: text/html\n\n");
+	// this->_header.append("Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
+	// Server: huyaache/2.2.14 (Win32)\n\
+	// Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n");
+	this->_header.append("Content-Length: ");
+	this->_header.append(std::to_string(this->fileLen));
+	this->_header.append("\n");
+	this->_header.append("Connection: Closed\n");
+	if (cgiPid == -1) {
+		this->_header.append("Content-Type: text/html\n");
+		this->_header.append("\n");
+	} 
+	(void) cgiPid;
 }

@@ -5,17 +5,17 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "(lldb) Launch",
-			"type": "cppdbg",
-			"request": "launch",
-			"program": "${workspaceFolder}/webserv",
-			"args": ["config.conf"],
-			"stopAtEntry": false,
-			"cwd": "${workspaceFolder}",
+			"name": "(lldb) Launch", // без разницы
+			"type": "cppdbg",  // тип дебеггера ставится сам
+			"request": "launch", // хз 
+			"program": "${workspaceFolder}/webserv", // путь до файла, который нужно запустить
+			"args": ["config.conf"], // аргументы если нужны для запуска
+			"stopAtEntry": false, // останавливаться до запуска main
+			"cwd": "${workspaceFolder}", // задать адрес до папки проекта 
 			"environment": [],
-			"externalConsole": false,
-			"MIMode": "lldb",
-			"preLaunchTask": "C/C++: clang++ build active file"
+			"externalConsole": false, 
+			"MIMode": "lldb", // сам ставится
+			"preLaunchTask": "C/C++: clang++ build active file" // какую задачу выполнить из tasks.json
 		}
 	]
 }

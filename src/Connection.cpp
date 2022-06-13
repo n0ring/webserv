@@ -47,6 +47,9 @@ int Connection::receiveData() {  // viHost
 	int ret;
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
+	std::cout << "-----------buffer-in-----------------" << std::endl;
+	std::cout << buf << std::endl;
+	std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (false) {
 		// save buffer to file. only with POST and file content
 	}
@@ -70,7 +73,7 @@ int Connection::receiveData() {  // viHost
 
 void	Connection::setResponce() {
 	if (this->_request.getCurrentCode() == 0) {
-		std::cout << "HTTP not found " << std::endl; 
+		std::cout << "HTTP not found in set Responce" << std::endl;
 		this->_request.setCurrentCode(505);
 	}
 	if (this->_request.getCurrentCode() >= 400) { // set erorr page
@@ -86,9 +89,10 @@ void	Connection::setResponce() {
 }
 
 void Connection::prepareResponceToSend() {
+
 	this->setResponce();
 	this->buffer_in.clear();
-	this->_responce.createHeader();
+	this->_responce.createHeader(this->_request.getCgiPid());
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
 }
 
@@ -99,7 +103,6 @@ int Connection::sendData() {
 	
 	bzero(buf, BUFFER);
 
-	// check here is cgi is over
 	readyToSend = this->_responce.fillBuffer(buf);
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
 	if (sended == -1) {
@@ -108,14 +111,17 @@ int Connection::sendData() {
 	}
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) { // end of sending 
-		this->_responce.resetObj();
 		this->_writed = 0;
 		this->_needToWrite = 0;
-		this->_request.resetObj();
-		remove(TMP_FILE); // if cgi
+		std::cout << "PID: " << this->_request.getCgiPid() << std::endl;
+		if (this->_request.getCgiPid() > 0) {
+			remove(TMP_FILE); // if cgi
+		}
 		if (this->_request.getCurrentCode() >= 400) {
 			return -1;
 		}
+		this->_request.resetObj();
+		this->_responce.resetObj();
 		return 0;
 	}
 	return sended;

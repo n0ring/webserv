@@ -53,10 +53,10 @@ VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams)
 	return it;
 }
 
-void setPathToApp(std::string& pathToApp, std::string& fileToExec) {
+void findPathToApp(std::string& pathToApp, std::string& fileToExec) {
 	std::ifstream	ifs;
-	char		c;
-	std::string	line;
+	char			c;
+	std::string		line;
 
 	ifs.open(fileToExec);
 	if (!ifs.is_open()) {
@@ -82,22 +82,22 @@ void setPathToApp(std::string& pathToApp, std::string& fileToExec) {
 }
 
 void setEnv(char **env) {
+	// env[1] = (char *) std::string("PATH_INFO=").append(getenv("PATH_INFO")).c_str();
 	env[0] = (char *) std::string("PATH=").append(getenv("PATH")).c_str();
 	env[1] = NULL;
 }
 
-std::string	VHost::cgiStart(location &loc) { // return name file to read and send
+int	VHost::cgiStart(location &loc) { // return name file to read and send
 	int					ofd;
-	std::string			pathApp;
+	std::string			pathToApp;
 	int					pid;
 	std::vector<char *>	argv;
 	char*				env[2];
 	std::string			fileToExec = loc.root + "/" + loc.cgi;
 
-	
-	setPathToApp(pathApp, fileToExec);
-	if (access(pathApp.c_str(), X_OK) == 0) {
-		argv.push_back((char *) pathApp.c_str());
+	findPathToApp(pathToApp, fileToExec);
+	if (access(pathToApp.c_str(), X_OK) == 0) {
+		argv.push_back((char *) pathToApp.c_str());
 	}
 	argv.push_back((char *) fileToExec.c_str());
 	argv.push_back(NULL);
@@ -105,7 +105,7 @@ std::string	VHost::cgiStart(location &loc) { // return name file to read and sen
 	pid = fork();
 	if (pid == -1) {
 		perror("fork");
-		return "";
+		return -1;
 	}
 	if (pid == 0)  {
 		ofd = open(TMP_FILE, O_RDWR | O_CREAT | O_TRUNC, 777);
@@ -119,10 +119,11 @@ std::string	VHost::cgiStart(location &loc) { // return name file to read and sen
 			perror("execve");
 			exit(1);
 		}
-	} else {
-		waitpid(pid, NULL, 0);
 	}
-	return TMP_FILE;
+	else {
+		waitpid(pid, 0, 0);
+	}
+	return pid;
 }
 
 void VHost::processHeader(Request& request) {
@@ -144,7 +145,8 @@ void VHost::processHeader(Request& request) {
 	}
 	if (currentLoc->isCgi()) {
 		std::cout << "CGI" << std::endl;
-		request.setFileNameToSend(this->cgiStart(*currentLoc));
+		request.setCgiPid(this->cgiStart(*currentLoc));
+		request.setFileNameToSend(TMP_FILE);
 	}
 	else {
 		request.setFileNameToSend(currentLoc->getFileName(inputRouteParams));

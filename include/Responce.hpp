@@ -38,6 +38,6 @@ class Responce {
 		void	resetObj();
 
 
-		void	createHeader();
+		void	createHeader(int cgiPid);
 };
 
