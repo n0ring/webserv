@@ -52,7 +52,7 @@ int VHost::setup(void) {
 }
 
 void	VHost::setupSocket(void) {
-	this->_listener = socket(PF_INET, SOCK_STREAM, 0); // maybe add second socket for udp
+	this->_listener = socket( PF_INET, SOCK_STREAM, 0); // maybe add second socket for udp
 	if (this->_listener == -1) {
 		perror("socket");
 		exit(-1);

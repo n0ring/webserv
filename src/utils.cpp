@@ -33,6 +33,17 @@ void deleteComments(std::string &config) {
 	}
 }
 
+void splitByChar(std::string &s, char delimiter, std::vector<std::string>& v) {
+	size_t start = 0, end;
+	while (start < s.length()) {
+		while (start < s.length() && s[start] == delimiter ) start++;
+		end = start;
+		while (end < s.length() && s[end] != delimiter) end++;
+		v.push_back(s.substr(start, end - start));
+		start = end + 1;
+	}
+}
+
 std::vector<std::string> sPPlit(std::string s) {
 	std::vector<std::string>	res; 
 	size_t						start = 0, end;
@@ -65,7 +76,8 @@ std::pair<std::string, std::string> splitInPair(std::string &line) {
 }
 
 std::string getLine(std::string& str, size_t& startPos) {
-	size_t		endPos	= str.find('\n', startPos);
+	size_t		endPos	=  std::min(str.find('\n', startPos), str.find('\r', startPos));
+
 	std::string	line;
 	if (endPos == std::string::npos) {
 		startPos = str.length();

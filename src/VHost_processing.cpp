@@ -2,12 +2,9 @@
 
 #include <unistd.h> // access
 #define ROUTE_FIRST 1
-
 int VHost::getListener(void) const {
 	return this->_listener;
 }
-
-// /index/dir/some
 
 void setRouteParams(std::string& route, std::vector<std::string>& params) {
 	size_t extStart, fStart;
@@ -30,28 +27,6 @@ void setRouteParams(std::string& route, std::vector<std::string>& params) {
 
 // check for file ext - first loop
 // check for dirs - sec loop if after first not found file ext
-VHost::locations_iter  VHost::getLocation(std::vector<std::string>& routeParams) {
-	std::vector<location>::iterator it = this->locations.begin();
-	std::vector<location>::iterator ite = this->locations.end();
-
-	for (; it != ite; it++) { 
-		if (it->isLocationMatch(routeParams[0])) {
-			break;
-		}
-	}
-	if (it != ite) {
-		return it;
-	}
-	if (routeParams.size() == 3) { // check for dirs if before for files
-		it = this->locations.begin();
-		for (; it != ite; it++) {
-			if (it->isLocationMatch(routeParams[2])) {
-				break;
-			}
-		}
-	}
-	return it;
-}
 
 void findPathToApp(std::string& pathToApp, std::string& fileToExec) {
 	std::ifstream	ifs;
@@ -126,13 +101,86 @@ int	VHost::cgiStart(location &loc) { // return name file to read and send
 	return pid;
 }
 
-void VHost::processHeader(Request& request) {
-	std::vector<std::string>	inputRouteParams;
-	VHost::locations_iter		currentLoc;
-	std::string					fileToSend;
 
-	setRouteParams(request.getParamByName("Route"), inputRouteParams);
-	currentLoc =  this->getLocation(inputRouteParams);
+void setParamObj(std::vector<std::string>& v, routeParams& params) {
+	size_t i = 0;
+	for (; i < v.size(); i++) {
+		if (v[i].find(".") != std::string::npos) {
+			break;	
+		}
+		params.dirs.push_back(v[i]);
+	}
+	if (i == v.size()) {
+		return ;
+	}
+	size_t baseNameEnd = v[i].find(".");
+	if (baseNameEnd != std::string::npos) {
+		params.fileBaseName = v[i].substr(0, baseNameEnd);
+		size_t extEnd = baseNameEnd + 1;
+		while (extEnd + 1 < v[i].size() && v[i][extEnd + 1] != '/' 
+			&& v[i][extEnd + 1] != '?') extEnd++;
+		params.ext = v[i].substr(baseNameEnd + 1, extEnd - baseNameEnd);
+		params.afterFile.append(v[i].substr(extEnd + 1));
+		i++;
+		for (; i < v.size(); i++) {
+			params.afterFile.append("/");
+			params.afterFile.append(v[i]);
+		}
+	}
+}
+
+VHost::locations_iter	VHost::getLocation(routeParams& params) {
+	std::vector<location>::iterator it;
+	std::vector<location>::iterator ite = this->locations.end();
+	std::string dirToFind;
+
+	for (size_t i = 0; i < params.dirs.size(); i++) { // search by dirNames
+		it = this->locations.begin();
+		dirToFind.append("/");
+		dirToFind.append(params.dirs[i]);
+		for (; it != ite; it++) { 
+			if (it->isLocationMatch(dirToFind)) break;
+		}
+		if (it != ite) { // dir found set root + all dirs + filename 
+			i++;
+			params.finalPathToFile.append(it->root);
+			while (i < params.dirs.size())
+				params.finalPathToFile.append("/" + params.dirs[i++]);
+			params.finalPathToFile.append("/");
+			if (params.fileBaseName.empty())
+				params.finalPathToFile.append(it->index);
+			else
+				params.finalPathToFile.append(params.fileBaseName + "." + params.ext);
+			return it;
+		}
+	}
+	it = this->locations.begin();
+	for (; it != ite; it++) {  // search by file extens
+		if (it->isLocationMatch(params.ext)) break;
+	}
+	if (it != ite) {
+		params.finalPathToFile.append(it->root + "/" + params.fileBaseName + "." + params.ext);
+	}
+	else {
+		it = this->locations.begin();
+		std::string r = "/";
+		for (; it != ite; it++) if (it->isLocationMatch(r)) break;
+		if (it != ite) params.finalPathToFile.append(it->root + "/");
+		params.finalPathToFile.append(params.fileBaseName + "." + params.ext);
+	}
+	return it;
+}
+
+void VHost::processHeader(Request& request, routeParams &paramObj) {
+	VHost::locations_iter		currentLoc;
+	VHost::locations_iter		currentLoc1;
+	std::string					fileToSend;
+	std::vector<std::string>	inputRouteParams;
+
+	std::cout << "ROUTE IN PROCESS: " << request.getParamByName("Route") << std::endl;
+	splitByChar(request.getParamByName("Route"), '/', inputRouteParams);
+	setParamObj(inputRouteParams, paramObj);
+	currentLoc = this->getLocation(paramObj);
 	if (currentLoc == this->locations.end()) {
 		request.setCurrentCode(404);
 		std::cout << "location not found " << std::endl; 
@@ -149,8 +197,9 @@ void VHost::processHeader(Request& request) {
 		request.setFileNameToSend(TMP_FILE);
 	}
 	else {
-		request.setFileNameToSend(currentLoc->getFileName(inputRouteParams));
+		request.setFileNameToSend(paramObj.finalPathToFile);
 	}
 	request.setCurrentCode(200);
 	// set actions for every method? 
 }
+

@@ -4,7 +4,7 @@ void Responce::setHeader(std::string header) {
 	this->_header = header;
 }
 
-bool Responce::prepareFileToSend(const char *fileName) {
+bool Responce::prepareFileToSend(std::string &fileName) {
 	this->ifs.open(fileName, std::ifstream::in);
 	if (this->ifs.is_open() == false) {
 		return false;
@@ -12,6 +12,7 @@ bool Responce::prepareFileToSend(const char *fileName) {
 	this->ifs.seekg (0, ifs.end);
     this->fileLen = this->ifs.tellg();
     ifs.seekg(0, ifs.beg);
+	this->fileExtToSend = fileName.substr(fileName.find(".") + 1);
 	return true;
 }
 
@@ -30,7 +31,7 @@ size_t Responce::fillBuffer(char *buf) {
 	if (this->headerSended < this->getHeaderSize()) {
 		this->headerSended += shiftHead = this->_header.copy(buf, BUFFER);
 	}
-	if (shiftHead < BUFFER && this->bodySended < this->fileLen) {
+	if (this->ifs.is_open() && shiftHead < BUFFER && this->bodySended < this->fileLen) {
 		this->ifs.read(buf + shiftHead, BUFFER - shiftHead);
 		this->bodySended = this->ifs.eof() ? this->fileLen : (size_t) this->ifs.tellg(); 
 	}
@@ -54,8 +55,8 @@ void Responce::setCode(int c) {
 	this->code = c;
 }
 
-
 void Responce::createHeader(int cgiPid) {
+	Mime::set(this->fileExtToSend, this->MIME);
 	this->_header.append("HTTP/1.1");
 	this->_header.append(" ");
 	this->_header.append(std::to_string(this->code));
@@ -67,12 +68,12 @@ void Responce::createHeader(int cgiPid) {
 	// Server: huyaache/2.2.14 (Win32)\n\
 	// Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n");
 	this->_header.append("Content-Length: ");
-	this->_header.append(std::to_string(this->fileLen));
-	this->_header.append("\n");
+	this->_header.append(std::to_string(this->fileLen) + "\n");
 	this->_header.append("Connection: Closed\n");
 	if (cgiPid == -1) {
-		this->_header.append("Content-Type: text/html\n");
+		if (!this->MIME.empty()) {
+			this->_header.append("Content-Type: " + this->MIME + "\n");
+		}
 		this->_header.append("\n");
-	} 
-	(void) cgiPid;
+	}
 }

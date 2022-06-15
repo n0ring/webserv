@@ -2,6 +2,7 @@
 
 #include <iostream> // string io
 #include <fstream> // ifstream
+#include "utils.hpp"
 
 #define BUFFER 2048
 
@@ -18,6 +19,8 @@ class Responce {
 		int				code;
 		int				contentLength;
 		std::string		contentType;
+		std::string		MIME;
+		std::string		fileExtToSend;
 
 
 	public:
@@ -27,7 +30,7 @@ class Responce {
 
 		void		setHeader(std::string header);
 		
-		bool prepareFileToSend(const  char *fileName);
+		bool prepareFileToSend(std::string &fileName);
 		
 		void setCode(int c);
 

@@ -24,10 +24,19 @@
 #define CYAN    "\033[36m"      /* Cyan */
 #define WHITE   "\033[37m"      /* White */
 
+
+struct routeParams { // no / on start and end
+	std::vector<std::string>	dirs; // before file
+	std::string					fileBaseName;
+	std::string					ext;
+	std::string					afterFile;
+	std::string					finalPathToFile;
+};
 class location {
 	private:
 		friend class VHost; 
 		typedef std::vector<std::string>::size_type size_type;
+		
 		std::vector<std::string>	names;
 		std::string					root;
 		std::vector<std::string>	methods; // ints
@@ -128,11 +137,9 @@ class VHost {
 		int			acceptNewConnection();
 		void		setResponce(Request& request, Responce &responce);
 
-		void	processHeader(Request& request);
+		void	processHeader(Request& request, routeParams& routeObj);
 		int		cgiStart(location &loc);
-
-		locations_iter	getLocation(std::vector<std::string>& params);
-
+		locations_iter  getLocation(routeParams& params);
 
 		// delete this
 		void toString();

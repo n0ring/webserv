@@ -30,18 +30,23 @@ void Request::resetObj(void) {
 std::string& Request::getHeader(void) { return this->_header; }
 
 void Request::setHeader(std::string& buf_in) {
+	size_t endOfHeaderShift = 4;
 	if (this->_header.empty() == false) {
 		return ;
 	}
 	size_t endHeader = buf_in.find(END_OF_HEADER);
+	if (endHeader == std::string::npos) {
+		endHeader = buf_in.find("\n\n");
+		endOfHeaderShift = 2;
+	}
 	if (endHeader != std::string::npos) {
 		this->_header = buf_in.substr(0, endHeader + 1);
 		this->parseHeader();
-		buf_in.erase(0, endHeader + END_OF_HEADER_SHIFT);
+		buf_in.erase(0, endHeader + endOfHeaderShift);
 	}
-	std::cout << "-----------header--------------------" << std::endl;
-	std::cout << this->_header << std::endl;
-	std::cout << "-----------end of header-------------" << std::endl;
+	// std::cout << "-----------header--------------------" << std::endl;
+	// std::cout << this->_header << std::endl;
+	// std::cout << "-----------end of header-------------" << std::endl;
 }
 
 void Request::parseHeader() {

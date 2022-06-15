@@ -47,15 +47,15 @@ int Connection::receiveData() {  // viHost
 	int ret;
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
-	std::cout << "-----------buffer-in-----------------" << std::endl;
-	std::cout << buf << std::endl;
-	std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (false) {
 		// save buffer to file. only with POST and file content
 	}
 	else {
 		this->buffer_in.append(buf, ret);
 	}
+	// std::cout << "-----------buffer-in-----------------" << std::endl;
+	// std::cout << this->buffer_in << std::endl;
+	// std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -63,7 +63,10 @@ int Connection::receiveData() {  // viHost
 	}
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
-		this->_vHost.processHeader(this->_request);
+		this->_vHost.processHeader(this->_request, this->routeObj);
+	}
+	if (ret == 0) {
+		return -1;
 	}
 	if (_request.getCurrentCode() >= 400 || ret < BUFFER || isRecieveOver(buffer_in)) {
 		return 0;
@@ -72,6 +75,7 @@ int Connection::receiveData() {  // viHost
 }
 
 void	Connection::setResponce() {
+	std::string errorFile = "www/errors/404.html";
 	if (this->_request.getCurrentCode() == 0) {
 		std::cout << "HTTP not found in set Responce" << std::endl;
 		this->_request.setCurrentCode(505);
@@ -79,12 +83,11 @@ void	Connection::setResponce() {
 	if (this->_request.getCurrentCode() >= 400) { // set erorr page
 		this->_request.setFileNameToSend("www/errors/404.html");
 	}
-	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend().c_str())) {
-		std::cerr << "file not open" << std::endl;
+	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
+		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
 		this->_responce.setCode(404);
-		this->_responce.prepareFileToSend("www/errors/404.html"); // if can't open set default
+		this->_responce.prepareFileToSend(errorFile); // if can't open set default
 	}
-	std::cout << "file To send: " << this->_request.getFileToSend()  << std::endl;
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
 
@@ -92,6 +95,7 @@ void Connection::prepareResponceToSend() {
 
 	this->setResponce();
 	this->buffer_in.clear();
+	// if file to send not open set default.
 	this->_responce.createHeader(this->_request.getCgiPid());
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
 }
@@ -107,19 +111,25 @@ int Connection::sendData() {
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
 	if (sended == -1) {
 		perror("send");
+		std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
 		return -1;
 	}
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) { // end of sending 
+		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
+		if (!this->_request.getParamByName("Connection").compare("close")) {
+			return -1;
+		}
+		bzero(&this->routeObj, sizeof(this->routeObj));
 		this->_writed = 0;
 		this->_needToWrite = 0;
-		std::cout << "PID: " << this->_request.getCgiPid() << std::endl;
 		if (this->_request.getCgiPid() > 0) {
 			remove(TMP_FILE); // if cgi
 		}
 		if (this->_request.getCurrentCode() >= 400) {
 			return -1;
 		}
+		// if connection: close return -1;
 		this->_request.resetObj();
 		this->_responce.resetObj();
 		return 0;

@@ -45,7 +45,6 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 		// handle 
 		ret = it_connection->second.receiveData();
 		if (ret < 0) {
-			std::cout << "receive data error\n";
 			return -1;
 		}
 		if (ret == 0) {
@@ -57,10 +56,8 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 		ret = it_connection->second.sendData();
 		if (ret == 0) {
 			iter->events = POLLIN;
-			std::cout << "send is over\n";
 		}
 		if (ret == -1) {
-			std::cout << "send error is over\n";
 			return -1;
 		}
 	}
