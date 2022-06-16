@@ -139,7 +139,8 @@ class VHost {
 
 		void	processHeader(Request& request, routeParams& routeObj);
 		int		cgiStart(location &loc);
-		locations_iter  getLocation(routeParams& params);
+		locations_iter 	getLocation(routeParams& params);
+		void			setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it);
 
 		// delete this
 		void toString();

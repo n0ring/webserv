@@ -3,7 +3,7 @@
 #include <iostream> // string io
 #include <fstream> // ifstream
 #include "utils.hpp"
-
+#include <sys/stat.h> // stat (check is file regular)
 #define BUFFER 2048
 
 

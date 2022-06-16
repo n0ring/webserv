@@ -5,14 +5,18 @@ void Responce::setHeader(std::string header) {
 }
 
 bool Responce::prepareFileToSend(std::string &fileName) {
+	// struct stat sb;
 	this->ifs.open(fileName, std::ifstream::in);
 	if (this->ifs.is_open() == false) {
 		return false;
 	}
-	this->ifs.seekg (0, ifs.end);
-    this->fileLen = this->ifs.tellg();
-    ifs.seekg(0, ifs.beg);
-	this->fileExtToSend = fileName.substr(fileName.find(".") + 1);
+	// if (stat(fileName.c_str(), &sb) == 0 && S_ISREG(sb.st_mode)) {
+		this->ifs.seekg (0, ifs.end);
+		this->fileLen = this->ifs.tellg();
+		ifs.seekg(0, ifs.beg);
+		this->fileExtToSend = fileName.substr(fileName.find(".") + 1);
+		// return true;
+	// }
 	return true;
 }
 
