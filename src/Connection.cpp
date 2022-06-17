@@ -47,7 +47,12 @@ int Connection::receiveData() {  // viHost
 	int ret;
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
-	if (false) {
+	// if (!this->_request.getHeader().empty()) { // header !empty
+	if (!this->_request.getHeader().empty()) { // header !empty
+		// if file open to file
+		// else to body
+		// where to save? content leng
+		// body or file
 		// save buffer to file. only with POST and file content
 	}
 	else {
@@ -69,6 +74,7 @@ int Connection::receiveData() {  // viHost
 		return -1;
 	}
 	if (_request.getCurrentCode() >= 400 || ret < BUFFER || isRecieveOver(buffer_in)) {
+		// if body not empty process body ?????
 		return 0;
 	}
 	return ret;
@@ -81,18 +87,17 @@ void	Connection::setResponce() {
 		this->_request.setCurrentCode(505);
 	}
 	if (this->_request.getCurrentCode() >= 400) { // set erorr page
-		this->_request.setFileNameToSend("www/errors/404.html");
+		this->_request.setFileNameToSend(errorFile);
 	}
 	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
 		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
-		this->_responce.setCode(404);
+		this->_request.setCurrentCode(404);
 		this->_responce.prepareFileToSend(errorFile); // if can't open set default
 	}
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
 
 void Connection::prepareResponceToSend() {
-
 	this->setResponce();
 	this->buffer_in.clear();
 	// if file to send not open set default.

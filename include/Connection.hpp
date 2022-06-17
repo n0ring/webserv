@@ -14,11 +14,12 @@ class Connection {
 		int			_writed;
 		int			_needToWrite;
 		std::string buffer_in;
+		std::string body;
 		Request		_request;
 		Responce	_responce;
 		routeParams	routeObj;
 
-		// fileToSave. 
+		// fileToSave. open file? 
 
 	public:
 		Connection(int listenner, int fd, VHost& vHost);

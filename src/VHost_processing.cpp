@@ -29,79 +29,6 @@ void setRouteParams(std::string& route, std::vector<std::string>& params) {
 // check for file ext - first loop
 // check for dirs - sec loop if after first not found file ext
 
-void findPathToApp(std::string& pathToApp, std::string& fileToExec) {
-	std::ifstream	ifs;
-	char			c;
-	std::string		line;
-
-	ifs.open(fileToExec);
-	if (!ifs.is_open()) {
-		std::cout << "cgi file not open" << std::endl;
-		return ;
-	}
-	while (!ifs.eof()) {
-		c = ifs.get();
-		if (c == '\n') {
-			if (line.find("#!") == std::string::npos) {
-				line.clear();
-				continue;
-			}
-			break;
-		}
-		else {
-			line.push_back(c);
-		}
-	}
-	if (line.find("#!") != std::string::npos) {
-		pathToApp = line.substr(line.find("/"));
-	}
-}
-
-void setEnv(char **env) {
-	// env[1] = (char *) std::string("PATH_INFO=").append(getenv("PATH_INFO")).c_str();
-	env[0] = (char *) std::string("PATH=").append(getenv("PATH")).c_str();
-	env[1] = NULL;
-}
-
-int	VHost::cgiStart(location &loc) { // return name file to read and send
-	int					ofd;
-	std::string			pathToApp;
-	int					pid;
-	std::vector<char *>	argv;
-	char*				env[2];
-	std::string			fileToExec = loc.root + "/" + loc.cgi;
-
-	findPathToApp(pathToApp, fileToExec);
-	if (access(pathToApp.c_str(), X_OK) == 0) {
-		argv.push_back((char *) pathToApp.c_str());
-	}
-	argv.push_back((char *) fileToExec.c_str());
-	argv.push_back(NULL);
-	setEnv(env);
-	pid = fork();
-	if (pid == -1) {
-		perror("fork");
-		return -1;
-	}
-	if (pid == 0)  {
-		ofd = open(TMP_FILE, O_RDWR | O_CREAT | O_TRUNC, 777);
-		if (ofd == -1) {
-			perror("open tmp file");
-			exit(1);
-		}
-		dup2(ofd, STDOUT_FILENO);
-		if (execve(argv[0], &(argv[0]), env)  == -1) {
-			close(ofd);
-			perror("execve");
-			exit(1);
-		}
-	}
-	else {
-		waitpid(pid, 0, 0);
-	}
-	return pid;
-}
-
 
 void setParamObj(std::vector<std::string>& v, routeParams& params) {
 	size_t i = 0;
@@ -185,6 +112,17 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	return it;
 }
 
+
+
+void GET(Request& request, routeParams &paramObj) {
+	request.setFileNameToSend(paramObj.finalPathToFile);
+}
+
+void POST(Request& request, routeParams &paramObj) {
+	(void) request;
+	(void) paramObj;
+}
+
 void VHost::processHeader(Request& request, routeParams &paramObj) {
 	VHost::locations_iter		currentLoc;
 	VHost::locations_iter		currentLoc1;
@@ -207,13 +145,23 @@ void VHost::processHeader(Request& request, routeParams &paramObj) {
 	}
 	if (currentLoc->isCgi()) {
 		std::cout << "CGI" << std::endl;
-		request.setCgiPid(this->cgiStart(*currentLoc));
+		request.setCgiPid(Cgi::start(*currentLoc, TMP_FILE));
 		request.setFileNameToSend(TMP_FILE);
 	}
 	else {
-		request.setFileNameToSend(paramObj.finalPathToFile);
+		std::string method = request.getParamByName("Method");
+		if (!method.compare("GET")) {
+			std::cout << "Method GET" << std::endl;
+			GET(request, paramObj);
+		}
+		else if (!method.compare("POST")) {
+			std::cout << "Method POST" << std::endl;
+		}
+		else if (!method.compare("DELETE")) {
+			std::cout << "Method DELETE" << std::endl;
+		}
+
 	}
-	request.setCurrentCode(200);
-	// set actions for every method? 
+		request.setCurrentCode(200);
 }
 

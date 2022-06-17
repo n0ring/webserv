@@ -44,9 +44,9 @@ void Request::setHeader(std::string& buf_in) {
 		this->parseHeader();
 		buf_in.erase(0, endHeader + endOfHeaderShift);
 	}
-	// std::cout << "-----------header--------------------" << std::endl;
-	// std::cout << this->_header << std::endl;
-	// std::cout << "-----------end of header-------------" << std::endl;
+	std::cout << "-----------header--------------------" << std::endl;
+	std::cout << this->_header << std::endl;
+	std::cout << "-----------end of header-------------" << std::endl;
 }
 
 void Request::parseHeader() {

@@ -80,4 +80,7 @@ void Responce::createHeader(int cgiPid) {
 		}
 		this->_header.append("\n");
 	}
+	std::cout << "-----header to send------" << std::endl;
+	std::cout << this->_header << std::endl;
+	std::cout << "------------------------\n\n";
 }
