@@ -17,7 +17,6 @@ class Parser {
 		~Parser(void) {}
 		void parseConfig(std::vector<VHost> &configsObjs,
 							std::string configName);
-		void splitConfigToServers(std::string config,
-							std::vector<std::string>& confs);
+		void splitConfigToServers(std::string ,std::vector<std::string>& );
 
 };

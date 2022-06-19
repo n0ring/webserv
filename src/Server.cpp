@@ -29,7 +29,6 @@ void Server::setupServers(std::string configName) {
 	Parser parser;
 
 	parser.parseConfig(this->_vHosts, configName);
-	// this->_configs.push_back(ServerConfig(8080, "127.0.0.1", 10));
 	
 	for (int i = 0; i < (int) this->_vHosts.size(); i++) {
 		this->fds.push_back(make_fd(this->_vHosts[i].setup(), POLLIN));
@@ -43,6 +42,9 @@ void	Server::start(std::string configName) {
 	this->setupServers(configName);
 	if (this->_vHosts.size() > 0) {
 		readyForWork = true;
+	}
+	else {
+		std::cerr << "no vHosts" << std::endl;
 	}
 	while (readyForWork) { //////////// !!!!!!!!
 		this->nfds = this->fds.size();

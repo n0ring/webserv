@@ -128,8 +128,7 @@ void VHost::processHeader(Request& request, routeParams &paramObj) {
 	VHost::locations_iter		currentLoc1;
 	std::string					fileToSend;
 	std::vector<std::string>	inputRouteParams;
-
-	std::cout << "ROUTE IN PROCESS: " << request.getParamByName("Route") << std::endl;
+	
 	splitByChar(request.getParamByName("Route"), '/', inputRouteParams);
 	setParamObj(inputRouteParams, paramObj);
 	currentLoc = this->getLocation(paramObj);

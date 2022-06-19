@@ -68,6 +68,7 @@ int Connection::receiveData() {  // viHost
 	}
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
+		// check Vhost for change
 		this->_vHost.processHeader(this->_request, this->routeObj);
 	}
 	if (ret == 0) {

@@ -46,9 +46,8 @@ class VHost {
 		int			_listener;
 		sockaddr	_address; 
 		socklen_t	_addrlen;
-		std::vector<location> locations;
-
-		// Cgi			_cgi;
+		std::vector<location>	locations;
+		std::vector<VHost>		vHostsWithSamePort;
 		
 		void	setupSocket(void);
 		void	setupSockAddr_in(void);
@@ -68,6 +67,12 @@ class VHost {
 		void	setServerParams(std::vector<std::string> params);
 		void	validate();
 		int		setup(void);
+		int			getPort(void) const { return this->_port; }
+		std::string	getServerName(void) const {return this->_serverName; }
+		std::string	getHost(void) const {return this->_ip; }
+		void	addHostSamePort(VHost newHost) {
+			this->vHostsWithSamePort.push_back(newHost);
+		}
 
 		// procccccesssssss..
 		int			getListener(void) const;

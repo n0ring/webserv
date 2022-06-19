@@ -35,7 +35,31 @@ VHost createObj(std::string configText) {
 	return vHost;
 }
 
-void Parser::parseConfig(std::vector<VHost> &configsObjs, std::string configName) {
+bool	checkForMatchIpPort(std::vector<VHost> &vHosts, VHost& newVhost) {
+	int			portCurrent, portForCheck  = newVhost.getPort();
+	std::string	serverNameForCheck = newVhost.getServerName();
+	std::string	hostCurrent, hostForCheck = newVhost.getHost();
+
+	for (unsigned long i = 0; i < vHosts.size(); i++) {
+		portCurrent = vHosts[i].getPort();
+		hostCurrent = vHosts[i].getHost();
+		if (( hostCurrent == hostForCheck || hostCurrent == "0.0.0.0"
+				|| hostForCheck == "0.0.0.0") 
+				&& portCurrent == portForCheck) {
+			if (serverNameForCheck == vHosts[i].getServerName()) {
+				std::cerr << "Same serverName: " << serverNameForCheck 
+				<< " for host " << hostCurrent << " on port: " << portCurrent
+				<< std::endl;
+				exit(-1);
+			}
+			vHosts[i].addHostSamePort(newVhost);
+			return true;
+		}
+	}
+	return false;
+}
+
+void Parser::parseConfig(std::vector<VHost> &vHosts, std::string configName) {
 	std::vector<std::string>			configsVector;
 	std::vector<std::string>::iterator	it, ite;
 	std::string							configStr;
@@ -54,8 +78,13 @@ void Parser::parseConfig(std::vector<VHost> &configsObjs, std::string configName
 	ite = configsVector.end();
 	for (; it != ite; it++) {
 		vHostObj = createObj(*it);
+		// check for match 
 		vHostObj.validate();
-		configsObjs.push_back(vHostObj);
+		if (checkForMatchIpPort(vHosts, vHostObj)) {
+			
+		} else {
+			vHosts.push_back(vHostObj);
+		}
 	}
 }
 
