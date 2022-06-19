@@ -5,9 +5,11 @@ echo
 
 echo "<h3>"
 echo "<pre>"
-cal
+# cal
 date
-env 
+ls -a
+# cat
+echo
+echo "end of cat"
 echo "</pre>"
 echo "</h3>"
-

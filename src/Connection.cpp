@@ -2,14 +2,17 @@
 #include "Connection.hpp"
 
 Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenner),
-				_fd(fd), _vHost(vH) {
+				_fd(fd), _vHost(&vH) {
 	this->_writed = 0;
 	this->_needToWrite = 0;
+	this->_request.setFd(fd);
+	this->currentLoc = NULL;
+	this->cgiIput.append(".cgi_input" + std::to_string(fd));
+	this->cgiOutput.append(".cgi_output" + std::to_string(fd));
 }
 
-Connection::Connection(Connection const &other) : _listennerFd(other._listennerFd),
-	_fd(other._fd),  _vHost(other._vHost), _writed(other._writed)
-	{
+Connection::Connection(Connection const &other) {
+	*this = other;
 }
 
 Connection & Connection::operator=(Connection const &other) {
@@ -17,6 +20,12 @@ Connection & Connection::operator=(Connection const &other) {
 		this->_listennerFd = other._listennerFd;
 		this->_fd = other._fd;
 		this->_vHost = other._vHost;
+		this->_writed = other._writed;
+		this->_needToWrite = other._needToWrite;
+		this->currentLoc = other.currentLoc;
+		this->cgiIput = other.cgiIput;
+		this->cgiOutput = other.cgiOutput;
+		// add others
 	}
 	return *this;
 }
@@ -48,12 +57,8 @@ int Connection::receiveData() {  // viHost
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
 	// if (!this->_request.getHeader().empty()) { // header !empty
-	if (!this->_request.getHeader().empty()) { // header !empty
-		// if file open to file
-		// else to body
-		// where to save? content leng
-		// body or file
-		// save buffer to file. only with POST and file content
+	if (!this->_request.getHeader().empty() && this->currentLoc->isCgi()) { // if post? 
+		write(this->cgiIputFd, buf, ret);
 	}
 	else {
 		this->buffer_in.append(buf, ret);
@@ -68,8 +73,18 @@ int Connection::receiveData() {  // viHost
 	}
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
-		// check Vhost for change
-		this->_vHost.processHeader(this->_request, this->routeObj);
+		this->checkForVhostChange();
+		this->_vHost->processHeader(this->_request, this->routeObj, &this->currentLoc);
+		// if cgi open inputfile. send there all except header. next packege save there.
+		if (this->currentLoc->isCgi()) {
+			this->cgiIputFd = open(this->cgiIput.c_str(), O_RDWR | O_CREAT | O_TRUNC);
+			if (this->cgiIputFd == -1) {
+				perror("crete input file");
+				this->_request.setCurrentCode(500);
+				return 0;
+			}
+			write(this->cgiIputFd, this->body.c_str(), this->body.length());
+		}
 	}
 	if (ret == 0) {
 		return -1;
@@ -98,7 +113,33 @@ void	Connection::setResponce() {
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
 
+void GET(Request& request, routeParams &paramObj) {
+	request.setFileNameToSend(paramObj.finalPathToFile);
+}
+
+void Connection::executeOrder66() { // all data recieved
+	if (this->currentLoc->isCgi()) {
+		std::cout << "CGI" << std::endl;
+		this->_request.setCgiPid(Cgi::start(*this->currentLoc, TMP_FILE, this->_request));
+		this->_request.setFileNameToSend(TMP_FILE);
+	}
+	else {
+		std::string method = this->_request.getParamByName("Method");
+		if (!method.compare("GET")) {
+			std::cout << "Method GET" << std::endl;
+			GET(this->_request, this->routeObj);
+		}
+		else if (!method.compare("POST")) {
+			std::cout << "Method POST" << std::endl;
+		}
+		else if (!method.compare("DELETE")) {
+			std::cout << "Method DELETE" << std::endl;
+		}
+	}
+}
+
 void Connection::prepareResponceToSend() {
+	this->executeOrder66();
 	this->setResponce();
 	this->buffer_in.clear();
 	// if file to send not open set default.
@@ -129,6 +170,8 @@ int Connection::sendData() {
 		bzero(&this->routeObj, sizeof(this->routeObj));
 		this->_writed = 0;
 		this->_needToWrite = 0;
+		remove(this->cgiIput.c_str());
+		remove(this->cgiOutput.c_str());
 		if (this->_request.getCgiPid() > 0) {
 			remove(TMP_FILE); // if cgi
 		}
@@ -143,6 +186,19 @@ int Connection::sendData() {
 	return sended;
 }
 
+void	Connection::checkForVhostChange() {
+	VHost* newVhost = NULL;
+	std::string s = this->_request.getParamByName("Host");
+	std::vector<std::string> hostParams;
+	splitByChar(s, ':', hostParams);
+	if (hostParams.empty()) {
+		return ;
+	}
+	newVhost = this->_vHost->changeVhost(hostParams.front());
+	if (newVhost) {
+		this->_vHost = newVhost;
+	}
+}
 
 Connection::~Connection(void) {}
 Request& Connection::getRequestObj() {return this->_request; }

@@ -58,13 +58,13 @@ void setParamObj(std::vector<std::string>& v, routeParams& params) {
 }
 
 void VHost::setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it) {
-	params.finalPathToFile.append(it->root);
+	params.finalPathToFile.append(it->params["root"]);
 	while (i < params.dirs.size()) {
 		params.finalPathToFile.append("/" + params.dirs[i++]);
 	}
 	params.finalPathToFile.append("/");
 	if (params.fileBaseName.empty()) {
-		params.finalPathToFile.append(it->index);
+		params.finalPathToFile.append(it->params["index"]);
 	}
 	else {
 		params.finalPathToFile.append(params.fileBaseName + "." + params.ext);
@@ -99,13 +99,13 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	}
 	it = findLocationMatch(this->locations, params.ext); // search for file ext
 	if (it != ite) {
-		params.finalPathToFile.append(it->root + "/" + params.fileBaseName + "." + params.ext);
+		params.finalPathToFile.append(it->params["root"] + "/" + params.fileBaseName + "." + params.ext);
 	}
 	else if (!params.fileBaseName.empty() + !params.ext.empty()) {
 		std::string r = "/";
 		it = findLocationMatch(this->locations, r); // serch for root (add file and try to open) !!!!!!
 		if (it != ite) {
-			params.finalPathToFile.append(it->root + "/");
+			params.finalPathToFile.append(it->params["root"] + "/");
 		}
 		params.finalPathToFile.append(params.fileBaseName + "." + params.ext);
 	}
@@ -114,16 +114,14 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 
 
 
-void GET(Request& request, routeParams &paramObj) {
-	request.setFileNameToSend(paramObj.finalPathToFile);
-}
+
 
 void POST(Request& request, routeParams &paramObj) {
 	(void) request;
 	(void) paramObj;
 }
 
-void VHost::processHeader(Request& request, routeParams &paramObj) {
+void VHost::processHeader(Request& request, routeParams &paramObj, location **locToConnection) {
 	VHost::locations_iter		currentLoc;
 	VHost::locations_iter		currentLoc1;
 	std::string					fileToSend;
@@ -142,25 +140,17 @@ void VHost::processHeader(Request& request, routeParams &paramObj) {
 		std::cout << "method not allowed " << std::endl; 
 		return ;
 	}
-	if (currentLoc->isCgi()) {
-		std::cout << "CGI" << std::endl;
-		request.setCgiPid(Cgi::start(*currentLoc, TMP_FILE));
-		request.setFileNameToSend(TMP_FILE);
-	}
-	else {
-		std::string method = request.getParamByName("Method");
-		if (!method.compare("GET")) {
-			std::cout << "Method GET" << std::endl;
-			GET(request, paramObj);
-		}
-		else if (!method.compare("POST")) {
-			std::cout << "Method POST" << std::endl;
-		}
-		else if (!method.compare("DELETE")) {
-			std::cout << "Method DELETE" << std::endl;
-		}
-
-	}
-		request.setCurrentCode(200);
+	*locToConnection = &(*currentLoc);
+	request.setCurrentCode(200);
 }
 
+
+
+VHost*	VHost::changeVhost(std::string& hostName) {
+	for (size_t i = 0; i < this->vHostsWithSamePort.size(); i++) {
+		if (vHostsWithSamePort[i].getServerName() == hostName) {
+			return &(vHostsWithSamePort[i]);
+		}
+	}
+	return NULL;
+}

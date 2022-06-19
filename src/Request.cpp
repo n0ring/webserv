@@ -2,7 +2,8 @@
 
 
 Request::Request(Request const & other) : _ip(other._ip),
-	_currentCode(0), _cgiPid(other._cgiPid) { }
+	_currentCode(0), _cgiPid(other._cgiPid) {
+	}
 
 
 Request & Request::operator=(Request const &other) {
@@ -44,9 +45,9 @@ void Request::setHeader(std::string& buf_in) {
 		this->parseHeader();
 		buf_in.erase(0, endHeader + endOfHeaderShift);
 	}
-	std::cout << "-----------header--------------------" << std::endl;
+	std::cout << BLUE << "-----------header in--------------------" << std::endl;
 	std::cout << this->_header << std::endl;
-	std::cout << "-----------end of header-------------" << std::endl;
+	std::cout << "-----------end of header-------------" <<  RESET << std::endl;
 }
 
 void Request::parseHeader() {

@@ -10,7 +10,7 @@ class Connection {
 	private:
 		int			_listennerFd;
 		int			_fd;
-		VHost&		_vHost;
+		VHost*		_vHost;
 		int			_writed;
 		int			_needToWrite;
 		std::string buffer_in;
@@ -18,12 +18,17 @@ class Connection {
 		Request		_request;
 		Responce	_responce;
 		routeParams	routeObj;
+		location*	currentLoc;
+		std::string cgiIput;
+		int 		cgiIputFd;
+		std::string cgiOutput;
+
 
 		// fileToSave. open file? 
 
 	public:
-		Connection(int listenner, int fd, VHost& vHost);
 		Connection(Connection const &other);
+		Connection(int listenner, int fd, VHost& vHost);
 		Connection & operator=(Connection const &other);
 		~Connection(void);
 
@@ -35,7 +40,9 @@ class Connection {
 		int			getListener(void) const;
 		Request&	getRequestObj();
 		Responce&	getResponceObj();
-		VHost&		getVhost(void) { return this->_vHost; }
 		void		setResponce();
 		void		handleRequest();
+		void		checkForVhostChange();
+		void		executeOrder66();
+
 };

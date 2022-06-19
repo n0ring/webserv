@@ -16,9 +16,12 @@ class Request {
 
 		std::string _fileToSend;
 		int			_fileToSave;
+		int			_fd;
 
 		int			_currentCode;
 		int			_cgiPid;
+		std::string	inputCGIFile;
+		std::string outputCGIFile;
 	
 	public:
 		Request(void) {
@@ -45,4 +48,8 @@ class Request {
 		std::string& getParamByName(std::string paramName);
 		int				getCgiPid(void) {return this->_cgiPid; }
 		void setCgiPid(int pid) { this->_cgiPid = pid; }
+		void setFd(int fd) { this->_fd = fd;}
+		int getFd() { return this->_fd; }
+		std::string	getInCGIfileName(void) const {return this->inputCGIFile;}
+		std::string	getOutCGIfileName(void) const {return this->outputCGIFile;}
 };

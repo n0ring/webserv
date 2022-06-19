@@ -73,14 +73,13 @@ void Responce::createHeader(int cgiPid) {
 	// Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n");
 	this->_header.append("Content-Length: ");
 	this->_header.append(std::to_string(this->fileLen) + "\n");
-	this->_header.append("Connection: Closed\n");
+	this->_header.append("Connection: Close\n");
 	if (cgiPid == -1) {
 		if (!this->MIME.empty()) {
 			this->_header.append("Content-Type: " + this->MIME + "\n");
 		}
 		this->_header.append("\n");
 	}
-	std::cout << "-----header to send------" << std::endl;
-	std::cout << this->_header << std::endl;
-	std::cout << "------------------------\n\n";
+	std::cout << GREEN << "-----header to send------" << std::endl;
+	std::cout << this->_header << std::endl << RESET;
 }

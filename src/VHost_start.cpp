@@ -107,7 +107,7 @@ void VHost::setServerParams(std::vector<std::string> params) {
 		this->_port = std::stoi(params.back());
 		return ;
 	}
-	if (params.front().compare("server_names") == 0) {
+	if (params.front().compare("server_name") == 0) {
 		this->_serverName = params.back();
 		return ;
 	}
@@ -120,30 +120,14 @@ void VHost::setServerParams(std::vector<std::string> params) {
 void VHost::setLocationParam(std::vector<std::string> inputParams) {
 	if (inputParams.size() < 2) return ;
 
-	if (inputParams.front().compare("root") == 0) { // need to del
-		this->locations.back().root = inputParams.back();
-		truncStr(this->locations.back().root);
-		return ;
-	}
-	if (inputParams.front().compare("index") == 0) {
-		this->locations.back().index = inputParams.back();
-		return ;
-	}
 	if (inputParams.front().compare("methods") == 0) {
 		for (size_t i = 1; i < inputParams.size(); i++) {
 			this->locations.back().methods.push_back(inputParams[i]);
 		}
 		return ;
 	}
-	if (inputParams.front().compare("autoindex") == 0) {
-		this->locations.back().autoindex = inputParams.back();
-		return ;
-	}
-
-	if (inputParams.front().compare("cgi") == 0) {
-		this->locations.back().cgi = inputParams.back();
-		return ;
-	}
+	truncStr(inputParams.back());
+	this->locations.back().params[inputParams.front()] = inputParams.back();
 }
 
 void VHost::validate() {
@@ -151,21 +135,21 @@ void VHost::validate() {
 	// check for names > 1 if [0] != *
 	// check for file formats != dirs
 	// root has to start with /
+	// dir name has to start with / (/test)
 	// valid methods (only 3)
-	// not same ports
 	bool isValid = true;
-	if (this->_ip.empty()) {
-		isValid = false;
-		std::cerr << "Ip address not found" << std::endl;		
-	}
-	if (this->_port == -1) {
-		isValid = false;
-		std::cerr << "Port not found" << std::endl;		
-	}
-	if (this->_maxBody == -1) {
-		isValid = false;
-		std::cerr << "Max body size not found" << std::endl;		
-	}
+	// if (this->_ip.empty()) {
+	// 	isValid = false;
+	// 	std::cerr << "Ip address not found" << std::endl;		
+	// }
+	// if (this->_port == -1) {
+	// 	isValid = false;
+	// 	std::cerr << "Port not found" << std::endl;		
+	// }
+	// if (this->_maxBody == -1) {
+	// 	isValid = false;
+	// 	std::cerr << "Max body size not found" << std::endl;		
+	// }
 	if (this->locations.size() == 0) {
 		isValid = false;
 		std::cerr << "Locations not found" << std::endl;		
