@@ -72,6 +72,11 @@ void Request::parseHeader() {
 	}
 }
 
+void Request::setQueryString(std::string& str) {
+	if (!str.empty())
+	this->_headerParams["QueryString"] = str;
+}
+
 
 // GET / HTTP/1.1 
 // Host: localhost:8080

@@ -47,6 +47,7 @@ class Request {
 
 		std::string& getParamByName(std::string paramName);
 		int				getCgiPid(void) {return this->_cgiPid; }
+		void setQueryString(std::string& str);
 		void setCgiPid(int pid) { this->_cgiPid = pid; }
 		void setFd(int fd) { this->_fd = fd;}
 		int getFd() { return this->_fd; }

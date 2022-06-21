@@ -22,6 +22,7 @@ class location {
 		std::vector<std::string>			names;
 		std::vector<std::string>			methods; // ints
 		std::map<std::string, std::string>	params;
+		std::map<int, std::string>			errorPages;
 
 	public:
 		bool isLocationMatch(std::string &route) {
@@ -59,6 +60,14 @@ class location {
 		}
 
 		bool isCgi() { return  (this->params.count("cgi")); }
+
+		bool hasErrorPage(void) { return !this->errorPages.empty();}
+		std::string getErrorPage(int code) { 
+			if (this->errorPages.count(code)) {
+				return this->errorPages[code];
+			}
+			return "";
+		 }
 
 
 		void toString() {

@@ -29,6 +29,7 @@ VHost & VHost::operator=(VHost const &other) {
 		this->_address = other._address;
 		this->_addrlen = other._addrlen;
 		this->locations= other.locations;
+		this->errorPages = other.errorPages;
 	}
 	return *this;
 }
@@ -94,8 +95,28 @@ void VHost::setNewLocation(std::vector<std::string> params) {
 	this->locations.push_back(loc);
 }
 
+
+void	setErrorPages(std::map<int, std::string>& errorMap,
+						std::vector<std::string> params) {
+	truncStr(params.back());
+	size_t posToChange = params.back().find("*");
+	if (posToChange == std::string::npos) {
+		std::cerr << "incorrect error_page params" << std::endl;
+		return ;
+	}
+	for (size_t i = 1; i < params.size() - 1; i++) {
+		int code = std::stoi(params[i]);
+		std::string pathRaw =  params.back();
+		errorMap[code] = pathRaw.replace(posToChange, 1, params[i]);
+	}
+}
+
 void VHost::setServerParams(std::vector<std::string> params) {
 	if (params.size() != 2) {
+		if (params.size() >= 3 && params.front().compare("error_page") == 0) {
+			setErrorPages(this->errorPages, params);
+			return;
+		}
 		std::cout << "incorrect paramr pair" << std::endl;
 		return ;
 	}
@@ -120,6 +141,10 @@ void VHost::setServerParams(std::vector<std::string> params) {
 void VHost::setLocationParam(std::vector<std::string> inputParams) {
 	if (inputParams.size() < 2) return ;
 
+	if (inputParams.front().compare("error_page") == 0) {
+		setErrorPages(this->locations.back().errorPages, inputParams);
+		return;
+	}
 	if (inputParams.front().compare("methods") == 0) {
 		for (size_t i = 1; i < inputParams.size(); i++) {
 			this->locations.back().methods.push_back(inputParams[i]);

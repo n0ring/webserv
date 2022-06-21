@@ -29,25 +29,44 @@ void	Cgi::findPathToApp(std::string& pathToApp, std::string& fileToExec) {
 	}
 }
 
-void Cgi::setEnv(char **env) {
-	// env[1] = (char *) std::string("PATH_INFO=").append(getenv("PATH_INFO")).c_str();
-	env[0] = (char *) std::string("PATH=").append(getenv("PATH")).c_str();
-	env[1] = NULL;
+void setEnv(std::vector<std::string>& envVector, Request& request) {
+	char *pwd = getenv("PWD");
+	envVector.push_back("REQUEST_METHOD=" + request.getParamByName("Method"));
+	envVector.push_back("CONTENT_LENGTH=" + request.getParamByName("Content-Length"));
+	envVector.push_back("CONTENT_TYPE=" + request.getParamByName("Method"));
+	envVector.push_back("QUERY_STRING=" + request.getParamByName("QueryString"));
+
+	if (pwd) {
+		envVector.push_back("PATH_INFO=" + std::string(pwd)); // change after
+	}
 }
 
+void child(std::string& tmpInputFile, std::string& tmpOutputFile,
+			std::vector<char *>& argv,  Request& request) {
+	int	ofd, ifd;
+	std::vector<std::string> envVector;
+	setEnv(envVector, request);
 
+	char* env[envVector.size() + 1];
+	for (size_t i = 0; i < envVector.size(); i++) {
+		env[i] = (char *) envVector[i].c_str();
+	}
+	env[envVector.size()] = NULL;
 
-void child(const char *tmpFile, std::vector<char *>& argv, char* env[]) {
-	int					ofd;
-	
-	remove(tmpFile);
-	// dup2(inputFile, STDIN_FILENO); 
-	ofd = open(tmpFile, O_RDWR | O_CREAT | O_TRUNC, 777);
+	remove(tmpOutputFile.c_str());
+	ofd = open(tmpOutputFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, 777);
+	ifd = open(tmpInputFile.c_str(), O_RDONLY);
 	if (ofd == -1) {
-		perror("open tmp file");
+		perror("CGI:open tmp output");
 		exit(1);
 	}
+	if (ifd == -1) {
+		perror("CGI:open tmp input");
+		exit(-1);
+	}
+	dup2(ifd, STDIN_FILENO); 
 	dup2(ofd, STDOUT_FILENO);
+	// dup2(ofd, STDERR_FILENO);
 	if (execve(argv[0], &(argv[0]), env)  == -1) {
 		close(ofd);
 		perror("execve");
@@ -55,15 +74,12 @@ void child(const char *tmpFile, std::vector<char *>& argv, char* env[]) {
 	}
 }
 
-
-int	Cgi::start(location &loc, const char *tmpFile, Request& request) { // return exit status
+int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputFile, Request& request) { // return exit status
 	std::string			pathToApp;
-	int					pid;
+	int					pid, status;
 	std::vector<char *>	argv;
-	char*				env[2];
 	std::string			fileToExec = loc.params["root"] + "/" + loc.params["cgi"];
 
-	(void) request;
 	if (loc.params.count("bin")) {
 		pathToApp.append("/" + loc.params["bin"]);
 	} else {
@@ -75,18 +91,36 @@ int	Cgi::start(location &loc, const char *tmpFile, Request& request) { // return
 	argv.push_back((char *) fileToExec.c_str());
 	argv.push_back(NULL);
 
-	setEnv(env);
-
 	pid = fork();
 	if (pid == -1) {
 		perror("fork");
 		return -1;
 	}
 	if (pid == 0)  {
-		child(tmpFile, argv, env);
+		child(tmpInputFile, tmpOutputFile, argv, request);
 	}
 	else {
-		waitpid(pid, 0, 0);
+		waitpid(pid, &status, 0);
+		if (WIFEXITED(status))
+			return WEXITSTATUS(status);
 	}
 	return pid;
+}
+
+void Cgi::preprocessCgi(Connection& connect) {
+	int fd = -1;
+	if (connect.getCurrectCode() >= 400) {
+		return ;
+	}
+	// set env jere
+	remove(connect.getCgiInputFileName().c_str());
+	fd = open(connect.getCgiInputFileName().c_str(), O_RDWR | O_CREAT | O_TRUNC);
+	if (fd == -1) {
+		perror("create input file fail");
+		connect.setCurrentCode(500);
+	}
+	else {
+		connect.setCgiInputFd(fd);
+	}
+	connect.sendBodyToFile();
 }

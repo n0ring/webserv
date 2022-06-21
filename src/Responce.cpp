@@ -4,7 +4,7 @@ void Responce::setHeader(std::string header) {
 	this->_header = header;
 }
 
-bool Responce::prepareFileToSend(std::string &fileName) {
+bool Responce::prepareFileToSend(std::string fileName) {
 	// struct stat sb;
 	this->ifs.open(fileName, std::ifstream::in);
 	if (this->ifs.is_open() == false) {
@@ -59,7 +59,7 @@ void Responce::setCode(int c) {
 	this->code = c;
 }
 
-void Responce::createHeader(int cgiPid) {
+void Responce::createHeader(location* loc) {
 	Mime::set(this->fileExtToSend, this->MIME);
 	this->_header.append("HTTP/1.1");
 	this->_header.append(" ");
@@ -74,7 +74,7 @@ void Responce::createHeader(int cgiPid) {
 	this->_header.append("Content-Length: ");
 	this->_header.append(std::to_string(this->fileLen) + "\n");
 	this->_header.append("Connection: Close\n");
-	if (cgiPid == -1) {
+	if (  !(loc && loc->isCgi()) || code >= 400) { // > 500? 
 		if (!this->MIME.empty()) {
 			this->_header.append("Content-Type: " + this->MIME + "\n");
 		}

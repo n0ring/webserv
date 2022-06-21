@@ -31,7 +31,7 @@ VHost createObj(std::string configText) {
 			}
 		}
 	}
-	// serverConfig.toString();
+	// vHost.toString();
 	return vHost;
 }
 

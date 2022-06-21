@@ -1,5 +1,5 @@
-
 #include "VHost.hpp"
+
 
 #include <unistd.h> // access
 #define ROUTE_FIRST 1
@@ -22,45 +22,49 @@ void setRouteParams(std::string& route, std::vector<std::string>& params) {
 		params.push_back(route);
 	}
 }
+/*
+	foo://example.com:8042/over/there?name=ferret#nose
+	\_/   \______________/\_________/ \_________/ \__/
+	 |           |            |            |        |
+ scheme     authority       path        query   fragment
+*/
 
-// 3 params - has file
-// 1 param - only dir
-
-// check for file ext - first loop
-// check for dirs - sec loop if after first not found file ext
-
-
-void setParamObj(std::vector<std::string>& v, routeParams& params) {
-	size_t i = 0;
-	for (; i < v.size(); i++) {
-		if (v[i].find(".") != std::string::npos) {
-			break;	
-		}
-		params.dirs.push_back(v[i]);
-	}
-	if (i == v.size()) {
+void splitLastPath(routeParams& params) {
+	if (params.path.empty()) {
+		return ;
+	} 
+	size_t dotPos = params.path.back().find(".");
+	if (dotPos == std::string::npos) {
 		return ;
 	}
-	size_t baseNameEnd = v[i].find(".");
-	if (baseNameEnd != std::string::npos && baseNameEnd != v[i].length() - 1) {
-		params.fileBaseName = v[i].substr(0, baseNameEnd);
-		size_t extEnd = baseNameEnd + 1;
-		while (extEnd + 1 < v[i].size() && v[i][extEnd + 1] != '/' 
-			&& v[i][extEnd + 1] != '?') extEnd++;
-		params.ext = v[i].substr(baseNameEnd + 1, extEnd - baseNameEnd);
-		params.afterFile.append(v[i].substr(extEnd + 1));
-		i++;
-		for (; i < v.size(); i++) {
-			params.afterFile.append("/");
-			params.afterFile.append(v[i]);
+	params.fileBaseName = params.path.back().substr(0, dotPos);
+	params.ext = params.path.back().substr(dotPos + 1);
+	params.path.erase(params.path.end() - 1);
+}
+
+void setParamObj(Request& request, routeParams& params) {
+	std::vector<std::string>	routeArr;
+	size_t posQueryChar;
+	
+	splitByChar(request.getParamByName("Route"), '/', routeArr);
+	for (size_t i = 0 ; i < routeArr.size(); i++) {
+		posQueryChar = routeArr[i].find("?");
+		if (posQueryChar == std::string::npos) {
+			params.path.push_back(routeArr[i]);
+		}
+		else {
+			params.path.push_back(routeArr[i].substr(0, posQueryChar));
+			params.query = routeArr[i].substr(posQueryChar + 1);
+			break;
 		}
 	}
+	splitLastPath(params);
 }
 
 void VHost::setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it) {
 	params.finalPathToFile.append(it->params["root"]);
-	while (i < params.dirs.size()) {
-		params.finalPathToFile.append("/" + params.dirs[i++]);
+	while (i < params.path.size()) {
+		params.finalPathToFile.append("/" + params.path[i++]);
 	}
 	params.finalPathToFile.append("/");
 	if (params.fileBaseName.empty()) {
@@ -89,8 +93,8 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	std::vector<location>::iterator ite = this->locations.end();
 	std::string dirToFind;
 
-	for (size_t i = 0; i < params.dirs.size(); i++) { // search by dirNames
-		dirToFind.append("/" + params.dirs[i]);
+	for (size_t i = 0; i < params.path.size(); i++) { // search by dirNames
+		dirToFind.append("/" + params.path[i]);
 		it =  findLocationMatch(this->locations, dirToFind); 
 		if (it != ite) { // dir found set root + all dirs + filename 
 			this->setRouteParamByDirSearch(params, i + 1, it);
@@ -100,6 +104,7 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	it = findLocationMatch(this->locations, params.ext); // search for file ext
 	if (it != ite) {
 		params.finalPathToFile.append(it->params["root"] + "/" + params.fileBaseName + "." + params.ext);
+
 	}
 	else if (!params.fileBaseName.empty() + !params.ext.empty()) {
 		std::string r = "/";
@@ -113,37 +118,27 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 }
 
 
-
-
-
-void POST(Request& request, routeParams &paramObj) {
-	(void) request;
-	(void) paramObj;
-}
-
 void VHost::processHeader(Request& request, routeParams &paramObj, location **locToConnection) {
 	VHost::locations_iter		currentLoc;
-	VHost::locations_iter		currentLoc1;
 	std::string					fileToSend;
-	std::vector<std::string>	inputRouteParams;
 	
-	splitByChar(request.getParamByName("Route"), '/', inputRouteParams);
-	setParamObj(inputRouteParams, paramObj);
+	setParamObj(request, paramObj);
 	currentLoc = this->getLocation(paramObj);
 	if (currentLoc == this->locations.end()) {
 		request.setCurrentCode(404);
+		*locToConnection = NULL;
 		std::cout << "location not found " << std::endl; 
 		return ;
 	}
+	*locToConnection = &(*currentLoc);
+	request.setQueryString(paramObj.query);
 	if (currentLoc->isMethodAllow(request.getParamByName("Method")) == false) {
 		request.setCurrentCode(405);
 		std::cout << "method not allowed " << std::endl; 
 		return ;
 	}
-	*locToConnection = &(*currentLoc);
 	request.setCurrentCode(200);
 }
-
 
 
 VHost*	VHost::changeVhost(std::string& hostName) {
@@ -153,4 +148,11 @@ VHost*	VHost::changeVhost(std::string& hostName) {
 		}
 	}
 	return NULL;
+}
+
+std::string VHost::getErrorPage(int code) {
+	if (this->errorPages.count(code)) {
+		return this->errorPages[code];
+	}
+	return "";
 }

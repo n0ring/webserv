@@ -6,13 +6,14 @@
 #include <fcntl.h>
 #include <netinet/in.h> // sockaddr_in
 #include <vector>
+#include <map>
 #include <arpa/inet.h>  // inet_addr
 #include <algorithm>
 #include "utils.hpp" // parserUtils deleteComment, sPPlit, getLine
 #include "Request.hpp"
 #include "Responce.hpp"
 #include "Location.hpp"
-#include "Cgi.hpp"
+// #include "Cgi.hpp"
 
 #define LOCATION_PARAM "location"
 #define TMP_FILE "tmp"
@@ -29,10 +30,10 @@
 
 
 struct routeParams { // no / on start and end
-	std::vector<std::string>	dirs; // before file
+	std::vector<std::string>	path; // before file
 	std::string					fileBaseName;
 	std::string					ext;
-	std::string					afterFile;
+	std::string					query;
 	std::string					finalPathToFile;
 };
 class VHost {
@@ -48,6 +49,7 @@ class VHost {
 		socklen_t	_addrlen;
 		std::vector<location>	locations;
 		std::vector<VHost>		vHostsWithSamePort;
+		std::map<int, std::string>	errorPages;
 		
 		void	setupSocket(void);
 		void	setupSockAddr_in(void);
@@ -78,7 +80,7 @@ class VHost {
 		int			getListener(void) const;
 		int			acceptNewConnection();
 		void		setResponce(Request& request, Responce &responce);
-
+		std::string	getErrorPage(int code);
 		void	processHeader(Request& request, routeParams& routeObj, location **currentLoc);
 		VHost*	changeVhost(std::string& hostName);
 		locations_iter 	getLocation(routeParams& params);

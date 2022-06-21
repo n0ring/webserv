@@ -9,6 +9,9 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 	this->currentLoc = NULL;
 	this->cgiIput.append(".cgi_input" + std::to_string(fd));
 	this->cgiOutput.append(".cgi_output" + std::to_string(fd));
+	this->cgiIputFd = -1;
+	remove(this->cgiOutput.c_str());
+	remove(this->cgiIput.c_str());
 }
 
 Connection::Connection(Connection const &other) {
@@ -24,6 +27,7 @@ Connection & Connection::operator=(Connection const &other) {
 		this->_needToWrite = other._needToWrite;
 		this->currentLoc = other.currentLoc;
 		this->cgiIput = other.cgiIput;
+		this->cgiIputFd = other.cgiIputFd;
 		this->cgiOutput = other.cgiOutput;
 		// add others
 	}
@@ -57,7 +61,7 @@ int Connection::receiveData() {  // viHost
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
 	// if (!this->_request.getHeader().empty()) { // header !empty
-	if (!this->_request.getHeader().empty() && this->currentLoc->isCgi()) { // if post? 
+	if (this->cgiIputFd != -1) { // if post? 
 		write(this->cgiIputFd, buf, ret);
 	}
 	else {
@@ -75,16 +79,10 @@ int Connection::receiveData() {  // viHost
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
 		this->checkForVhostChange();
 		this->_vHost->processHeader(this->_request, this->routeObj, &this->currentLoc);
-		// if cgi open inputfile. send there all except header. next packege save there.
-		if (this->currentLoc->isCgi()) {
-			this->cgiIputFd = open(this->cgiIput.c_str(), O_RDWR | O_CREAT | O_TRUNC);
-			if (this->cgiIputFd == -1) {
-				perror("crete input file");
-				this->_request.setCurrentCode(500);
-				return 0;
-			}
-			write(this->cgiIputFd, this->body.c_str(), this->body.length());
-		}
+		if (this->currentLoc && this->currentLoc->isCgi()) {
+			Cgi::preprocessCgi(*this);
+		} // only for good code
+		// if cgi open inputfile. send there all except header. next packege save there
 	}
 	if (ret == 0) {
 		return -1;
@@ -96,19 +94,32 @@ int Connection::receiveData() {  // viHost
 	return ret;
 }
 
+std::string Connection::getErrorPageName(int code) {
+	std::string pageName;
+	if (this->currentLoc) {
+		pageName = this->currentLoc->getErrorPage(code);
+	}
+	if (pageName.empty()) {
+		pageName = this->_vHost->getErrorPage(code);
+	}
+	if (pageName.empty()) {
+		return "www/errors/1.html";
+	}
+	return pageName;
+}
+
 void	Connection::setResponce() {
-	std::string errorFile = "www/errors/404.html";
 	if (this->_request.getCurrentCode() == 0) {
 		std::cout << "HTTP not found in set Responce" << std::endl;
 		this->_request.setCurrentCode(505);
 	}
 	if (this->_request.getCurrentCode() >= 400) { // set erorr page
-		this->_request.setFileNameToSend(errorFile);
+		this->_request.setFileNameToSend(this->getErrorPageName(this->getCurrectCode()));
 	}
 	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
 		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
 		this->_request.setCurrentCode(404);
-		this->_responce.prepareFileToSend(errorFile); // if can't open set default
+		this->_responce.prepareFileToSend(this->getErrorPageName(this->getCurrectCode())); // if can't open set default
 	}
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
@@ -118,10 +129,14 @@ void GET(Request& request, routeParams &paramObj) {
 }
 
 void Connection::executeOrder66() { // all data recieved
-	if (this->currentLoc->isCgi()) {
+	if (this->currentLoc && this->currentLoc->isCgi()) {
 		std::cout << "CGI" << std::endl;
-		this->_request.setCgiPid(Cgi::start(*this->currentLoc, TMP_FILE, this->_request));
-		this->_request.setFileNameToSend(TMP_FILE);
+		close(this->cgiIputFd);
+		if (Cgi::start(*this->currentLoc, this->cgiIput, this->cgiOutput, this->_request)) {
+			this->setCurrentCode(500);
+			return ;
+		}
+		this->_request.setFileNameToSend( this->cgiOutput.c_str());
 	}
 	else {
 		std::string method = this->_request.getParamByName("Method");
@@ -139,11 +154,13 @@ void Connection::executeOrder66() { // all data recieved
 }
 
 void Connection::prepareResponceToSend() {
-	this->executeOrder66();
+	if (this->getCurrectCode() < 400) {
+		this->executeOrder66();
+	} 
 	this->setResponce();
 	this->buffer_in.clear();
 	// if file to send not open set default.
-	this->_responce.createHeader(this->_request.getCgiPid());
+	this->_responce.createHeader(this->currentLoc);
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
 }
 
@@ -167,18 +184,17 @@ int Connection::sendData() {
 		if (!this->_request.getParamByName("Connection").compare("close")) {
 			return -1;
 		}
+		if (this->currentLoc && this->currentLoc->isCgi()) {
+			remove(this->cgiIput.c_str());
+			remove(this->cgiOutput.c_str());
+			// return -1;
+		}
 		bzero(&this->routeObj, sizeof(this->routeObj));
 		this->_writed = 0;
 		this->_needToWrite = 0;
-		remove(this->cgiIput.c_str());
-		remove(this->cgiOutput.c_str());
-		if (this->_request.getCgiPid() > 0) {
-			remove(TMP_FILE); // if cgi
-		}
 		if (this->_request.getCurrentCode() >= 400) {
 			return -1;
 		}
-		// if connection: close return -1;
 		this->_request.resetObj();
 		this->_responce.resetObj();
 		return 0;
@@ -198,6 +214,10 @@ void	Connection::checkForVhostChange() {
 	if (newVhost) {
 		this->_vHost = newVhost;
 	}
+}
+
+void	Connection::sendBodyToFile() {
+	write(this->cgiIputFd, this->buffer_in.c_str(), this->buffer_in.length());
 }
 
 Connection::~Connection(void) {}

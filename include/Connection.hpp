@@ -5,7 +5,7 @@
 #include "Request.hpp"
 #include "Responce.hpp"
 #include "VHost.hpp"
-
+#include "Cgi.hpp"
 class Connection {
 	private:
 		int			_listennerFd;
@@ -44,5 +44,11 @@ class Connection {
 		void		handleRequest();
 		void		checkForVhostChange();
 		void		executeOrder66();
+		void		sendBodyToFile();
+		std::string getErrorPageName(int code);
+		void		setCgiInputFd(int fd) {this->cgiIputFd = fd;}
+		int			getCurrectCode(void) { return this->_request.getCurrentCode(); }
+		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
+		std::string& getCgiInputFileName(void) { return this->cgiIput; }
 
 };

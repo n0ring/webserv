@@ -5,11 +5,20 @@ echo
 
 echo "<h3>"
 echo "<pre>"
-# cal
-date
-ls -a
-# cat
+cal
+echo "from STDIN:"
+cat
 echo
-echo "end of cat"
+echo
+env
+# sed 's/+/ /g' | cut -b 7-   | bash
+# echo
+
+# echo 	"<form method="post" action="cgi-bash">"
+# echo	"<input placeholder="minishell" autofocus name="input" type="text">"
+# echo 		"<button type="submit"> BASH POST </button>"
+# echo "</form>"
+
+
 echo "</pre>"
 echo "</h3>"

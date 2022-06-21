@@ -2,9 +2,10 @@
 
 #include <iostream> // string io
 #include <fstream> // ifstream
-#include "utils.hpp"
 #include <sys/stat.h> // stat (check is file regular)
-#define BUFFER 2048
+#include "Location.hpp"
+#include "utils.hpp"
+#define BUFFER 700
 
 
 class Responce {
@@ -30,7 +31,7 @@ class Responce {
 
 		void		setHeader(std::string header);
 		
-		bool prepareFileToSend(std::string &fileName);
+		bool prepareFileToSend(std::string fileName);
 		
 		void setCode(int c);
 
@@ -41,6 +42,6 @@ class Responce {
 		void	resetObj();
 
 
-		void	createHeader(int cgiPid);
+		void	createHeader(location* loc);
 };
 
