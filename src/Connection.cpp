@@ -9,6 +9,7 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 	this->currentLoc = NULL;
 	this->cgiIput.append(".cgi_input" + std::to_string(fd));
 	this->cgiOutput.append(".cgi_output" + std::to_string(fd));
+	this->defaultErrorPageName.append(".defaultErrorPage" + std::to_string(fd) + ".html");
 	this->cgiIputFd = -1;
 	remove(this->cgiOutput.c_str());
 	remove(this->cgiIput.c_str());
@@ -29,6 +30,7 @@ Connection & Connection::operator=(Connection const &other) {
 		this->cgiIput = other.cgiIput;
 		this->cgiIputFd = other.cgiIputFd;
 		this->cgiOutput = other.cgiOutput;
+		this->defaultErrorPageName = other.defaultErrorPageName;
 		// add others
 	}
 	return *this;
@@ -50,11 +52,6 @@ bool isRecieveOver(std::string req) { // need to refactor or delete
 	return false;
 }
 
-/*
-During receive data need to set and process header. 
-after process header set params for receive next data pack
-(place to save, continue or not)
-*/
 int Connection::receiveData() {  // viHost
 	char buf[BUFFER];
 	int ret;
@@ -94,8 +91,49 @@ int Connection::receiveData() {  // viHost
 	return ret;
 }
 
+
+int Connection::sendData() {
+	char	buf[BUFFER];
+	size_t	readyToSend = 0;
+	int		sended;
+	
+	bzero(buf, BUFFER);
+
+	readyToSend = this->_responce.fillBuffer(buf);
+	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
+	if (sended == -1) {
+		perror("send");
+		std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
+		return -1;
+	}
+	this->_writed += sended;
+	if (this->_writed >= this->_needToWrite) { // end of sending 
+		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
+		remove(this->defaultErrorPageName.c_str());
+		if (this->currentLoc && this->currentLoc->isCgi()) {
+			remove(this->cgiIput.c_str());
+			remove(this->cgiOutput.c_str());
+		}
+		bzero(&this->routeObj, sizeof(this->routeObj));
+		this->_writed = 0;
+		this->_needToWrite = 0;
+		if (this->_request.getCurrentCode() >= 400) {
+			return -1;
+		}
+		this->_request.resetObj();
+		this->_responce.resetObj();
+		if (!this->_request.getParamByName("Connection").compare("close")) {
+			return -1;
+		}
+		return 0;
+	}
+	return sended;
+}
+
 std::string Connection::getErrorPageName(int code) {
 	std::string pageName;
+	std::string	page;
+
 	if (this->currentLoc) {
 		pageName = this->currentLoc->getErrorPage(code);
 	}
@@ -103,7 +141,15 @@ std::string Connection::getErrorPageName(int code) {
 		pageName = this->_vHost->getErrorPage(code);
 	}
 	if (pageName.empty()) {
-		return "www/errors/1.html";
+		std::ofstream ofs;
+		remove(this->defaultErrorPageName.c_str());
+		ofs.open(this->defaultErrorPageName, std::ostream::out | std::ostream::trunc);
+		if (ofs.is_open()) {
+			page = getDefaultErrorPage(code);
+			ofs << page;
+			ofs.close();
+			pageName = this->defaultErrorPageName;
+		}
 	}
 	return pageName;
 }
@@ -118,8 +164,13 @@ void	Connection::setResponce() {
 	}
 	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
 		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
+		if (this->_request.getCurrentCode() >= 400) {
+			this->_responce.setCode(this->_request.getCurrentCode());
+			return ;
+		}
 		this->_request.setCurrentCode(404);
-		this->_responce.prepareFileToSend(this->getErrorPageName(this->getCurrectCode())); // if can't open set default
+		this->_responce.prepareFileToSend(this->getErrorPageName(this->getCurrectCode()));
+		// if can't open set default/ clear file to send;
 	}
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
@@ -159,47 +210,8 @@ void Connection::prepareResponceToSend() {
 	} 
 	this->setResponce();
 	this->buffer_in.clear();
-	// if file to send not open set default.
 	this->_responce.createHeader(this->currentLoc);
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
-}
-
-int Connection::sendData() {
-	char	buf[BUFFER];
-	size_t	readyToSend = 0;
-	int		sended;
-	
-	bzero(buf, BUFFER);
-
-	readyToSend = this->_responce.fillBuffer(buf);
-	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
-	if (sended == -1) {
-		perror("send");
-		std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
-		return -1;
-	}
-	this->_writed += sended;
-	if (this->_writed >= this->_needToWrite) { // end of sending 
-		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
-		if (!this->_request.getParamByName("Connection").compare("close")) {
-			return -1;
-		}
-		if (this->currentLoc && this->currentLoc->isCgi()) {
-			remove(this->cgiIput.c_str());
-			remove(this->cgiOutput.c_str());
-			// return -1;
-		}
-		bzero(&this->routeObj, sizeof(this->routeObj));
-		this->_writed = 0;
-		this->_needToWrite = 0;
-		if (this->_request.getCurrentCode() >= 400) {
-			return -1;
-		}
-		this->_request.resetObj();
-		this->_responce.resetObj();
-		return 0;
-	}
-	return sended;
 }
 
 void	Connection::checkForVhostChange() {
@@ -224,3 +236,10 @@ Connection::~Connection(void) {}
 Request& Connection::getRequestObj() {return this->_request; }
 Responce& Connection::getResponceObj() {return this->_responce; }
 int Connection::getListener() const {return this->_listennerFd; }
+
+
+
+
+
+
+

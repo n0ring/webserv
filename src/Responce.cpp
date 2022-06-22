@@ -5,18 +5,14 @@ void Responce::setHeader(std::string header) {
 }
 
 bool Responce::prepareFileToSend(std::string fileName) {
-	// struct stat sb;
 	this->ifs.open(fileName, std::ifstream::in);
 	if (this->ifs.is_open() == false) {
 		return false;
 	}
-	// if (stat(fileName.c_str(), &sb) == 0 && S_ISREG(sb.st_mode)) {
-		this->ifs.seekg (0, ifs.end);
-		this->fileLen = this->ifs.tellg();
-		ifs.seekg(0, ifs.beg);
-		this->fileExtToSend = fileName.substr(fileName.find(".") + 1);
-		// return true;
-	// }
+	this->ifs.seekg (0, ifs.end);
+	this->fileLen = this->ifs.tellg();
+	ifs.seekg(0, ifs.beg);
+	this->fileExtToSend = fileName.substr(fileName.find_last_of(".") + 1);
 	return true;
 }
 
@@ -45,7 +41,6 @@ size_t Responce::fillBuffer(char *buf) {
 
 void Responce::resetObj() {
 	this->_header.clear();
-	this->_body.clear();
 	this->ifs.close();
 	this->fileLen = 0;
 	this->headerSended = 0;
@@ -72,7 +67,7 @@ void Responce::createHeader(location* loc) {
 	// Server: huyaache/2.2.14 (Win32)\n\
 	// Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n");
 	this->_header.append("Content-Length: ");
-	this->_header.append(std::to_string(this->fileLen) + "\n");
+		this->_header.append(std::to_string(this->fileLen) + "\n");
 	this->_header.append("Connection: Close\n");
 	if (  !(loc && loc->isCgi()) || code >= 400) { // > 500? 
 		if (!this->MIME.empty()) {

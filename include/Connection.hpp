@@ -22,9 +22,7 @@ class Connection {
 		std::string cgiIput;
 		int 		cgiIputFd;
 		std::string cgiOutput;
-
-
-		// fileToSave. open file? 
+		std::string	defaultErrorPageName;
 
 	public:
 		Connection(Connection const &other);

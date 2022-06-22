@@ -108,3 +108,26 @@ void truncStr(std::string &s) {
 		s.erase(s.length() - 1);
 	}
 }
+
+std::string getDefaultErrorPage(int code) {
+	std::string page;
+	std::string message = "This is default page. User don't provide it. Error: ";
+	page.append("\
+	<!DOCTYPE html>\
+<html>\
+<head>\
+	<meta charset='utf-8'>\
+	<meta http-equiv='X-UA-Compatible' content='IE=edge'>\
+	<title>Page Title</title>\
+	<meta name='viewport' content='width=device-width, initial-scale=1'>\
+</head>\
+<body style=\"background: black;\">\
+	<h1 style=\"color: blueviolet;  margin: auto; width: 50%\">");
+	
+	page.append(message);
+	page.append(std::to_string(code));
+	page.append("</h1>\
+	</body>\
+	</html>");
+	return page;
+}

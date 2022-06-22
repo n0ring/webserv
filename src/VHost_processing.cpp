@@ -33,7 +33,7 @@ void splitLastPath(routeParams& params) {
 	if (params.path.empty()) {
 		return ;
 	} 
-	size_t dotPos = params.path.back().find(".");
+	size_t dotPos = params.path.back().find_last_of(".");
 	if (dotPos == std::string::npos) {
 		return ;
 	}

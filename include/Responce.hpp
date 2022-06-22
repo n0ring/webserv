@@ -5,18 +5,16 @@
 #include <sys/stat.h> // stat (check is file regular)
 #include "Location.hpp"
 #include "utils.hpp"
-#define BUFFER 700
+#define BUFFER 2048
 
 
 class Responce {
 	private:
 		std::string		_header;
-		std::string		_body;
 		std::ifstream	ifs;
 		size_t			fileLen;
 		size_t			headerSended;
 		size_t			bodySended;
-
 		int				code;
 		int				contentLength;
 		std::string		contentType;
@@ -31,17 +29,12 @@ class Responce {
 
 		void		setHeader(std::string header);
 		
-		bool prepareFileToSend(std::string fileName);
-		
-		void setCode(int c);
-
-		size_t getFileSize();
-		size_t getHeaderSize();
-
+		bool	prepareFileToSend(std::string fileName);
+		void	setCode(int c);
+		size_t	getFileSize();
+		size_t	getHeaderSize();
 		size_t	fillBuffer(char *buf);
 		void	resetObj();
-
-
 		void	createHeader(location* loc);
 };
 
