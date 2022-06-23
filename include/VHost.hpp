@@ -35,6 +35,7 @@ struct routeParams { // no / on start and end
 	std::string					ext;
 	std::string					query;
 	std::string					finalPathToFile;
+	std::string					pathRemainder;
 };
 class VHost {
 	private:
@@ -43,13 +44,13 @@ class VHost {
 		std::string	_serverName; // from cfg
 		int 		_backlog; // from cfg ?? 
 		int 		_maxBody; // from cfg
+		std::map<int, std::string>	errorPages;
 
 		int			_listener;
 		sockaddr	_address; 
 		socklen_t	_addrlen;
 		std::vector<location>	locations;
 		std::vector<VHost>		vHostsWithSamePort;
-		std::map<int, std::string>	errorPages;
 		
 		void	setupSocket(void);
 		void	setupSockAddr_in(void);

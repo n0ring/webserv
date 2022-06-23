@@ -36,9 +36,9 @@ class Server {
 		// int			_listener;
 	
 		std::vector<VHost>	_vHosts;
-		ConnectionPool							ConnectionPool;
-		std::vector<pollfd>			fds;
-		int							nfds;
+		ConnectionPool		ConnectionPool;
+		std::vector<pollfd>	fds;
+		int					nfds;
 
 		void			setupServers(std::string configName);
 		VHost	&getVHost(int fd);

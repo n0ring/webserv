@@ -1,6 +1,7 @@
 import fileinput
 import os
-print  "Content-Type: text/html\n\n"
+print  "HTTP/1.1 200 OK"
+print  "Content-Type: text/html\n"
 
 print "<h3>"
 print "<pre>"

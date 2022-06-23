@@ -1,6 +1,6 @@
 #include "VHost.hpp"
 
-
+// ver. 2 of route parsing
 #include <unistd.h> // access
 #define ROUTE_FIRST 1
 int VHost::getListener(void) const {
@@ -34,6 +34,7 @@ void splitLastPath(routeParams& params) {
 		return ;
 	} 
 	size_t dotPos = params.path.back().find_last_of(".");
+	
 	if (dotPos == std::string::npos) {
 		return ;
 	}
@@ -44,10 +45,10 @@ void splitLastPath(routeParams& params) {
 
 void setParamObj(Request& request, routeParams& params) {
 	std::vector<std::string>	routeArr;
-	size_t posQueryChar;
+	size_t posQueryChar, i;
 	
 	splitByChar(request.getParamByName("Route"), '/', routeArr);
-	for (size_t i = 0 ; i < routeArr.size(); i++) {
+	for (i = 0 ; i < routeArr.size(); i++) {
 		posQueryChar = routeArr[i].find("?");
 		if (posQueryChar == std::string::npos) {
 			params.path.push_back(routeArr[i]);
@@ -59,6 +60,10 @@ void setParamObj(Request& request, routeParams& params) {
 		}
 	}
 	splitLastPath(params);
+	i++;
+	for (; i < routeArr.size(); i++) {
+		params.pathRemainder.append("/" + routeArr[i]);
+	}
 }
 
 void VHost::setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it) {

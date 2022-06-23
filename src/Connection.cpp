@@ -210,7 +210,9 @@ void Connection::prepareResponceToSend() {
 	} 
 	this->setResponce();
 	this->buffer_in.clear();
-	this->_responce.createHeader(this->currentLoc);
+	if (!this->currentLoc || !this->currentLoc->isCgi())  {
+		this->_responce.createHeader(this->currentLoc);
+	}
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
 }
 
