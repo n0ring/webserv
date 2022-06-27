@@ -25,6 +25,13 @@ class location {
 		std::map<int, std::string>			errorPages;
 
 	public:
+		std::string	getParamByName(std::string param) {
+			if (this->params.count(param)) {
+				return this->params[param];
+			}
+			return "";
+		}
+
 		bool isLocationMatch(std::string &route) {
 			std::vector<std::string>::iterator start = this->names.begin();
 			std::vector<std::string>::iterator end = this->names.end();

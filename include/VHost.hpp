@@ -7,6 +7,7 @@
 #include <netinet/in.h> // sockaddr_in
 #include <vector>
 #include <map>
+#include <stack>
 #include <arpa/inet.h>  // inet_addr
 #include <algorithm>
 #include "utils.hpp" // parserUtils deleteComment, sPPlit, getLine
@@ -30,12 +31,15 @@
 
 
 struct routeParams { // no / on start and end
+	std::string					query;
+	std::string					fullRoute;
+	std::string					ext;
+	std::stack<std::string>		pathStack;
+	std::string					finalPathToFile;
+
+	std::string					pathRemainder;
 	std::vector<std::string>	path; // before file
 	std::string					fileBaseName;
-	std::string					ext;
-	std::string					query;
-	std::string					finalPathToFile;
-	std::string					pathRemainder;
 };
 class VHost {
 	private:

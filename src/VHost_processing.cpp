@@ -1,83 +1,47 @@
 #include "VHost.hpp"
 
-// ver. 2 of route parsing
+// ver. 3 of route parsing (full path. start to search and remove last parts)
 #include <unistd.h> // access
-#define ROUTE_FIRST 1
+
 int VHost::getListener(void) const {
 	return this->_listener;
 }
 
-void setRouteParams(std::string& route, std::vector<std::string>& params) {
-	size_t extStart, fStart;
-	extStart = route.find_last_of(".");
-	fStart = route.find_last_of("/");
-	if (extStart != std::string::npos) {
-		fStart++;
-		params.push_back(route.substr(extStart + 1));
-		params.push_back(route.substr(fStart, extStart - fStart));
-		if (fStart > 0) fStart--;
-		params.push_back(route.substr(0, fStart));
-	}
-	else {
-		params.push_back(route);
-	}
-}
 /*
-	foo://example.com:8042/over/there?name=ferret#nose
-	\_/   \______________/\_________/ \_________/ \__/
+	foo://example.com:8042 /over/there/file.fl?name=ferret#nose
+	\_/   \______________/ \_________/ \_________/ \__/
 	 |           |            |            |        |
  scheme     authority       path        query   fragment
 */
 
-void splitLastPath(routeParams& params) {
-	if (params.path.empty()) {
-		return ;
-	} 
-	size_t dotPos = params.path.back().find_last_of(".");
-	
-	if (dotPos == std::string::npos) {
+
+void setQueryString(routeParams& params) {
+	size_t queryStringStart = params.fullRoute.find("?");
+	if (queryStringStart == std::string::npos) {
 		return ;
 	}
-	params.fileBaseName = params.path.back().substr(0, dotPos);
-	params.ext = params.path.back().substr(dotPos + 1);
-	params.path.erase(params.path.end() - 1);
+	params.query =  params.fullRoute.substr(queryStringStart + 1);
+	params.fullRoute.erase(queryStringStart);
+}
+
+void checkForFileExt(routeParams& params) {
+	size_t fileExtStart = params.fullRoute.find_last_of(".");
+	size_t fileExtEnd;
+	if (fileExtStart == std::string::npos) {
+		return ;
+	}
+	fileExtEnd = ++fileExtStart;
+	while (fileExtEnd < params.fullRoute.length() 
+		&& params.fullRoute[fileExtEnd] != '/') {
+		fileExtEnd++;
+	}
+	params.ext = params.fullRoute.substr(fileExtStart, fileExtEnd - fileExtStart);
 }
 
 void setParamObj(Request& request, routeParams& params) {
-	std::vector<std::string>	routeArr;
-	size_t posQueryChar, i;
-	
-	splitByChar(request.getParamByName("Route"), '/', routeArr);
-	for (i = 0 ; i < routeArr.size(); i++) {
-		posQueryChar = routeArr[i].find("?");
-		if (posQueryChar == std::string::npos) {
-			params.path.push_back(routeArr[i]);
-		}
-		else {
-			params.path.push_back(routeArr[i].substr(0, posQueryChar));
-			params.query = routeArr[i].substr(posQueryChar + 1);
-			break;
-		}
-	}
-	splitLastPath(params);
-	i++;
-	for (; i < routeArr.size(); i++) {
-		params.pathRemainder.append("/" + routeArr[i]);
-	}
-}
-
-void VHost::setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it) {
-	params.finalPathToFile.append(it->params["root"]);
-	while (i < params.path.size()) {
-		params.finalPathToFile.append("/" + params.path[i++]);
-	}
-	params.finalPathToFile.append("/");
-	if (params.fileBaseName.empty()) {
-		params.finalPathToFile.append(it->params["index"]);
-	}
-	else {
-		params.finalPathToFile.append(params.fileBaseName + "." + params.ext);
-	}
+	params.fullRoute = request.getParamByName("Route");
+	setQueryString(params);
+	checkForFileExt(params);
 }
 
 VHost::locations_iter findLocationMatch(std::vector<location>& locations, std::string s) {
@@ -93,42 +57,59 @@ VHost::locations_iter findLocationMatch(std::vector<location>& locations, std::s
 	return it;
 }
 
+void removeLastDir(routeParams& params) {
+	size_t lastDirStart = params.fullRoute.find_last_of("/");
+	if (lastDirStart == std::string::npos) {
+		params.fullRoute.clear();
+		return ;
+	}
+	params.pathStack.push(params.fullRoute.substr(lastDirStart));
+	params.fullRoute.erase(lastDirStart);
+}
+
+void setFinalPathToFile(VHost::locations_iter it, routeParams& params) {
+	params.finalPathToFile.append(it->getParamByName("root"));
+	while (!params.pathStack.empty()) {
+		params.finalPathToFile.append(params.pathStack.top());
+		params.pathStack.pop();
+	}
+	if (params.ext.empty()) {
+		params.finalPathToFile.append("/");
+		params.finalPathToFile.append(it->getParamByName("index"));
+	}
+	std::cout << RED << params.finalPathToFile << std::endl;
+}
+
 VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	std::vector<location>::iterator it;
 	std::vector<location>::iterator ite = this->locations.end();
-	std::string dirToFind;
 
-	for (size_t i = 0; i < params.path.size(); i++) { // search by dirNames
-		dirToFind.append("/" + params.path[i]);
-		it =  findLocationMatch(this->locations, dirToFind); 
-		if (it != ite) { // dir found set root + all dirs + filename 
-			this->setRouteParamByDirSearch(params, i + 1, it);
+	while (!params.fullRoute.empty()) { // by dirs
+		it =  findLocationMatch(this->locations, params.fullRoute);
+		if (it != ite) { // found
+			setFinalPathToFile(it, params);
 			return it;
 		}
+		removeLastDir(params);
 	}
-	it = findLocationMatch(this->locations, params.ext); // search for file ext
-	if (it != ite) {
-		params.finalPathToFile.append(it->params["root"] + "/" + params.fileBaseName + "." + params.ext);
-
+	it = findLocationMatch(this->locations, params.ext);
+	if (it == ite) {
+		it =  findLocationMatch(this->locations, "/");
 	}
-	else if (!params.fileBaseName.empty() + !params.ext.empty()) {
-		std::string r = "/";
-		it = findLocationMatch(this->locations, r); // serch for root (add file and try to open) !!!!!!
-		if (it != ite) {
-			params.finalPathToFile.append(it->params["root"] + "/");
-		}
-		params.finalPathToFile.append(params.fileBaseName + "." + params.ext);
-	}
+	setFinalPathToFile(it, params);
 	return it;
 }
 
 
 void VHost::setLocation(Request& request, routeParams &paramObj, location **locToConnection) {
-	VHost::locations_iter		currentLoc;
+	VHost::locations_iter			currentLoc;
 	std::string						fileToSend;
+
+	// bzero(&paramObj, sizeof(paramObj));
 	setParamObj(request, paramObj);
 	request.setQueryString(paramObj.query);
 	currentLoc = this->getLocation(paramObj);
+
 	if (currentLoc == this->locations.end()) {
 		*locToConnection = NULL;
 	} else {

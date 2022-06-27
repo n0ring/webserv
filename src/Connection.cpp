@@ -90,6 +90,12 @@ int Connection::receiveData() {  // viHost
 	return ret;
 }
 
+// split by ?
+// after ? to queryStr
+// before split to file for search
+// if find 
+// set finalpathname
+// if not try by file ext
 
 int Connection::sendData() {
 	char	buf[BUFFER];
