@@ -40,16 +40,19 @@ int Connection::getFd() const {
 	return this->_fd;
 }
 
-bool isRecieveOver(std::string req) { // need to refactor or delete
-	int last = req.length() - 1;
-	if (req.length() < 4) {
-		return false;
+void Connection::processLocation() {
+	if (this->currentLoc == NULL) {
+		this->_request.setCurrentCode(404);
+		return ;
 	}
-	if (req[last] == 10 && req[last - 1] == 13
-	 	&& req[last - 2] == 10 && req[last - 3] == 13) {
-		return true;
+	if (this->currentLoc->isMethodAllow(this->_request.getParamByName("Method")) == false) {
+		this->_request.setCurrentCode(404);
+		return ;
 	}
-	return false;
+	this->_request.setCurrentCode(200);
+	if (this->currentLoc->isCgi()) {
+		Cgi::preprocessCgi(*this);
+	}
 }
 
 int Connection::receiveData() {  // viHost
@@ -57,7 +60,6 @@ int Connection::receiveData() {  // viHost
 	int ret;
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
-	// if (!this->_request.getHeader().empty()) { // header !empty
 	if (this->cgiIputFd != -1) { // if post? 
 		write(this->cgiIputFd, buf, ret);
 	}
@@ -75,11 +77,8 @@ int Connection::receiveData() {  // viHost
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
 		this->checkForVhostChange();
-		this->_vHost->processHeader(this->_request, this->routeObj, &this->currentLoc);
-		if (this->currentLoc && this->currentLoc->isCgi()) {
-			Cgi::preprocessCgi(*this);
-		} // only for good code
-		// if cgi open inputfile. send there all except header. next packege save there
+		this->_vHost->setLocation(this->_request, this->routeObj, &this->currentLoc);
+		this->processLocation();
 	}
 	if (ret == 0) {
 		return -1;

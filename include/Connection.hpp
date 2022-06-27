@@ -48,5 +48,5 @@ class Connection {
 		int			getCurrectCode(void) { return this->_request.getCurrentCode(); }
 		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
 		std::string& getCgiInputFileName(void) { return this->cgiIput; }
-
+		void		processLocation(void);
 };

@@ -123,28 +123,18 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 }
 
 
-void VHost::processHeader(Request& request, routeParams &paramObj, location **locToConnection) {
+void VHost::setLocation(Request& request, routeParams &paramObj, location **locToConnection) {
 	VHost::locations_iter		currentLoc;
-	std::string					fileToSend;
-	
+	std::string						fileToSend;
 	setParamObj(request, paramObj);
+	request.setQueryString(paramObj.query);
 	currentLoc = this->getLocation(paramObj);
 	if (currentLoc == this->locations.end()) {
-		request.setCurrentCode(404);
 		*locToConnection = NULL;
-		std::cout << "location not found " << std::endl; 
-		return ;
+	} else {
+		*locToConnection = &(*currentLoc);
 	}
-	*locToConnection = &(*currentLoc);
-	request.setQueryString(paramObj.query);
-	if (currentLoc->isMethodAllow(request.getParamByName("Method")) == false) {
-		request.setCurrentCode(405);
-		std::cout << "method not allowed " << std::endl; 
-		return ;
-	}
-	request.setCurrentCode(200);
 }
-
 
 VHost*	VHost::changeVhost(std::string& hostName) {
 	for (size_t i = 0; i < this->vHostsWithSamePort.size(); i++) {

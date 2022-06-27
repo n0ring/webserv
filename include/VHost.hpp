@@ -82,7 +82,7 @@ class VHost {
 		int			acceptNewConnection();
 		void		setResponce(Request& request, Responce &responce);
 		std::string	getErrorPage(int code);
-		void	processHeader(Request& request, routeParams& routeObj, location **currentLoc);
+		void	setLocation(Request& request, routeParams& routeObj, location **currentLoc);
 		VHost*	changeVhost(std::string& hostName);
 		locations_iter 	getLocation(routeParams& params);
 		void			setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it);
