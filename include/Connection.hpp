@@ -6,6 +6,10 @@
 #include "Responce.hpp"
 #include "VHost.hpp"
 #include "Cgi.hpp"
+
+#define CGI_FILE_IN_PREFIX ".cgi_input"
+#define CGI_FILE_OUT_PREFIX ".cgi_output"
+#define DEFAULT_ERROR_PAGE_PREFIX ".defaultErrorPage"
 class Connection {
 	private:
 		int			_listennerFd;
@@ -49,4 +53,5 @@ class Connection {
 		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
 		std::string& getCgiInputFileName(void) { return this->cgiIput; }
 		void		processLocation(void);
+		bool		isMoreBody(void);
 };

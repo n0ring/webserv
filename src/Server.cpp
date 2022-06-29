@@ -29,8 +29,9 @@ void Server::setupServers(std::string configName) {
 	Parser parser;
 
 	parser.parseConfig(this->_vHosts, configName);
-	
+	std::cout << "Servers: " << std::endl;
 	for (int i = 0; i < (int) this->_vHosts.size(); i++) {
+		this->_vHosts[i].toString();
 		this->fds.push_back(make_fd(this->_vHosts[i].setup(), POLLIN));
 	}
 }

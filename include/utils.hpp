@@ -27,7 +27,6 @@ void truncStr(std::string &s);
 std::pair<std::string, std::string> splitInPair(std::string &line);
 void splitByChar(std::string &s, char delimiter, std::vector<std::string>& v);
 std::string getDefaultErrorPage(int code);
-bool isRecieveOver(std::string req);
 // make map? 
 class Mime {
 	public: 

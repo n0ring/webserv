@@ -28,6 +28,7 @@ VHost & VHost::operator=(VHost const &other) {
 		this->_listener = other._listener;
 		this->_address = other._address;
 		this->_addrlen = other._addrlen;
+		this->vHostsWithSamePort = other.vHostsWithSamePort;
 		this->locations= other.locations;
 		this->errorPages = other.errorPages;
 	}
@@ -162,6 +163,7 @@ void VHost::validate() {
 	// root has to start with /
 	// dir name has to start with / (/test)
 	// valid methods (only 3)
+	// post only for cgi location
 	bool isValid = true;
 	// if (this->_ip.empty()) {
 	// 	isValid = false;
@@ -185,13 +187,21 @@ void VHost::validate() {
 }
 
 void VHost::toString() {
-	std::cout << "<--Server Config-->" << std::endl;
-	std::cout << "Port: " << this->_port << std::endl;
-	std::cout << "Ip: " << this->_ip << std::endl;
-	std::cout << "Max body: " << this->_maxBody << std::endl;
-	std::cout << "Backlog: " << this->_backlog << std::endl;
-	std::cout << "Listener: " << this->_listener << std::endl;
-	for (std::vector<location>::size_type i = 0; i < this->locations.size(); i++) {
-		this->locations[i].toString();
+	std::cout << this->_ip << " on port: " << this->_port << std::endl;
+	for (size_t i = 0; i < this->vHostsWithSamePort.size(); i++) {
+		this->vHostsWithSamePort[i].toString();
 	}
 }
+
+// void VHost::toString() {
+// 	std::cout << "<--Server Config-->" << std::endl;
+// 	std::cout << "Port: " << this->_port << std::endl;
+// 	std::cout << "Ip: " << this->_ip << std::endl;
+// 	std::cout << "Max body: " << this->_maxBody << std::endl;
+// 	std::cout << "Backlog: " << this->_backlog << std::endl;
+// 	std::cout << "Listener: " << this->_listener << std::endl;
+// 	for (std::vector<location>::size_type i = 0; i < this->locations.size(); i++) {
+// 		this->locations[i].toString();
+// 	}
+// }
+

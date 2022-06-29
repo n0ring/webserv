@@ -100,18 +100,6 @@ void removeSemicolon(std::string& s, std::string& line) {
 	}
 }
 
-bool isRecieveOver(std::string req) { // need to refactor or delete
-	int last = req.length() - 1;
-	if (req.length() < 4) {
-		return false;
-	}
-	if (req[last] == 10 && req[last - 1] == 13
-	 	&& req[last - 2] == 10 && req[last - 3] == 13) {
-		return true;
-	}
-	return false;
-}
-
 void truncStr(std::string &s) {
 	if (s[0] == '/') {
 		s.erase(0, 1);

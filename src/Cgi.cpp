@@ -33,7 +33,8 @@ void setEnv(std::vector<std::string>& envVector, Request& request) {
 	char *pwd = getenv("PWD");
 	envVector.push_back("REQUEST_METHOD=" + request.getParamByName("Method"));
 	envVector.push_back("CONTENT_LENGTH=" + request.getParamByName("Content-Length"));
-	envVector.push_back("CONTENT_TYPE=" + request.getParamByName("Method"));
+	envVector.push_back("CONTENT_TYPE=" + request.getParamByName("Content-Type"));
+	envVector.push_back("REQUEST_METHOD=" + request.getParamByName("Method"));
 	envVector.push_back("QUERY_STRING=" + request.getParamByName("QueryString"));
 
 	if (pwd) {
@@ -67,7 +68,6 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 	}
 	dup2(ifd, STDIN_FILENO); 
 	dup2(ofd, STDOUT_FILENO);
-	// dup2(ofd, STDERR_FILENO);
 	if (execve(argv[0], &(argv[0]), env)  == -1) {
 		close(ofd);
 		perror("execve");
@@ -105,7 +105,7 @@ int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputF
 		if (WIFEXITED(status))
 			return WEXITSTATUS(status);
 	}
-	return 0;
+	return EXIT_SUCCESS;
 }
 
 void Cgi::preprocessCgi(Connection& connect) {

@@ -1,16 +1,14 @@
 #!/bin/bash
 
+echo  "HTTP/1.1 200 OK"
 echo "Content-Type: text/html"
 echo 
 
 echo "<h3>"
 echo "<pre>"
 cal
-echo "from STDIN:"
-cat
-echo
-echo
-env
+ls sidanofasofns
+exit 
 # sed 's/+/ /g' | cut -b 7-   | bash
 # echo
 

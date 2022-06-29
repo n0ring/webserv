@@ -35,7 +35,7 @@ VHost createObj(std::string configText) {
 	return vHost;
 }
 
-bool	checkForMatchIpPort(std::vector<VHost> &vHosts, VHost& newVhost) {
+bool	checkForMatchIpPort(std::vector<VHost> &vHosts, VHost newVhost) {
 	int			portCurrent, portForCheck  = newVhost.getPort();
 	std::string	serverNameForCheck = newVhost.getServerName();
 	std::string	hostCurrent, hostForCheck = newVhost.getHost();

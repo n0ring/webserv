@@ -41,6 +41,7 @@ struct routeParams { // no / on start and end
 	std::vector<std::string>	path; // before file
 	std::string					fileBaseName;
 };
+
 class VHost {
 	private:
 		int			_port; // form cfg

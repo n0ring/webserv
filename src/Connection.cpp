@@ -7,9 +7,9 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 	this->_needToWrite = 0;
 	this->_request.setFd(fd);
 	this->currentLoc = NULL;
-	this->cgiIput.append(".cgi_input" + std::to_string(fd));
-	this->cgiOutput.append(".cgi_output" + std::to_string(fd));
-	this->defaultErrorPageName.append(".defaultErrorPage" + std::to_string(fd) + ".html");
+	this->cgiIput.append(CGI_FILE_IN_PREFIX + std::to_string(fd));
+	this->cgiOutput.append(CGI_FILE_OUT_PREFIX + std::to_string(fd));
+	this->defaultErrorPageName.append(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html");
 	this->cgiIputFd = -1;
 	remove(this->cgiOutput.c_str());
 	remove(this->cgiIput.c_str());
@@ -44,7 +44,6 @@ void Connection::processLocation() {
 	std::string conLength = this->_request.getParamByName("Content-Length");
 
 	if (!conLength.empty() && std::stoi(conLength) > this->_vHost->getMaxBody()) {
-		std::cout << "TOOO big" << std::endl;
 		this->_request.setCurrentCode(413);
 		return ;
 	}
@@ -73,9 +72,9 @@ int Connection::receiveData() {  // viHost
 	else {
 		this->buffer_in.append(buf, ret);
 	}
-	// std::cout << "-----------buffer-in-----------------" << std::endl;
-	// std::cout << this->buffer_in << std::endl;
-	// std::cout << "-----------buffer-in-end--------------" << std::endl;
+	std::cout << "-----------buffer-in-----------------" << std::endl;
+	std::cout << this->buffer_in << std::endl;
+	std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -90,11 +89,24 @@ int Connection::receiveData() {  // viHost
 	if (ret == 0) {
 		return -1;
 	}
-	if (_request.getCurrentCode() >= 400 || ret < BUFFER || isRecieveOver(buffer_in)) {
-		// if body not empty process body ?????
+	if (_request.getCurrentCode() >= 400 || (ret < BUFFER && !this->isMoreBody())) {
 		return 0;
 	}
 	return ret;
+}
+
+bool Connection::isMoreBody(void) {
+	std::string conLength = this->_request.getParamByName("Content-Length");
+
+	if (conLength.empty()) {
+		return false;
+	}
+	size_t buf = this->buffer_in.length();
+	(void) buf;
+	if (this->buffer_in.length() < std::stoul(conLength)) {
+		return true;
+	}
+	return false;
 }
 
 int Connection::sendData() {
