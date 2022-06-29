@@ -41,12 +41,19 @@ int Connection::getFd() const {
 }
 
 void Connection::processLocation() {
+	std::string conLength = this->_request.getParamByName("Content-Length");
+
+	if (!conLength.empty() && std::stoi(conLength) > this->_vHost->getMaxBody()) {
+		std::cout << "TOOO big" << std::endl;
+		this->_request.setCurrentCode(413);
+		return ;
+	}
 	if (this->currentLoc == NULL) {
 		this->_request.setCurrentCode(404);
 		return ;
 	}
 	if (this->currentLoc->isMethodAllow(this->_request.getParamByName("Method")) == false) {
-		this->_request.setCurrentCode(404);
+		this->_request.setCurrentCode(405);
 		return ;
 	}
 	this->_request.setCurrentCode(200);
@@ -89,13 +96,6 @@ int Connection::receiveData() {  // viHost
 	}
 	return ret;
 }
-
-// split by ?
-// after ? to queryStr
-// before split to file for search
-// if find 
-// set finalpathname
-// if not try by file ext
 
 int Connection::sendData() {
 	char	buf[BUFFER];
@@ -175,7 +175,6 @@ void	Connection::setResponce() {
 		}
 		this->_request.setCurrentCode(404);
 		this->_responce.prepareFileToSend(this->getErrorPageName(this->getCurrectCode()));
-		// if can't open set default/ clear file to send;
 	}
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
@@ -215,7 +214,7 @@ void Connection::prepareResponceToSend() {
 	} 
 	this->setResponce();
 	this->buffer_in.clear();
-	if (!this->currentLoc || !this->currentLoc->isCgi())  {
+	if (!this->currentLoc || !this->currentLoc->isCgi() || this->getCurrectCode() >= 400)  {
 		this->_responce.createHeader(this->currentLoc);
 	}
 	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();

@@ -62,6 +62,7 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 	}
 	if (ifd == -1) {
 		perror("CGI:open tmp input");
+		std::cerr << tmpOutputFile.c_str() << std::endl;
 		exit(-1);
 	}
 	dup2(ifd, STDIN_FILENO); 
@@ -104,7 +105,7 @@ int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputF
 		if (WIFEXITED(status))
 			return WEXITSTATUS(status);
 	}
-	return pid;
+	return 0;
 }
 
 void Cgi::preprocessCgi(Connection& connect) {
@@ -121,6 +122,6 @@ void Cgi::preprocessCgi(Connection& connect) {
 	}
 	else {
 		connect.setCgiInputFd(fd);
+		connect.sendBodyToFile();
 	}
-	connect.sendBodyToFile();
 }

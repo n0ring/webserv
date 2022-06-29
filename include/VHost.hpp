@@ -83,6 +83,7 @@ class VHost {
 
 		// procccccesssssss..
 		int			getListener(void) const;
+		int			getMaxBody() const { return this->_maxBody;}
 		int			acceptNewConnection();
 		void		setResponce(Request& request, Responce &responce);
 		std::string	getErrorPage(int code);

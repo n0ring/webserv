@@ -1,7 +1,6 @@
 #include "VHost.hpp"
 
 // ver. 3 of route parsing (full path. start to search and remove last parts)
-#include <unistd.h> // access
 
 int VHost::getListener(void) const {
 	return this->_listener;
@@ -13,7 +12,6 @@ int VHost::getListener(void) const {
 	 |           |            |            |        |
  scheme     authority       path        query   fragment
 */
-
 
 void setQueryString(routeParams& params) {
 	size_t queryStringStart = params.fullRoute.find("?");

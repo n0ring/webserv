@@ -14,7 +14,7 @@ class Connection {
 		int			_writed;
 		int			_needToWrite;
 		std::string buffer_in;
-		std::string body;
+		std::string body; // use? 
 		Request		_request;
 		Responce	_responce;
 		routeParams	routeObj;
