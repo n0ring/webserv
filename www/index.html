@@ -40,18 +40,27 @@
 		<button type="submit"> send to python (get) </button>
 	</form>
 
-	<form style="color: white;" method="post" enctype="multipart/form-data">
+	<form style="color: white;" method="post" enctype="multipart/form-data"  action="cgi-py">
 		<div>
 		  <label for="file">Choose file to upload</label>
-		  <input type="file" id="file" name="file">
+		  <input type="file" id="file" name="file" multiple>
 		</div>
 		<div>
 		  <button>Submit</button>
 		</div>
 	</form>
 
+	<form style="color: white;" method="post" action="upload">
+		<div>
+		  <label for="text">Choose file to upload (no cgi) !!!!!! </label>
+		  <input type="text" id="file" name="file">
+		</div>
+		<div>
+		  <button>NO TO CGI</button>
+		</div>
+	</form>
 
-	<form style="color: green;" method="post" actio>
+	<form style="color: green;" method="post" action="cgi-py">
 		<div>
 		  <label for="text">Choose file to upload</label>
 		  <input type="text" id="text" name="text">

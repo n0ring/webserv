@@ -1,14 +1,13 @@
 #include "Request.hpp"
 
 
-Request::Request(Request const & other) : _ip(other._ip),
-	_currentCode(0), _cgiPid(other._cgiPid) {
+Request::Request(Request const & other) : _currentCode(0), _cgiPid(other._cgiPid) {
 	}
 
 
 Request & Request::operator=(Request const &other) {
 	if (this != &other) {
-		this->_ip = other._ip;
+		
 	}
 	return *this;
 }
@@ -19,11 +18,11 @@ std::string& Request::getParamByName(std::string paramName) {
 }
 
 void Request::resetObj(void) {
-	this->_ip.clear();
+
 	this->_header.clear();
 	this->_headerParams.clear();
-	this->_fileToSave= -1;
 	this->_fileToSend.clear();
+	this->_fileToSave= -1;
 	this->_currentCode = 0;
 	this->_cgiPid = -1;
 }

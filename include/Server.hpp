@@ -36,7 +36,7 @@ class Server {
 		// int			_listener;
 	
 		std::vector<VHost>	_vHosts;
-		ConnectionPool		ConnectionPool;
+		ConnectionPool		connectionPool;
 		std::vector<pollfd>	fds;
 		int					nfds;
 

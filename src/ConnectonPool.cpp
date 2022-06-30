@@ -44,6 +44,7 @@ int		ConnectionPool::onClientDataExchange(std::vector<pollfd>::iterator& iter) {
 	if (iter->revents == POLLIN) {
 		// handle 
 		ret = it_connection->second.receiveData();
+		std::cout << "ret status: " << ret << std::endl;
 		if (ret < 0) {
 			return -1;
 		}

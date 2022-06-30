@@ -48,6 +48,8 @@ void Responce::resetObj() {
 	this->code = 0;
 	this->contentLength = 0;
 	this->contentType.clear();
+	this->MIME.clear();
+	this->fileExtToSend.clear();
 }
 
 void Responce::setCode(int c) {

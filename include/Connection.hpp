@@ -10,6 +10,7 @@
 #define CGI_FILE_IN_PREFIX ".cgi_input"
 #define CGI_FILE_OUT_PREFIX ".cgi_output"
 #define DEFAULT_ERROR_PAGE_PREFIX ".defaultErrorPage"
+#define INPUT_FILE_POST ".inputFile"
 class Connection {
 	private:
 		int			_listennerFd;
@@ -23,10 +24,13 @@ class Connection {
 		Responce	_responce;
 		routeParams	routeObj;
 		location*	currentLoc;
-		std::string cgiIput;
-		int 		cgiIputFd;
-		std::string cgiOutput;
+		int 		inputFileFd;
+		int			bodyRecieved;
+
 		std::string	defaultErrorPageName;
+		std::string cgiOutput;
+		std::string cgiIput;
+		std::string inputFilePost;
 
 	public:
 		Connection(Connection const &other);
@@ -48,7 +52,7 @@ class Connection {
 		void		executeOrder66();
 		void		sendBodyToFile();
 		std::string getErrorPageName(int code);
-		void		setCgiInputFd(int fd) {this->cgiIputFd = fd;}
+		void		setFileInputFd(int fd) {this->inputFileFd = fd;}
 		int			getCurrectCode(void) { return this->_request.getCurrentCode(); }
 		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
 		std::string& getCgiInputFileName(void) { return this->cgiIput; }

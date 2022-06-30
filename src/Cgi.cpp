@@ -59,11 +59,12 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 	ifd = open(tmpInputFile.c_str(), O_RDONLY);
 	if (ofd == -1) {
 		perror("CGI:open tmp output");
+		std::cerr << RED << tmpOutputFile.c_str() << RESET << std::endl;
 		exit(1);
 	}
 	if (ifd == -1) {
 		perror("CGI:open tmp input");
-		std::cerr << tmpOutputFile.c_str() << std::endl;
+		std::cerr << RED << tmpInputFile.c_str() << RESET << std::endl;
 		exit(-1);
 	}
 	dup2(ifd, STDIN_FILENO); 
@@ -121,7 +122,8 @@ void Cgi::preprocessCgi(Connection& connect) {
 		connect.setCurrentCode(500);
 	}
 	else {
-		connect.setCgiInputFd(fd);
+		std::cout << "input file was created." << std::endl;
+		connect.setFileInputFd(fd);
 		connect.sendBodyToFile();
 	}
 }

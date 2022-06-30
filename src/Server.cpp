@@ -60,17 +60,16 @@ void	Server::start(std::string configName) {
 				continue;
 			}
 			else if (it->revents != POLLIN && it->revents != POLLOUT) {
-				this->ConnectionPool.onClientDisconnect(it, this->fds);
+				this->connectionPool.onClientDisconnect(it, this->fds);
 				continue;
 			}
-			if (this->isFdListener(it->fd)) {
-				this->ConnectionPool.onClientConnect(this->getVHost(it->fd), this->fds, it);
-			}
-			else {
-				if (this->ConnectionPool.onClientDataExchange(it) == -1) {
-					this->ConnectionPool.onClientDisconnect(it, this->fds);
+			if (it->revents == POLLOUT || !this->isFdListener(it->fd)) {
+				if (this->connectionPool.onClientDataExchange(it) == -1) {
+					this->connectionPool.onClientDisconnect(it, this->fds);
 					continue;
 				}
+			} else {
+				this->connectionPool.onClientConnect(this->getVHost(it->fd), this->fds, it);
 			}
 			it++;
 		}

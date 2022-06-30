@@ -9,7 +9,6 @@
 #define SUPPORTED_PROTOCOL "HTTP/1.1"
 class Request {
 	private:
-		std::string	_ip;
 
 		std::string	_header;
 		std::map<std::string, std::string> _headerParams;

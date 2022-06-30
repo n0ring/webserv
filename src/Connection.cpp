@@ -9,8 +9,10 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 	this->currentLoc = NULL;
 	this->cgiIput.append(CGI_FILE_IN_PREFIX + std::to_string(fd));
 	this->cgiOutput.append(CGI_FILE_OUT_PREFIX + std::to_string(fd));
+	this->inputFilePost.append(INPUT_FILE_POST + std::to_string(fd));
 	this->defaultErrorPageName.append(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html");
-	this->cgiIputFd = -1;
+	this->inputFileFd = -1;
+	this->bodyRecieved = 0;
 	remove(this->cgiOutput.c_str());
 	remove(this->cgiIput.c_str());
 }
@@ -28,9 +30,11 @@ Connection & Connection::operator=(Connection const &other) {
 		this->_needToWrite = other._needToWrite;
 		this->currentLoc = other.currentLoc;
 		this->cgiIput = other.cgiIput;
-		this->cgiIputFd = other.cgiIputFd;
+		this->inputFileFd = other.inputFileFd;
+		this->inputFilePost = other.inputFilePost;
 		this->cgiOutput = other.cgiOutput;
 		this->defaultErrorPageName = other.defaultErrorPageName;
+		this->bodyRecieved = other.bodyRecieved;
 		// add others
 	}
 	return *this;
@@ -59,6 +63,16 @@ void Connection::processLocation() {
 	if (this->currentLoc->isCgi()) {
 		Cgi::preprocessCgi(*this);
 	}
+	else if (this->_request.getParamByName("Method").compare("POST") == 0) {
+		remove(this->inputFilePost.c_str());
+		int fd = open(this->inputFilePost.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 777);
+		if (fd == -1) {
+			std::cerr << " input file not created" << std::endl;
+			return ;
+		}
+		this->setFileInputFd(fd);
+		this->sendBodyToFile();
+	}
 }
 
 int Connection::receiveData() {  // viHost
@@ -66,14 +80,15 @@ int Connection::receiveData() {  // viHost
 	int ret;
 	
 	ret = recv(this->_fd, buf, BUFFER, 0);
-	if (this->cgiIputFd != -1) { // if post? 
-		write(this->cgiIputFd, buf, ret);
+	if (this->inputFileFd != -1) { // if post?  // body only here??? 
+		write(this->inputFileFd, buf, ret); // 
+		this->bodyRecieved += ret;
 	}
 	else {
 		this->buffer_in.append(buf, ret);
 	}
-	std::cout << "-----------buffer-in-----------------" << std::endl;
-	std::cout << this->buffer_in << std::endl;
+	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	std::cout << buf << std::endl;
 	std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
@@ -97,13 +112,11 @@ int Connection::receiveData() {  // viHost
 
 bool Connection::isMoreBody(void) {
 	std::string conLength = this->_request.getParamByName("Content-Length");
-
 	if (conLength.empty()) {
 		return false;
 	}
-	size_t buf = this->buffer_in.length();
-	(void) buf;
-	if (this->buffer_in.length() < std::stoul(conLength)) {
+	std::cout << "buf: " << this->bodyRecieved << " " << conLength << std::endl;
+	if (this->bodyRecieved < std::stoi(conLength)) {
 		return true;
 	}
 	return false;
@@ -131,9 +144,15 @@ int Connection::sendData() {
 			remove(this->cgiIput.c_str());
 			remove(this->cgiOutput.c_str());
 		}
+		remove(this->inputFilePost.c_str());
 		bzero(&this->routeObj, sizeof(this->routeObj));
 		this->_writed = 0;
 		this->_needToWrite = 0;
+		this->buffer_in.clear();
+		bzero(&(this->routeObj), sizeof(this->routeObj));
+		this->currentLoc = NULL;
+		this->inputFileFd = -1;
+		this->bodyRecieved = 0;
 		if (this->_request.getCurrentCode() >= 400) {
 			return -1;
 		}
@@ -195,10 +214,20 @@ void GET(Request& request, routeParams &paramObj) {
 	request.setFileNameToSend(paramObj.finalPathToFile);
 }
 
+void POST() {
+	
+	
+	
+	// get data from input file
+	// parser header and if all good create file and save there data
+	
+	// i know its stupid.
+}
+
 void Connection::executeOrder66() { // all data recieved
 	if (this->currentLoc && this->currentLoc->isCgi()) {
 		std::cout << "CGI" << std::endl;
-		close(this->cgiIputFd);
+		close(this->inputFileFd);
 		if (Cgi::start(*this->currentLoc, this->cgiIput, this->cgiOutput, this->_request)) {
 			this->setCurrentCode(500);
 			return ;
@@ -213,6 +242,7 @@ void Connection::executeOrder66() { // all data recieved
 		}
 		else if (!method.compare("POST")) {
 			std::cout << "Method POST" << std::endl;
+			this->setCurrentCode(696);
 		}
 		else if (!method.compare("DELETE")) {
 			std::cout << "Method DELETE" << std::endl;
@@ -247,17 +277,11 @@ void	Connection::checkForVhostChange() {
 }
 
 void	Connection::sendBodyToFile() {
-	write(this->cgiIputFd, this->buffer_in.c_str(), this->buffer_in.length());
+	write(this->inputFileFd, this->buffer_in.c_str(), this->buffer_in.length());
+	this->bodyRecieved += this->buffer_in.length();
 }
 
 Connection::~Connection(void) {}
 Request& Connection::getRequestObj() {return this->_request; }
 Responce& Connection::getResponceObj() {return this->_responce; }
 int Connection::getListener() const {return this->_listennerFd; }
-
-
-
-
-
-
-
