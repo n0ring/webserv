@@ -5,7 +5,7 @@ void	Cgi::findPathToApp(std::string& pathToApp, std::string& fileToExec) {
 	char			c;
 	std::string		line;
 
-
+	return ;
 	ifs.open(fileToExec);
 	if (!ifs.is_open()) {
 		std::cout << "cgi file not open" << std::endl;
@@ -36,9 +36,10 @@ void setEnv(std::vector<std::string>& envVector, Request& request) {
 	envVector.push_back("CONTENT_TYPE=" + request.getParamByName("Content-Type"));
 	envVector.push_back("REQUEST_METHOD=" + request.getParamByName("Method"));
 	envVector.push_back("QUERY_STRING=" + request.getParamByName("QueryString"));
-
+	envVector.push_back("PATH_INFO=" + request.getParamByName("PathInfo"));
 	if (pwd) {
-		envVector.push_back("PATH_INFO=" + std::string(pwd)); // change after
+		envVector.push_back("PATH_TRANSLATED=" + std::string(pwd) + "/"
+			+ request.getParamByName("Root") + request.getParamByName("PathInfo")); 
 	}
 }
 

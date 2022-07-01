@@ -16,21 +16,26 @@ print( "<pre>")
 
 print( "hello from python script. this was on input: ")
 for line in fileinput.input():
-    print (line)
+	print (line)
+
+
 print( "queryString: ")
 print(os.getenv("QUERY_STRING"))
 print( "content type: ")
 print(os.getenv("CONTENT_TYPE"))
 print( "Method: ")
 print(os.getenv("REQUEST_METHOD"))
-
+print( "pathInfo: ")
+print(os.getenv("PATH_INFO"))
+print( "PATH_TRANSLATED: ")
+print(os.getenv("PATH_TRANSLATED"))
 
 print ("</pre>")
 print( "</h3>")
 
 
 
-# ------WebKitFormBoundary8cXD9BLvyoblAfGB
+# ------WebKitFormBoundaryjj9QGM7Sj9b6ZntI
 # Content-Disposition: form-data; name="file"; filename="m.cpp"
 # Content-Type: application/octet-stream
 
@@ -60,4 +65,4 @@ print( "</h3>")
 #         std::cout << maxSumArr(arr, 3) << std::endl;
 #         return 0;
 # }
-# ------WebKitFormBoundary8cXD9BLvyoblAfGB--
+# ------WebKitFormBoundaryjj9QGM7Sj9b6ZntI--

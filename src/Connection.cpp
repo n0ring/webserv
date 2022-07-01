@@ -87,9 +87,11 @@ int Connection::receiveData() {  // viHost
 	else {
 		this->buffer_in.append(buf, ret);
 	}
-	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
-	std::cout << buf << std::endl;
-	std::cout << "-----------buffer-in-end--------------" << std::endl;
+	// std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	// std::string tmp;
+	// tmp.append(buf, ret);
+	// std::cout << tmp << std::endl;
+	// std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -214,14 +216,23 @@ void GET(Request& request, routeParams &paramObj) {
 	request.setFileNameToSend(paramObj.finalPathToFile);
 }
 
-void POST() {
+void Connection::POST() {
+	std::ifstream ifs;
+	std::ofstream ofs;
 	
-	
-	
-	// get data from input file
-	// parser header and if all good create file and save there data
-	
-	// i know its stupid.
+	std::string conLength = this->_request.getParamByName("Content-Length");
+	if (conLength.empty() || std::stoi(conLength) == 0) {
+		return ; // change code? 
+	}
+	ifs.open(this->inputFilePost);
+	ofs.open("TMPFILENAME", std::ofstream::out | std::ofstream::trunc); // where get file name? 
+	if (ofs.is_open() && ifs.is_open()) {
+		ofs << ifs.rdbuf();
+	} else {
+		this->setCurrentCode(500);
+	}
+	ofs.close();
+	ifs.close();
 }
 
 void Connection::executeOrder66() { // all data recieved
@@ -243,6 +254,7 @@ void Connection::executeOrder66() { // all data recieved
 		else if (!method.compare("POST")) {
 			std::cout << "Method POST" << std::endl;
 			this->setCurrentCode(696);
+			this->POST();
 		}
 		else if (!method.compare("DELETE")) {
 			std::cout << "Method DELETE" << std::endl;

@@ -25,48 +25,80 @@
 		</button>
 	</a> -->
 
-	<form method="get" action="cgi-bash">
+	<!-- <form method="get" action="cgi-bash">
 		<input name="input" type="text">
 		<button type="submit"> BASH POST </button>
-	</form>
-
+	</form> -->
+<!-- 
 	<form method="post" action="cgi-py">
 		<input name="input" type="text">
 		<button type="submit"> send to python </button>
-	</form>
+	</form> -->
 
-	<form method="get" action="cgi-py">
+	<!-- <form method="get" action="cgi-py">
 		<input name="input" type="text">
 		<button type="submit"> send to python (get) </button>
+	</form> -->
+
+	<form style="color: red;" method="post" enctype="multipart/form-data"  action="cgi-py/uploadDir">
+		<div>
+		  <label for="text">chekc(CGI)</label>
+		  <input type="text" id="file" name="text" multiple>
+		</div>
+		<div>
+		  <button>Submit (CGI)</button>
+		</div>
 	</form>
 
-	<form style="color: white;" method="post" enctype="multipart/form-data"  action="cgi-py">
+	<form style="color: red;" method="post" enctype="multipart/form-data"  action="cgi-py">
 		<div>
-		  <label for="file">Choose file to upload</label>
+		  <label for="file">Choose file to upload (CGI)</label>
 		  <input type="file" id="file" name="file" multiple>
 		</div>
 		<div>
-		  <button>Submit</button>
+		  <button>Submit (CGI)</button>
 		</div>
 	</form>
 
 	<form style="color: white;" method="post" action="upload">
 		<div>
-		  <label for="text">Choose file to upload (no cgi) !!!!!! </label>
-		  <input type="text" id="file" name="file">
+		  <label for="inputfileId">Choose file to upload (no cgi no enctype) !!!!!! </label>
+		  <input type="file" id="inputfileId" name="inputfileName">
 		</div>
 		<div>
-		  <button>NO TO CGI</button>
+		  <button>NO TO CGI (no enctype)</button>
 		</div>
 	</form>
 
-	<form style="color: green;" method="post" action="cgi-py">
+	
+	<form style="color: white;" method="post" action="upload" enctype="application/x-www-form-urlencoded">
 		<div>
-		  <label for="text">Choose file to upload</label>
-		  <input type="text" id="text" name="text">
+		  <label for="inputfileId"> Choose file to upload (no cgi application/x-www-form-urlencoded) !!!!!! </label>
+		  <input type="file" id="inputfileId" name="inputfileName">
 		</div>
 		<div>
-		  <button>Submit</button>
+		  <button>NO TO CGI (application/x-www-form-urlencoded)</button>
+		</div>
+	</form>
+
+	<form style="color: white;" method="post" action="upload" enctype="multipart/form-data">
+		<div>
+		  <label for="inputfileId"> Choose file to upload (no cgi multipart/form-data) !!!!!! </label>
+		  <input type="file" id="inputfileId" name="inputfileName">
+		</div>
+		<div>
+		  <button>NO TO CGI (multipart/form-data)</button>
+		</div>
+	</form>
+
+
+	<form style="color: green;" method="post" action="cgi-py" enctype="multipart/form-data">
+		<div>
+		  <label for="fileid">Choose file to upload multipart/form-data</label>
+		  <input type="file" id="fileid" name="filename">
+		</div>
+		<div>
+		  <button>Submit no cgi multipart/form-data</button>
 		</div>
 	</form>
 </body>

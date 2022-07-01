@@ -58,4 +58,5 @@ class Connection {
 		std::string& getCgiInputFileName(void) { return this->cgiIput; }
 		void		processLocation(void);
 		bool		isMoreBody(void);
+		void		POST();
 };

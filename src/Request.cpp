@@ -71,7 +71,8 @@ void Request::parseHeader() {
 	}
 }
 
-void Request::setQueryString(std::string& str) {
-	if (!str.empty())
-	this->_headerParams["QueryString"] = str;
+void Request::setHeaderParam(std::string param, std::string& val) {
+	if (!val.empty()) {
+		this->_headerParams[param] = val;
+	}
 }

@@ -37,7 +37,7 @@ struct routeParams { // no / on start and end
 	std::stack<std::string>		pathStack;
 	std::string					finalPathToFile;
 
-	std::string					pathRemainder;
+	std::string					pathInfo;
 	std::vector<std::string>	path; // before file
 	std::string					fileBaseName;
 };

@@ -69,13 +69,14 @@ void setFinalPathToFile(VHost::locations_iter it, routeParams& params) {
 	params.finalPathToFile.append(it->getParamByName("root"));
 	while (!params.pathStack.empty()) {
 		params.finalPathToFile.append(params.pathStack.top());
+		params.pathInfo.append(params.pathStack.top());
 		params.pathStack.pop();
 	}
-	if (params.ext.empty()) {
+	if (params.ext.empty()) { // if no file add index file from loc
 		params.finalPathToFile.append("/");
 		params.finalPathToFile.append(it->getParamByName("index"));
 	}
-	std::cout << RED << params.finalPathToFile << std::endl;
+	std::cout << RED << "final route path: " << params.finalPathToFile << std::endl;
 }
 
 VHost::locations_iter	VHost::getLocation(routeParams& params) {
@@ -103,14 +104,18 @@ void VHost::setLocation(Request& request, routeParams &paramObj, location **locT
 	VHost::locations_iter			currentLoc;
 	std::string						fileToSend;
 
-	// bzero(&paramObj, sizeof(paramObj));
+	bzero(&paramObj, sizeof(paramObj));
 	setParamObj(request, paramObj);
-	request.setQueryString(paramObj.query);
+	// request.setQueryString(paramObj.query);
+	
 	currentLoc = this->getLocation(paramObj);
-
 	if (currentLoc == this->locations.end()) {
 		*locToConnection = NULL;
 	} else {
+		std::string root = currentLoc->getParamByName("root");
+		request.setHeaderParam("QueryString", paramObj.query);
+		request.setHeaderParam("PathInfo", paramObj.pathInfo);
+		request.setHeaderParam("Root", root);
 		*locToConnection = &(*currentLoc);
 	}
 }
