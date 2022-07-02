@@ -225,6 +225,7 @@ void Connection::POST() {
 		return ; // change code? 
 	}
 	ifs.open(this->inputFilePost);
+	// name == route? 
 	ofs.open("TMPFILENAME", std::ofstream::out | std::ofstream::trunc); // where get file name? 
 	if (ofs.is_open() && ifs.is_open()) {
 		ofs << ifs.rdbuf();
@@ -236,6 +237,9 @@ void Connection::POST() {
 }
 
 void Connection::executeOrder66() { // all data recieved
+	if (this->getCurrectCode() >= 400) {
+		return ;
+	}
 	if (this->currentLoc && this->currentLoc->isCgi()) {
 		std::cout << "CGI" << std::endl;
 		close(this->inputFileFd);
@@ -263,15 +267,11 @@ void Connection::executeOrder66() { // all data recieved
 }
 
 void Connection::prepareResponceToSend() {
-	if (this->getCurrectCode() < 400) {
-		this->executeOrder66();
-	} 
 	this->setResponce();
 	this->buffer_in.clear();
-	if (!this->currentLoc || !this->currentLoc->isCgi() || this->getCurrectCode() >= 400)  {
-		this->_responce.createHeader(this->currentLoc);
-	}
-	this->_needToWrite = this->_responce.getFileSize() + this->_responce.getHeaderSize();
+	this->_responce.createHeader(this->currentLoc);
+	this->_needToWrite = this->_responce.getFileSize()
+		+ this->_responce.getHeaderSize();
 }
 
 void	Connection::checkForVhostChange() {

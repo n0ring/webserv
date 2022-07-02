@@ -13,6 +13,10 @@ bool Responce::prepareFileToSend(std::string fileName) {
 	this->fileLen = this->ifs.tellg();
 	ifs.seekg(0, ifs.beg);
 	this->fileExtToSend = fileName.substr(fileName.find_last_of(".") + 1);
+	std::cout << "filelen: " << this->fileLen << std::endl;
+	if (this->fileLen == 0)  {
+		return false;
+	}
 	return true;
 }
 
@@ -56,14 +60,49 @@ void Responce::setCode(int c) {
 	this->code = c;
 }
 
+void Responce::setHeaderStatus(void) {
+	this->_header.append("HTTP/1.1 " + std::to_string(this->code) + "OK\n");
+}
+
+
+// get header from file
+// check whats filled 
+// fill the others
+
+
+
+void Responce::setHeaderFromFile(std::string& cgiHeader) {
+	char buf[BUFFER];
+	while (this->ifs.rdstate() != std::ifstream::failbit) {
+		bzero(buf, BUFFER);
+		this->ifs.getline(buf, BUFFER);
+		if (this->ifs.rdstate() & std::ifstream::failbit || buf[0] == '\0') {
+			break;
+		}
+		cgiHeader.append(buf);
+		cgiHeader.append("\n");
+	}
+}
+
+void Responce::createCGiHeader(void) {
+	std::string cgiHeader;
+	if (!this->ifs.is_open()) {
+		return ;
+	}
+	this->setHeaderFromFile(cgiHeader);
+	std::cout << "CGI HEADER: " << cgiHeader << std::endl;
+	
+
+	ifs.seekg(0, ifs.beg);
+}
+
 void Responce::createHeader(location* loc) {
 	Mime::set(this->fileExtToSend, this->MIME);
-	this->_header.append("HTTP/1.1");
-	this->_header.append(" ");
-	this->_header.append(std::to_string(this->code));
-	this->_header.append(" ");
-	this->_header.append("OK");
-	this->_header.append("\n");
+	if (loc->isCgi() && this->code < 400) {
+		this->createCGiHeader();
+		return ;
+	}
+	this->setHeaderStatus();
 
 	// this->_header.append("Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
 	// Server: huyaache/2.2.14 (Win32)\n\

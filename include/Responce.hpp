@@ -36,5 +36,8 @@ class Responce {
 		size_t	fillBuffer(char *buf);
 		void	resetObj();
 		void	createHeader(location* loc);
+		void	setHeaderFromFile(std::string& cgiHeader);
+		void	createCGiHeader(void);
+		void 	setHeaderStatus(void);
 };
 

@@ -22,7 +22,8 @@ def parse_file():
     # print(content_type)
 
     boundary = None
-    match = re.match(r"multipart/form-data;boundary=(.*)", content_type)
+	# Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryBU4fQNEaPl2YCys0
+    match = re.match("multipart/form-data; boundary=(.*)", content_type)
     if match:
         boundary = match.group(1).strip().encode()
 
@@ -94,6 +95,7 @@ def parse_file():
 
 try:
     parse_file()
+    print("HTTP/1.1 200 OK")
     print("Content-type: text/html")
     print("")
     print("<center><br></br>")

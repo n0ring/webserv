@@ -29,28 +29,28 @@
 		<input name="input" type="text">
 		<button type="submit"> BASH POST </button>
 	</form> -->
-<!-- 
-	<form method="post" action="cgi-py">
+
+	<form method="post" action="cgi-text">
 		<input name="input" type="text">
 		<button type="submit"> send to python </button>
-	</form> -->
+	</form>
 
 	<!-- <form method="get" action="cgi-py">
 		<input name="input" type="text">
 		<button type="submit"> send to python (get) </button>
 	</form> -->
 
-	<form style="color: red;" method="post" enctype="multipart/form-data"  action="cgi-py/uploadDir">
+	<form style="color: red;" method="post" enctype="multipart/form-data"  action="cgi-py/upload">
 		<div>
 		  <label for="text">chekc(CGI)</label>
-		  <input type="text" id="file" name="text" multiple>
+		  <input type="file" id="file" name="text" multiple>
 		</div>
 		<div>
 		  <button>Submit (CGI)</button>
 		</div>
 	</form>
 
-	<form style="color: red;" method="post" enctype="multipart/form-data"  action="cgi-py">
+	<!-- <form style="color: red;" method="post" enctype="multipart/form-data"  action="cgi-py">
 		<div>
 		  <label for="file">Choose file to upload (CGI)</label>
 		  <input type="file" id="file" name="file" multiple>
@@ -100,7 +100,7 @@
 		<div>
 		  <button>Submit no cgi multipart/form-data</button>
 		</div>
-	</form>
+	</form> -->
 </body>
 </html>
 
