@@ -7,10 +7,10 @@ int VHost::getListener(void) const {
 }
 
 /*
-foo://example.com:8042 /over/there/file.fl?name=ferret#nose
-		\_/   \______________/ \_________/ \_________/ \__/
-		 |           |            |            |        |
-	   scheme     authority       path        query   fragment
+foo://example.com:8042 /over/there/file.fl?name=ferret
+\_/   \______________/ \_________/ \_________/ \__/
+ |           |            |            |        |
+scheme     authority       path        query   fragment
 */
 
 void setQueryString(routeParams& params) {

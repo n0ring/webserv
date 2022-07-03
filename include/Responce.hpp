@@ -4,6 +4,7 @@
 #include <fstream> // ifstream
 #include <sys/stat.h> // stat (check is file regular)
 #include "Location.hpp"
+#include "Header.hpp"
 #include "utils.hpp"
 #define BUFFER 2048
 
@@ -20,6 +21,7 @@ class Responce {
 		std::string		contentType;
 		std::string		MIME;
 		std::string		fileExtToSend;
+		Header			headerObj;
 
 
 	public:
@@ -29,15 +31,16 @@ class Responce {
 
 		void		setHeader(std::string header);
 		
-		bool	prepareFileToSend(std::string fileName);
-		void	setCode(int c);
-		size_t	getFileSize();
-		size_t	getHeaderSize();
-		size_t	fillBuffer(char *buf);
-		void	resetObj();
-		void	createHeader(location* loc);
-		void	setHeaderFromFile(std::string& cgiHeader);
-		void	createCGiHeader(void);
-		void 	setHeaderStatus(void);
+		bool		prepareFileToSend(std::string fileName);
+		void		setCode(int c);
+		size_t		getFileSize();
+		size_t		getHeaderSize();
+		size_t		fillBuffer(char *buf);
+		void		resetObj();
+		void		createHeader(location* loc);
+		std::string	getCgiHeader(void);
+		void		createCGiHeader(void);
+		void		setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderValid);
+
 };
 

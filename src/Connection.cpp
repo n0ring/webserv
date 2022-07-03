@@ -87,11 +87,11 @@ int Connection::receiveData() {  // viHost
 	else {
 		this->buffer_in.append(buf, ret);
 	}
-	// std::cout << "-----------buffer-in (recv)-------------" << std::endl;
-	// std::string tmp;
-	// tmp.append(buf, ret);
-	// std::cout << tmp << std::endl;
-	// std::cout << "-----------buffer-in-end--------------" << std::endl;
+	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	std::string tmp;
+	tmp.append(buf, ret);
+	std::cout << tmp << std::endl;
+	std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -192,7 +192,7 @@ std::string Connection::getErrorPageName(int code) {
 	return pageName;
 }
 
-void	Connection::setResponce() {
+void	Connection::setResponceFile() {
 	if (this->_request.getCurrentCode() == 0) {
 		std::cout << "HTTP not found in set Responce" << std::endl;
 		this->_request.setCurrentCode(505);
@@ -267,7 +267,20 @@ void Connection::executeOrder66() { // all data recieved
 }
 
 void Connection::prepareResponceToSend() {
-	this->setResponce();
+	std::string	cgiHeader;
+	bool		isCgiHeaderValid = false;
+	this->setResponceFile();
+	// if cgi take header from output. send to header obj
+	if (this->currentLoc && this->currentLoc->isCgi()
+		&& this->getCurrectCode() < 400) {
+		cgiHeader = this->_responce.getCgiHeader();
+		this->_responce.setCgiHeaderToResponce(cgiHeader, isCgiHeaderValid);
+		if (cgiHeader.empty() || !isCgiHeaderValid) {
+			this->setCurrentCode(502);
+			this->setResponceFile();
+		}
+		// send cgiHeader to header. fill some fields
+	}
 	this->buffer_in.clear();
 	this->_responce.createHeader(this->currentLoc);
 	this->_needToWrite = this->_responce.getFileSize()
@@ -297,3 +310,8 @@ Connection::~Connection(void) {}
 Request& Connection::getRequestObj() {return this->_request; }
 Responce& Connection::getResponceObj() {return this->_responce; }
 int Connection::getListener() const {return this->_listennerFd; }
+
+
+// Responce::getCgiHeader (from output)
+// Responce::fillSomeFieldsInHeaderObj(cgiHeader)
+// in createHeader: HeaderObj::getHeaderStr(loc, responceObj)

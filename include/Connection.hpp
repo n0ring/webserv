@@ -46,7 +46,7 @@ class Connection {
 		int			getListener(void) const;
 		Request&	getRequestObj();
 		Responce&	getResponceObj();
-		void		setResponce();
+		void		setResponceFile();
 		void		handleRequest();
 		void		checkForVhostChange();
 		void		executeOrder66();

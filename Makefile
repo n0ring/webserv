@@ -8,6 +8,7 @@ SRC		=	$(addprefix src/,	main.cpp\
 								Request.cpp\
 								Responce.cpp\
 								Cgi.cpp\
+								Header.cpp\
 								utils.cpp)
 
 OBJDIR	=	obj

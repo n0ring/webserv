@@ -96,13 +96,13 @@ def parse_file():
 try:
     parse_file()
     print("HTTP/1.1 200 OK")
-    print("Content-type: text/html")
+    print("Content-Type: text/html")
     print("")
     print("<center><br></br>")
     print("<h1>Success!</h1>")
     print("</center>")
 except Exception as e:
-    print("Content-type: text/html")
+    print("Content-Type: text/html")
     print("")
     print("<center><br></br>")
     print("<h1>Fail...</h1>")

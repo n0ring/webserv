@@ -86,7 +86,6 @@ class VHost {
 		int			getListener(void) const;
 		int			getMaxBody() const { return this->_maxBody;}
 		int			acceptNewConnection();
-		void		setResponce(Request& request, Responce &responce);
 		std::string	getErrorPage(int code);
 		void	setLocation(Request& request, routeParams& routeObj, location **currentLoc);
 		VHost*	changeVhost(std::string& hostName);

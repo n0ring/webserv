@@ -5,6 +5,9 @@ void Responce::setHeader(std::string header) {
 }
 
 bool Responce::prepareFileToSend(std::string fileName) {
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
 	this->ifs.open(fileName, std::ifstream::in);
 	if (this->ifs.is_open() == false) {
 		return false;
@@ -13,7 +16,7 @@ bool Responce::prepareFileToSend(std::string fileName) {
 	this->fileLen = this->ifs.tellg();
 	ifs.seekg(0, ifs.beg);
 	this->fileExtToSend = fileName.substr(fileName.find_last_of(".") + 1);
-	std::cout << "filelen: " << this->fileLen << std::endl;
+	std::cout << fileName << " filelen: " << this->fileLen << std::endl;
 	if (this->fileLen == 0)  {
 		return false;
 	}
@@ -32,6 +35,8 @@ size_t Responce::fillBuffer(char *buf) {
 	size_t shiftHead = 0;
 	size_t shiftBody = this->bodySended;
 
+	// std::cout << "file pos in fill buffer: " << this->ifs.tellg() << std::endl;
+
 	if (this->headerSended < this->getHeaderSize()) {
 		this->headerSended += shiftHead = this->_header.copy(buf, BUFFER);
 	}
@@ -39,9 +44,13 @@ size_t Responce::fillBuffer(char *buf) {
 		this->ifs.read(buf + shiftHead, BUFFER - shiftHead);
 		this->bodySended = this->ifs.eof() ? this->fileLen : (size_t) this->ifs.tellg(); 
 	}
+	// std::cout << "----buffer to send----" << std::endl;
+	// std::string tmp;
+	// tmp.append(buf);
+	// std::cout << tmp << std::endl;
+	// std::cout << "----------------------" << std::endl;
 	return shiftHead + (this->bodySended - shiftBody);
 }
-
 
 void Responce::resetObj() {
 	this->_header.clear();
@@ -54,25 +63,19 @@ void Responce::resetObj() {
 	this->contentType.clear();
 	this->MIME.clear();
 	this->fileExtToSend.clear();
+	this->headerObj.reset();
 }
 
 void Responce::setCode(int c) {
 	this->code = c;
 }
 
-void Responce::setHeaderStatus(void) {
-	this->_header.append("HTTP/1.1 " + std::to_string(this->code) + "OK\n");
-}
-
-
-// get header from file
-// check whats filled 
-// fill the others
-
-
-
-void Responce::setHeaderFromFile(std::string& cgiHeader) {
+std::string Responce::getCgiHeader(void) {
+	std::string cgiHeader;
 	char buf[BUFFER];
+	if (!this->ifs.is_open()) {
+		return "";
+	}
 	while (this->ifs.rdstate() != std::ifstream::failbit) {
 		bzero(buf, BUFFER);
 		this->ifs.getline(buf, BUFFER);
@@ -82,40 +85,33 @@ void Responce::setHeaderFromFile(std::string& cgiHeader) {
 		cgiHeader.append(buf);
 		cgiHeader.append("\n");
 	}
-}
-
-void Responce::createCGiHeader(void) {
-	std::string cgiHeader;
-	if (!this->ifs.is_open()) {
-		return ;
-	}
-	this->setHeaderFromFile(cgiHeader);
-	std::cout << "CGI HEADER: " << cgiHeader << std::endl;
-	
-
-	ifs.seekg(0, ifs.beg);
+	// ifs.seekg(0, ifs.beg);
+	// count file size
+	std::cout << "file pos: " << this->ifs.tellg() << std::endl;
+	return cgiHeader;
 }
 
 void Responce::createHeader(location* loc) {
+	(void) loc;
+
 	Mime::set(this->fileExtToSend, this->MIME);
-	if (loc->isCgi() && this->code < 400) {
-		this->createCGiHeader();
+	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " OK");
+	this->headerObj.setContentType("Content-Type: " + this->MIME);
+	this->headerObj.setContentLength("Content-Length: " + std::to_string(this->fileLen));
+	this->headerObj.setConnectionStatus("Connection: Close");
+	this->headerObj.setEndOfHeader(true);
+
+
+
+	this->_header = this->headerObj.getHeaderStr();
+	std::cout << GREEN << "-----header to send------" << std::endl;
+	std::cout << this->_header << RESET << std::endl;
+}
+
+void	Responce::setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderValid) {
+	if (cgiHeader.empty()) {
 		return ;
 	}
-	this->setHeaderStatus();
-
-	// this->_header.append("Date: Mon, 27 Jul 2009 12:28:53 GMT\n\
-	// Server: huyaache/2.2.14 (Win32)\n\
-	// Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\n");
-	this->_header.append("Content-Length: ");
-		this->_header.append(std::to_string(this->fileLen) + "\n");
-	this->_header.append("Connection: Close\n");
-	if (  !(loc && loc->isCgi()) || code >= 400) { // > 500? 
-		if (!this->MIME.empty()) {
-			this->_header.append("Content-Type: " + this->MIME + "\n");
-		}
-		this->_header.append("\n");
-	}
-	std::cout << GREEN << "-----header to send------" << std::endl;
-	std::cout << this->_header << std::endl << RESET;
+	this->headerObj.checkCgiHeader(cgiHeader, isCgiHeaderValid);
 }
+

@@ -6,7 +6,10 @@ import sys
 
 def printHeader():
 	print  ("HTTP/1.1 200 OK")
+	print  ("Date: Mon, 18 Jul 2016 16:06:00 GMT")
+	print  ("Server: Huyache")
 	print  ("Content-Type: text/html\n")
+
 
 
 printHeader()
