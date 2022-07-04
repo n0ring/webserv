@@ -23,8 +23,12 @@ class location {
 		std::vector<std::string>			methods; // ints
 		std::map<std::string, std::string>	params;
 		std::map<int, std::string>			errorPages;
-
+		int									redirectCode;
 	public:
+		location(void) {
+			this->redirectCode = 307;
+		}
+
 		std::string	getParamByName(std::string param) {
 			if (this->params.count(param)) {
 				return this->params[param];
@@ -75,6 +79,8 @@ class location {
 			}
 			return "";
 		 }
+
+		 int getRedirectCode(void) { return this->redirectCode; }
 
 
 		void toString() {

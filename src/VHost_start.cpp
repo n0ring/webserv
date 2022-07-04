@@ -152,7 +152,11 @@ void VHost::setLocationParam(std::vector<std::string> inputParams) {
 		}
 		return ;
 	}
-	truncStr(inputParams.back());
+	if (inputParams.front().compare("redirect") == 0 && inputParams.size() == 3) {
+		this->locations.back().redirectCode = std::stoi(inputParams[1]);
+	} else {
+		truncStr(inputParams.back());
+	}
 	this->locations.back().params[inputParams.front()] = inputParams.back();
 }
 

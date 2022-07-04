@@ -66,13 +66,14 @@ void removeLastDir(routeParams& params) {
 }
 
 void setFinalPathToFile(VHost::locations_iter it, routeParams& params) {
+	std::string indexFile = it->getParamByName("index");
 	params.finalPathToFile.append(it->getParamByName("root"));
 	while (!params.pathStack.empty()) {
 		params.finalPathToFile.append(params.pathStack.top());
 		params.pathInfo.append(params.pathStack.top());
 		params.pathStack.pop();
 	}
-	if (params.ext.empty()) { // if no file add index file from loc
+	if (params.ext.empty() && !indexFile.empty()) { // if no file add index file from loc
 		params.finalPathToFile.append("/");
 		params.finalPathToFile.append(it->getParamByName("index"));
 	}

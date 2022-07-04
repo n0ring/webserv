@@ -59,11 +59,15 @@ void Connection::processLocation() {
 		this->_request.setCurrentCode(405);
 		return ;
 	}
+	if (!this->currentLoc->getParamByName("redirect").empty()) {
+		this->_request.setCurrentCode(this->currentLoc->getRedirectCode());
+		this->_responce.setParamToHeader("Location: " + this->currentLoc->getParamByName("redirect"));
+		return ;
+	}
 	this->_request.setCurrentCode(200);
 	if (this->currentLoc->isCgi()) {
 		Cgi::preprocessCgi(*this);
-	}
-	else if (this->_request.getParamByName("Method").compare("POST") == 0) {
+	} else if (this->_request.getParamByName("Method").compare("POST") == 0) {
 		remove(this->inputFilePost.c_str());
 		int fd = open(this->inputFilePost.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 777);
 		if (fd == -1) {
@@ -87,11 +91,11 @@ int Connection::receiveData() {  // viHost
 	else {
 		this->buffer_in.append(buf, ret);
 	}
-	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
-	std::string tmp;
-	tmp.append(buf, ret);
-	std::cout << tmp << std::endl;
-	std::cout << "-----------buffer-in-end--------------" << std::endl;
+	// std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	// std::string tmp;
+	// tmp.append(buf, ret);
+	// std::cout << tmp << std::endl;
+	// std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -103,9 +107,7 @@ int Connection::receiveData() {  // viHost
 		this->_vHost->setLocation(this->_request, this->routeObj, &this->currentLoc);
 		this->processLocation();
 	}
-	if (ret == 0) {
-		return -1;
-	}
+	if (ret == 0) { return -1; }
 	if (_request.getCurrentCode() >= 400 || (ret < BUFFER && !this->isMoreBody())) {
 		return 0;
 	}
@@ -114,6 +116,8 @@ int Connection::receiveData() {  // viHost
 
 bool Connection::isMoreBody(void) {
 	std::string conLength = this->_request.getParamByName("Content-Length");
+	// check for chunked encoding 
+
 	if (conLength.empty()) {
 		return false;
 	}
@@ -200,6 +204,7 @@ void	Connection::setResponceFile() {
 	if (this->_request.getCurrentCode() >= 400) { // set erorr page
 		this->_request.setFileNameToSend(this->getErrorPageName(this->getCurrectCode()));
 	}
+
 	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
 		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
 		if (this->_request.getCurrentCode() >= 400) {

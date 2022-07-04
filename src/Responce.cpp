@@ -1,10 +1,24 @@
 #include "Responce.hpp"
 
+
+Responce::Responce(void) {
+	this->fileLen = 0;
+	this->headerSended = 0;
+	this->bodySended = 0;
+	this->code = 0;
+	this->contentLength = 0;	
+}
+
+
 void Responce::setHeader(std::string header) {
 	this->_header = header;
 }
 
 bool Responce::prepareFileToSend(std::string fileName) {
+	if (fileName.empty()) {
+		std::cout << "no file to send" << std::endl;
+		return true;
+	}
 	if (this->ifs.is_open()) {
 		this->ifs.close();
 	}
@@ -85,9 +99,7 @@ std::string Responce::getCgiHeader(void) {
 		cgiHeader.append(buf);
 		cgiHeader.append("\n");
 	}
-	// ifs.seekg(0, ifs.beg);
-	// count file size
-	std::cout << "file pos: " << this->ifs.tellg() << std::endl;
+	this->fileLen -= this->ifs.tellg(); // file size - header.length in cgi output file. 
 	return cgiHeader;
 }
 
@@ -96,13 +108,11 @@ void Responce::createHeader(location* loc) {
 
 	Mime::set(this->fileExtToSend, this->MIME);
 	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " OK");
-	this->headerObj.setContentType("Content-Type: " + this->MIME);
-	this->headerObj.setContentLength("Content-Length: " + std::to_string(this->fileLen));
+	if (this->fileLen) {
+		this->headerObj.setContentType("Content-Type: " + this->MIME);
+		this->headerObj.setContentLength("Content-Length: " + std::to_string(this->fileLen));
+	}
 	this->headerObj.setConnectionStatus("Connection: Close");
-	this->headerObj.setEndOfHeader(true);
-
-
-
 	this->_header = this->headerObj.getHeaderStr();
 	std::cout << GREEN << "-----header to send------" << std::endl;
 	std::cout << this->_header << RESET << std::endl;
@@ -115,3 +125,6 @@ void	Responce::setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderV
 	this->headerObj.checkCgiHeader(cgiHeader, isCgiHeaderValid);
 }
 
+void	Responce::setParamToHeader(std::string param) {
+	this->headerObj.setParam(param);
+}

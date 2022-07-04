@@ -25,7 +25,7 @@ class Responce {
 
 
 	public:
-		Responce(void) : headerSended(0), bodySended(0) {};
+		Responce(void);
 		~Responce(void) {};
 
 
@@ -41,6 +41,7 @@ class Responce {
 		std::string	getCgiHeader(void);
 		void		createCGiHeader(void);
 		void		setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderValid);
+		void		setParamToHeader(std::string param);
 
 };
 

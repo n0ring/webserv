@@ -9,10 +9,10 @@ class Header {
 		std::string contentType;
 		std::string contentLength;
 		std::string connectionStatus;
-		std::string unknownParams;
+		// std::string unknownParams;
+		std::vector<std::string> unknownParams;
 
 		std::string result;
-		std::string end;
 
 	public:
 		Header(void);
@@ -26,9 +26,11 @@ class Header {
 		void		setContentType(std::string nContentType);
 		void		setContentLength(std::string nContentLenth);
 		void		setConnectionStatus(std::string nConnectionStatus);
-		void		setEndOfHeader(bool isNeed);
 		void		checkCgiHeader(std::string& cgiHeader, bool& isCgiHeaderValid);
-		bool		isParamMatch(std::vector<std::string>& currentParams, std::string line);
+		void		setHeaderParam(std::vector<std::string>& currentParams, std::string line);
 		bool		validateParams(void);
+		void		setParam(std::string param);
+		void		appendToHeaderStr(std::string& param);
+
 
 };

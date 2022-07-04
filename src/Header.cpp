@@ -16,18 +16,27 @@ Header&	Header::operator=(Header const& other) {
 		this->contentLength = other.contentLength;
 		this->connectionStatus = other.contentLength;
 		this->unknownParams = other.unknownParams;
-		this->end = other.end;
 	}
 	return *this;
 }
 
+
+void Header::appendToHeaderStr(std::string& param) {
+	if (!param.empty()) {
+		this->result.append(param + "\n");
+	}
+}
+
+
 std::string	Header::getHeaderStr(void) {
-	this->result.append(this->status + "\n");
-	this->result.append(this->contentType + "\n");
-	this->result.append(this->contentLength + "\n");
-	this->result.append(this->connectionStatus + "\n");
-	// this->result.append(this->unknownParams + "\n") /// 1!!!!!!!!!!
-	this->result.append(this->end);
+	this->appendToHeaderStr(this->status);
+	this->appendToHeaderStr(this->contentType);
+	this->appendToHeaderStr(this->contentLength);
+	this->appendToHeaderStr(this->connectionStatus);
+	for (size_t i = 0; i < this->unknownParams.size(); i++) {
+		this->appendToHeaderStr(this->unknownParams[i]);
+	}
+	this->result.append("\n");
 	return this->result;
 }
 
@@ -36,7 +45,7 @@ void	Header::reset(void) {
 	this->contentType.clear();
 	this->contentLength.clear();
 	this->connectionStatus.clear();
-	this->end.clear();
+	this->unknownParams.clear();
 }
 
 void	Header::setStatus(std::string nstatus) {
@@ -63,15 +72,7 @@ void	 Header::setConnectionStatus(std::string nConnectionStatus) {
 	}
 }
 
-void	Header::setEndOfHeader(bool isNeed) {
-	if (isNeed) {
-		end = "\n";
-	} else {
-		end.clear();
-	}
-}
-
-bool Header::isParamMatch(std::vector<std::string>& currentParams, std::string line) {
+void Header::setHeaderParam(std::vector<std::string>& currentParams, std::string line) {
 	if (currentParams.front() == "HTTP/1.1") {
 		this->status = line;
 	}
@@ -85,10 +86,8 @@ bool Header::isParamMatch(std::vector<std::string>& currentParams, std::string l
 		this->connectionStatus = line;
 	}
 	else {
-		this->unknownParams.append(line + "\n");
-		return false;
+		this->setParam(line);
 	}
-	return true;
 }
 
 bool	Header::validateParams(void) {
@@ -96,6 +95,10 @@ bool	Header::validateParams(void) {
 		return false;
 	}
 	return true;
+}
+
+void	Header::setParam(std::string param) {
+	this->unknownParams.push_back(param);
 }
 
 
@@ -107,14 +110,9 @@ void	Header::checkCgiHeader(std::string& cgiHeader, bool& isCgiHeaderValid) {
 	while (startPos < cgiHeader.length()) {
 		line = getLine(cgiHeader, startPos);
 		currentParams = sPPlit(line);
-		if (isParamMatch(currentParams, line)) {
-			isCgiHeaderValid = true;
-		}
+		setHeaderParam(currentParams, line);
 	}
-	
-	if (isCgiHeaderValid) {
-		isCgiHeaderValid = validateParams();
-	}
+	isCgiHeaderValid = validateParams();
 }
 
 
