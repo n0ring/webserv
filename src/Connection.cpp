@@ -91,11 +91,11 @@ int Connection::receiveData() {  // viHost
 	else {
 		this->buffer_in.append(buf, ret);
 	}
-	// std::cout << "-----------buffer-in (recv)-------------" << std::endl;
-	// std::string tmp;
-	// tmp.append(buf, ret);
-	// std::cout << tmp << std::endl;
-	// std::cout << "-----------buffer-in-end--------------" << std::endl;
+	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	std::string tmp;
+	tmp.append(buf, ret);
+	std::cout << tmp << std::endl;
+	std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
