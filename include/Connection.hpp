@@ -16,23 +16,22 @@ class Connection {
 		int			_listennerFd;
 		int			_fd;
 		VHost*		_vHost;
-		int			_writed;
-		int			_needToWrite;
-		std::string buffer_in;
-		std::string body; // use? 
 		Request		_request;
 		Responce	_responce;
 		routeParams	routeObj;
 		location*	currentLoc;
+		int			_writed;
+		int			_needToWrite;
+		std::string buffer_in;
 		int			bodyRecieved;
 		size_t		lastChunkSize;
 		bool		currentChunkNotEnded;
 		std::string inputBufferName;
 
-		std::string	defaultErrorPageName;
-		std::string cgiOutput;
+		std::string		defaultErrorPageName;
+		std::string		cgiOutput;
+		std::ofstream	ofs;
 
-		std::ofstream ofs;
 
 
 	public:
