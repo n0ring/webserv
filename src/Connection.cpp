@@ -78,8 +78,6 @@ void Connection::processLocation() {
 		Cgi::preprocessCgi(*this);
 	} else if (this->_request.getParamByName("Method").compare("POST") == 0) {
 		remove(this->inputFilePost.c_str());
-
-
 		int fd = open(this->inputFilePost.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 777);
 		if (fd == -1) {
 			std::cerr << " input file not created" << std::endl;
@@ -132,16 +130,14 @@ void Connection::unchunkBuffer() {
 }
 
 int Connection::receiveData() {  // viHost
-	char buf[BUFFER];
-	int ret;
+	char	buf[BUFFER];
+	int		ret;
 	bzero(buf, BUFFER);
 	ret = recv(this->_fd, buf, BUFFER, 0);
 	this->buffer_in.append(buf, ret);
-	if (this->inputFileFd != -1) { // if post?  // body only here??? 
+	if (this->inputFileFd != -1) { // if post?  // body only here???
 		this->unchunkBuffer();
-		write(this->inputFileFd, buffer_in.c_str(), buffer_in.length()); // change write to smt else 
-		this->bodyRecieved += this->buffer_in.length();
-		buffer_in.clear();
+		this->sendBodyToFile();
 	}
 	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
 	std::string tmp;
@@ -167,22 +163,13 @@ int Connection::receiveData() {  // viHost
 }
 
 bool Connection::isMoreBody(void) {
-	std::string conLength = this->_request.getParamByName("Content-Length");
-	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
-	// check for chunked encoding 
-	if (conLength.empty() && encoding.empty()) {
+	int contentLength;
+	
+	stringToNum(this->_request.getParamByName("Content-Length"), contentLength);
+	if (this->lastChunkSize == 0) { // if not chunk value -1 on start and dont change 
 		return false;
 	}
-	if (encoding == "chunked") {
-		if (this->lastChunkSize == 0) {
-			return false;
-		}
-		else {
-			return true;
-		}
-	}
-	std::cout << "buf: " << this->bodyRecieved << " " << conLength << std::endl;
-	if (this->bodyRecieved < std::stoi(conLength)) {
+	if (this->bodyRecieved < contentLength) { // if contLen.empty() contentLength == 0
 		return true;
 	}
 	return false;

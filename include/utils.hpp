@@ -56,6 +56,14 @@ class Mime {
 				mime = "image/png";
 				return ;
 			}
+			if (!ext.compare("svg")) {
+				mime = "image/svg+xml";
+				return ;
+			}
+			if (!ext.compare("css")) {
+				mime = "text/css";
+				return ;
+			}
 			if (!ext.compare("jpg") || !ext.compare("jpeg")) {
 				mime = "image/jpeg";
 				return ;

@@ -83,7 +83,7 @@ Host: localhost\n\
 Transfer-Encoding: chunked\r\n\
 Connection: close\r\n\r\n";
 
-	int size = 200;
+	int size = 5000;
 	std::string chunk;
 	chunk.append(std::to_string(size) + "\r\n");
 	for (int i = 0; i < size; i++) {

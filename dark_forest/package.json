@@ -1,0 +1,12 @@
+{
+  "name": "dark_forest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "sass --watch input.scss index.css",
+	"dev2": "sass --watch red-coast-input.scss red-coast-style.css"
+  },
+  "author": "",
+  "license": "ISC"
+}

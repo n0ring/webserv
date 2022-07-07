@@ -16,9 +16,10 @@ print( "<h3>")
 print( "<pre>")
 
 print( "hello from python script. this was on input: ")
+print("<div style=\"color: green;\" >")
 for line in fileinput.input():
 	print (line)
-
+print("</div>")
 
 print( "queryString: ")
 print(os.getenv("QUERY_STRING"))

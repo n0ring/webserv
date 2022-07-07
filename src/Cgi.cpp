@@ -115,7 +115,6 @@ void Cgi::preprocessCgi(Connection& connect) {
 	if (connect.getCurrectCode() >= 400) {
 		return ;
 	}
-	// set env jere
 	remove(connect.getCgiInputFileName().c_str());
 	fd = open(connect.getCgiInputFileName().c_str(), O_RDWR | O_CREAT | O_TRUNC);
 	if (fd == -1) {
