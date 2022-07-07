@@ -26,6 +26,8 @@ class Connection {
 		location*	currentLoc;
 		int 		inputFileFd;
 		int			bodyRecieved;
+		size_t		lastChunkSize;
+		bool		currentChunkNotEnded;
 
 		std::string	defaultErrorPageName;
 		std::string cgiOutput;
@@ -59,4 +61,5 @@ class Connection {
 		void		processLocation(void);
 		bool		isMoreBody(void);
 		void		POST();
+		void		unchunkBuffer();
 };

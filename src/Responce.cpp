@@ -103,6 +103,14 @@ std::string Responce::getCgiHeader(void) {
 	return cgiHeader;
 }
 
+std::string getCurrentTime(void) {
+	char buf[1000];
+	time_t now = time(0);
+	struct tm tm = *gmtime(&now);
+	strftime(buf, sizeof buf, "%a, %d %b %Y %H:%M:%S %Z", &tm);
+ 	return std::string(buf);
+}
+
 void Responce::createHeader(location* loc) {
 	(void) loc;
 
@@ -113,6 +121,7 @@ void Responce::createHeader(location* loc) {
 		this->headerObj.setContentLength("Content-Length: " + std::to_string(this->fileLen));
 	}
 	this->headerObj.setConnectionStatus("Connection: Close");
+	this->headerObj.setParam("Date: " + getCurrentTime());
 	this->_header = this->headerObj.getHeaderStr();
 	std::cout << GREEN << "-----header to send------" << std::endl;
 	std::cout << this->_header << RESET << std::endl;

@@ -13,6 +13,8 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 	this->defaultErrorPageName.append(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html");
 	this->inputFileFd = -1;
 	this->bodyRecieved = 0;
+	this->lastChunkSize = -1;
+	this->currentChunkNotEnded = false;
 	remove(this->cgiOutput.c_str());
 	remove(this->cgiIput.c_str());
 }
@@ -35,6 +37,8 @@ Connection & Connection::operator=(Connection const &other) {
 		this->cgiOutput = other.cgiOutput;
 		this->defaultErrorPageName = other.defaultErrorPageName;
 		this->bodyRecieved = other.bodyRecieved;
+		this->lastChunkSize = other.lastChunkSize;
+		this->currentChunkNotEnded = other.currentChunkNotEnded;
 		// add others
 	}
 	return *this;
@@ -45,9 +49,11 @@ int Connection::getFd() const {
 }
 
 void Connection::processLocation() {
-	std::string conLength = this->_request.getParamByName("Content-Length");
+	int contentLen;
 
-	if (!conLength.empty() && std::stoi(conLength) > this->_vHost->getMaxBody()) {
+	stringToNum(this->_request.getParamByName("Content-Length"), contentLen);
+
+	if (contentLen > this->_vHost->getMaxBody()) {
 		this->_request.setCurrentCode(413);
 		return ;
 	}
@@ -64,11 +70,16 @@ void Connection::processLocation() {
 		this->_responce.setParamToHeader("Location: " + this->currentLoc->getParamByName("redirect"));
 		return ;
 	}
+	if (this->_request.getParamByName("Transfer-Encoding") == "chunked") {
+		this->unchunkBuffer();	
+	}
 	this->_request.setCurrentCode(200);
 	if (this->currentLoc->isCgi()) {
 		Cgi::preprocessCgi(*this);
 	} else if (this->_request.getParamByName("Method").compare("POST") == 0) {
 		remove(this->inputFilePost.c_str());
+
+
 		int fd = open(this->inputFilePost.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 777);
 		if (fd == -1) {
 			std::cerr << " input file not created" << std::endl;
@@ -79,17 +90,58 @@ void Connection::processLocation() {
 	}
 }
 
+void Connection::unchunkBuffer() {
+	std::string	newBuff;
+	std::string	line;
+	size_t		startPos = 0;
+
+	if (this->_request.getParamByName("Transfer-Encoding") != "chunked") {
+		return ;
+	}
+	// currentChunkNotEnded
+	while (startPos < this->buffer_in.length()) {
+		if (!currentChunkNotEnded) {
+			line = getLine(this->buffer_in, startPos);
+			stringToNum(line, this->lastChunkSize);
+			if (this->lastChunkSize == 0) {
+				break; ;
+			}
+			while (this->buffer_in[startPos] == '\n' || this->buffer_in[startPos] == '\r') {
+				startPos++;
+			}
+		}
+		if (this->lastChunkSize < this->buffer_in.length() - startPos) { // all chunk in buffer
+			newBuff.append(this->buffer_in, startPos, this->lastChunkSize);
+			startPos += this->lastChunkSize;
+			while (this->buffer_in[startPos] == '\n' || this->buffer_in[startPos] == '\r') {
+				startPos++;
+			}
+			this->currentChunkNotEnded = false;
+		}
+		else { // only part of chunk in buffer
+			this->currentChunkNotEnded = true;
+			newBuff.append(this->buffer_in, startPos, this->buffer_in.length() - startPos);
+			this->lastChunkSize -= (this->buffer_in.length() - startPos);
+			if (this->lastChunkSize == 0) {
+				this->lastChunkSize--;
+			}
+			break;
+		}
+	}
+	this->buffer_in = newBuff;
+}
+
 int Connection::receiveData() {  // viHost
 	char buf[BUFFER];
 	int ret;
-	
+	bzero(buf, BUFFER);
 	ret = recv(this->_fd, buf, BUFFER, 0);
+	this->buffer_in.append(buf, ret);
 	if (this->inputFileFd != -1) { // if post?  // body only here??? 
-		write(this->inputFileFd, buf, ret); // 
-		this->bodyRecieved += ret;
-	}
-	else {
-		this->buffer_in.append(buf, ret);
+		this->unchunkBuffer();
+		write(this->inputFileFd, buffer_in.c_str(), buffer_in.length()); // change write to smt else 
+		this->bodyRecieved += this->buffer_in.length();
+		buffer_in.clear();
 	}
 	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
 	std::string tmp;
@@ -116,10 +168,18 @@ int Connection::receiveData() {  // viHost
 
 bool Connection::isMoreBody(void) {
 	std::string conLength = this->_request.getParamByName("Content-Length");
+	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
 	// check for chunked encoding 
-
-	if (conLength.empty()) {
+	if (conLength.empty() && encoding.empty()) {
 		return false;
+	}
+	if (encoding == "chunked") {
+		if (this->lastChunkSize == 0) {
+			return false;
+		}
+		else {
+			return true;
+		}
 	}
 	std::cout << "buf: " << this->bodyRecieved << " " << conLength << std::endl;
 	if (this->bodyRecieved < std::stoi(conLength)) {
@@ -159,6 +219,7 @@ int Connection::sendData() {
 		this->currentLoc = NULL;
 		this->inputFileFd = -1;
 		this->bodyRecieved = 0;
+		this->lastChunkSize = -1;
 		if (this->_request.getCurrentCode() >= 400) {
 			return -1;
 		}
@@ -226,7 +287,9 @@ void Connection::POST() {
 	std::ofstream ofs;
 	
 	std::string conLength = this->_request.getParamByName("Content-Length");
-	if (conLength.empty() || std::stoi(conLength) == 0) {
+	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
+
+	if ( (conLength.empty() || std::stoi(conLength) == 0) && encoding.empty()) {
 		return ; // change code? 
 	}
 	ifs.open(this->inputFilePost);
@@ -309,6 +372,7 @@ void	Connection::checkForVhostChange() {
 void	Connection::sendBodyToFile() {
 	write(this->inputFileFd, this->buffer_in.c_str(), this->buffer_in.length());
 	this->bodyRecieved += this->buffer_in.length();
+	this->buffer_in.clear();
 }
 
 Connection::~Connection(void) {}

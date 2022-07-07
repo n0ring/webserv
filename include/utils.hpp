@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -27,6 +28,18 @@ void truncStr(std::string &s);
 std::pair<std::string, std::string> splitInPair(std::string &line);
 void splitByChar(std::string &s, char delimiter, std::vector<std::string>& v);
 std::string getDefaultErrorPage(int code);
+
+template<typename T>
+void stringToNum(std::string &s, T& num) {
+	if (s.empty()) {
+		num = 0;
+		return ;
+	}
+	std::stringstream ss;
+	ss << s;
+	ss >> num;
+}
+
 // make map? 
 class Mime {
 	public: 
