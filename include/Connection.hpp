@@ -24,15 +24,16 @@ class Connection {
 		Responce	_responce;
 		routeParams	routeObj;
 		location*	currentLoc;
-		int 		inputFileFd;
 		int			bodyRecieved;
 		size_t		lastChunkSize;
 		bool		currentChunkNotEnded;
+		std::string inputBufferName;
 
 		std::string	defaultErrorPageName;
 		std::string cgiOutput;
-		std::string cgiIput;
-		std::string inputFilePost;
+
+		std::ofstream ofs;
+
 
 	public:
 		Connection(Connection const &other);
@@ -52,14 +53,13 @@ class Connection {
 		void		handleRequest();
 		void		checkForVhostChange();
 		void		executeOrder66();
-		void		sendBodyToFile();
+		void		saveBody();
 		std::string getErrorPageName(int code);
-		void		setFileInputFd(int fd) {this->inputFileFd = fd;}
 		int			getCurrectCode(void) { return this->_request.getCurrentCode(); }
 		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
-		std::string& getCgiInputFileName(void) { return this->cgiIput; }
 		void		processLocation(void);
 		bool		isMoreBody(void);
 		void		POST();
 		void		unchunkBuffer();
+		void		preparaBufferForBody();
 };

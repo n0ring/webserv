@@ -109,21 +109,3 @@ int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputF
 	}
 	return EXIT_SUCCESS;
 }
-
-void Cgi::preprocessCgi(Connection& connect) {
-	int fd = -1;
-	if (connect.getCurrectCode() >= 400) {
-		return ;
-	}
-	remove(connect.getCgiInputFileName().c_str());
-	fd = open(connect.getCgiInputFileName().c_str(), O_RDWR | O_CREAT | O_TRUNC);
-	if (fd == -1) {
-		perror("create input file fail");
-		connect.setCurrentCode(500);
-	}
-	else {
-		std::cout << "input file was created." << std::endl;
-		connect.setFileInputFd(fd);
-		connect.sendBodyToFile();
-	}
-}

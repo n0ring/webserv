@@ -7,16 +7,12 @@ Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenne
 	this->_needToWrite = 0;
 	this->_request.setFd(fd);
 	this->currentLoc = NULL;
-	this->cgiIput.append(CGI_FILE_IN_PREFIX + std::to_string(fd));
 	this->cgiOutput.append(CGI_FILE_OUT_PREFIX + std::to_string(fd));
-	this->inputFilePost.append(INPUT_FILE_POST + std::to_string(fd));
+	this->inputBufferName.append(INPUT_FILE_POST + std::to_string(fd));
 	this->defaultErrorPageName.append(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html");
-	this->inputFileFd = -1;
 	this->bodyRecieved = 0;
 	this->lastChunkSize = -1;
 	this->currentChunkNotEnded = false;
-	remove(this->cgiOutput.c_str());
-	remove(this->cgiIput.c_str());
 }
 
 Connection::Connection(Connection const &other) {
@@ -31,9 +27,7 @@ Connection & Connection::operator=(Connection const &other) {
 		this->_writed = other._writed;
 		this->_needToWrite = other._needToWrite;
 		this->currentLoc = other.currentLoc;
-		this->cgiIput = other.cgiIput;
-		this->inputFileFd = other.inputFileFd;
-		this->inputFilePost = other.inputFilePost;
+		this->inputBufferName = other.inputBufferName;
 		this->cgiOutput = other.cgiOutput;
 		this->defaultErrorPageName = other.defaultErrorPageName;
 		this->bodyRecieved = other.bodyRecieved;
@@ -74,17 +68,9 @@ void Connection::processLocation() {
 		this->unchunkBuffer();	
 	}
 	this->_request.setCurrentCode(200);
-	if (this->currentLoc->isCgi()) {
-		Cgi::preprocessCgi(*this);
-	} else if (this->_request.getParamByName("Method").compare("POST") == 0) {
-		remove(this->inputFilePost.c_str());
-		int fd = open(this->inputFilePost.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 777);
-		if (fd == -1) {
-			std::cerr << " input file not created" << std::endl;
-			return ;
-		}
-		this->setFileInputFd(fd);
-		this->sendBodyToFile();
+	if (this->currentLoc->isCgi() || this->_request.getParamByName("Method") == "POST") {
+		this->preparaBufferForBody();
+		this->saveBody();
 	}
 }
 
@@ -96,7 +82,6 @@ void Connection::unchunkBuffer() {
 	if (this->_request.getParamByName("Transfer-Encoding") != "chunked") {
 		return ;
 	}
-	// currentChunkNotEnded
 	while (startPos < this->buffer_in.length()) {
 		if (!currentChunkNotEnded) {
 			line = getLine(this->buffer_in, startPos);
@@ -135,9 +120,9 @@ int Connection::receiveData() {  // viHost
 	bzero(buf, BUFFER);
 	ret = recv(this->_fd, buf, BUFFER, 0);
 	this->buffer_in.append(buf, ret);
-	if (this->inputFileFd != -1) { // if post?  // body only here???
+	if (this->ofs.is_open()) { // if post?  // body only here???
 		this->unchunkBuffer();
-		this->sendBodyToFile();
+		this->saveBody();
 	}
 	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
 	std::string tmp;
@@ -194,17 +179,17 @@ int Connection::sendData() {
 		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
 		remove(this->defaultErrorPageName.c_str());
 		if (this->currentLoc && this->currentLoc->isCgi()) {
-			remove(this->cgiIput.c_str());
+			// remove(this->inputBufferName.c_str());
 			remove(this->cgiOutput.c_str());
 		}
-		remove(this->inputFilePost.c_str());
+			remove(this->inputBufferName.c_str());
+		remove(this->inputBufferName.c_str());
 		bzero(&this->routeObj, sizeof(this->routeObj));
 		this->_writed = 0;
 		this->_needToWrite = 0;
 		this->buffer_in.clear();
 		bzero(&(this->routeObj), sizeof(this->routeObj));
 		this->currentLoc = NULL;
-		this->inputFileFd = -1;
 		this->bodyRecieved = 0;
 		this->lastChunkSize = -1;
 		if (this->_request.getCurrentCode() >= 400) {
@@ -271,7 +256,7 @@ void GET(Request& request, routeParams &paramObj) {
 
 void Connection::POST() {
 	std::ifstream ifs;
-	std::ofstream ofs;
+	std::ofstream ofss;
 	
 	std::string conLength = this->_request.getParamByName("Content-Length");
 	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
@@ -279,15 +264,16 @@ void Connection::POST() {
 	if ( (conLength.empty() || std::stoi(conLength) == 0) && encoding.empty()) {
 		return ; // change code? 
 	}
-	ifs.open(this->inputFilePost);
+	this->ofs.close();
+	ifs.open(this->inputBufferName);
 	// name == route? 
-	ofs.open("TMPFILENAME", std::ofstream::out | std::ofstream::trunc); // where get file name? 
-	if (ofs.is_open() && ifs.is_open()) {
-		ofs << ifs.rdbuf();
+	ofss.open("TMPFILENAME", std::ofstream::out | std::ofstream::trunc); // where get file name? 
+	if (ofss.is_open() && ifs.is_open()) {
+		ofss << ifs.rdbuf();
 	} else {
 		this->setCurrentCode(500);
 	}
-	ofs.close();
+	ofss.close();
 	ifs.close();
 }
 
@@ -297,8 +283,9 @@ void Connection::executeOrder66() { // all data recieved
 	}
 	if (this->currentLoc && this->currentLoc->isCgi()) {
 		std::cout << "CGI" << std::endl;
-		close(this->inputFileFd);
-		if (Cgi::start(*this->currentLoc, this->cgiIput, this->cgiOutput, this->_request)) {
+		remove(this->cgiOutput.c_str());
+		this->ofs.close();
+		if (Cgi::start(*this->currentLoc, this->inputBufferName, this->cgiOutput, this->_request)) {
 			this->setCurrentCode(500);
 			return ;
 		}
@@ -356,8 +343,12 @@ void	Connection::checkForVhostChange() {
 	}
 }
 
-void	Connection::sendBodyToFile() {
-	write(this->inputFileFd, this->buffer_in.c_str(), this->buffer_in.length());
+void	Connection::saveBody() {
+	// write(this->inputFileFd, this->buffer_in.c_str(), this->buffer_in.length());
+	if (this->getCurrectCode() >= 400) {
+		return ;
+	}
+	this->ofs << this->buffer_in;
 	this->bodyRecieved += this->buffer_in.length();
 	this->buffer_in.clear();
 }
@@ -367,6 +358,16 @@ Request& Connection::getRequestObj() {return this->_request; }
 Responce& Connection::getResponceObj() {return this->_responce; }
 int Connection::getListener() const {return this->_listennerFd; }
 
+
+void	Connection::preparaBufferForBody() {
+	remove(this->inputBufferName.c_str());
+	this->ofs.open(this->inputBufferName, std::ofstream::out);
+	if (!this->ofs.is_open()) {
+		perror("create input file fail");
+		this->setCurrentCode(500);
+		return ;
+	}
+}
 
 // Responce::getCgiHeader (from output)
 // Responce::fillSomeFieldsInHeaderObj(cgiHeader)
