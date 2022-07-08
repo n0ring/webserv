@@ -22,6 +22,7 @@ class Responce {
 		std::string		MIME;
 		std::string		fileExtToSend;
 		Header			headerObj;
+		Mime			mimeList;
 
 
 	public:

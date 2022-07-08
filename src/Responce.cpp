@@ -113,8 +113,7 @@ std::string getCurrentTime(void) {
 
 void Responce::createHeader(location* loc) {
 	(void) loc;
-
-	Mime::set(this->fileExtToSend, this->MIME);
+	this->MIME = this->mimeList.getMime(this->fileExtToSend);
 	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " OK");
 	if (this->fileLen) {
 		this->headerObj.setContentType("Content-Type: " + this->MIME);

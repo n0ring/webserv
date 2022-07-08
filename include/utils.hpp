@@ -3,6 +3,7 @@
 #include <poll.h>
 #include <iostream>
 #include <vector>
+#include <map>
 #include <fstream>
 #include <sstream>
 
@@ -42,32 +43,89 @@ void stringToNum(std::string &s, T& num) {
 
 // make map? 
 class Mime {
+	private: 
+		std::map<std::string, std::string> list;
 	public: 
-		static void set(std::string &ext, std::string& mime) {
-			if (!ext.compare("html")) {
-				mime = "text/html";
-				return ;
-			}
-			if (!ext.compare("ico")) {
-				mime = "image/x-icon";
-				return ;
-			}
-			if (!ext.compare("png")) {
-				mime = "image/png";
-				return ;
-			}
-			if (!ext.compare("svg")) {
-				mime = "image/svg+xml";
-				return ;
-			}
-			if (!ext.compare("css")) {
-				mime = "text/css";
-				return ;
-			}
-			if (!ext.compare("jpg") || !ext.compare("jpeg")) {
-				mime = "image/jpeg";
-				return ;
-			}
-			mime.clear();
+		Mime(void) {
+			this->list["aac"] = "audio/aac";
+			this->list["abw"] = "application/x-abiword";
+			this->list["arc"] = "application/x-freearc";
+			this->list["avi"] = "video/x-msvideo";
+			this->list["azw"] = "application/vnd.amazon.ebook";
+			this->list["bin"] = "application/octet-stream";
+			this->list["bmp"] = "image/bmp";
+			this->list["bz"] = 	"application/x-bzip";
+			this->list["bz2"] = "application/x-bzip2";
+			this->list["csh"] = "application/x-csh";
+			this->list["css"] = "text/css";
+			this->list["csv"] = "text/csv";
+			this->list["doc"] = "application/msword";
+			this->list["docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+			this->list["eot"] = "application/vnd.ms-fontobject";
+			this->list["epub"] = "application/epub+zip";
+			this->list["gz"] = 	"application/gzip";
+			this->list["gif"] = "image/gif";
+			this->list["htm"] = "text/html";
+			this->list["html"] = "text/html";
+			this->list["ico"] = "image/vnd.microsoft.icon";
+			this->list["ics"] = "text/calendar";
+			this->list["jar"] = "application/java-archive";
+			this->list["jpeg"] = "image/jpeg";
+			this->list["jpg"] = "image/jpeg";
+			this->list["js"] = 	"text/javascript";
+			this->list["json"] = "application/json";
+			this->list["jsonld"] = "application/ld+json";
+			this->list["mid"] = "audio/midi";
+			this->list["midi"] = "audio/midi";
+			this->list["mjs"] = "text/javascript";
+			this->list["mp3"] = "audio/mpeg";
+			this->list["mpeg"] = "video/mpeg";
+			this->list["mpkg"] = "application/vnd.apple.installer+xml";
+			this->list["odp"] = "pplication/vnd.oasis.opendocument.presentation";
+			this->list["ods"] = "application/vnd.oasis.opendocument.spreadsheet";
+			this->list["odt"] = "application/vnd.oasis.opendocument.text";
+			this->list["oga"] = "audio/ogg";
+			this->list["ogv"] = "video/ogg";
+			this->list["ogx"] = "application/ogg";
+			this->list["opus"] = "audio/opus";
+			this->list["otf"] = "font/otf";
+			this->list["png"] = "image/png";
+			this->list["pdf"] = "application/pdf";
+			this->list["php"] = "application/x-httpd-php";
+			this->list["ppt"] = "application/vnd.ms-powerpoint";
+			this->list["pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+			this->list["rar"] = "application/vnd.rar";
+			this->list["rtf"] = "application/rtf";
+			this->list["sh"] = 	"application/x-sh";
+			this->list["svg"] = "image/svg+xml";
+			this->list["swf"] = "application/x-shockwave-flash";
+			this->list["tar"] = "application/x-tar";
+			this->list["tif"] = "image/tiff";
+			this->list["tiff"] = "image/tiff";
+			this->list["ts"] = 	"video/mp2t";
+			this->list["ttf"] = "font/ttf";
+			this->list["txt"] = "text/plain";
+			this->list["vsd"] = "application/vnd.visio";
+			this->list["wav"] = "audio/wav";
+			this->list["weba"] = "audio/webm";
+			this->list["webm"] = "video/webm";
+			this->list["webp"] = "image/webp";
+			this->list["woff"] = "font/woff";
+			this->list["woff2"] = "font/woff2";
+			this->list["xhtml"] = "application/xhtml+xml";
+			this->list["xls"] = "application/vnd.ms-excel";
+			this->list["xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+			this->list["xml"] = "text/xml";
+			this->list["xul"] = "application/vnd.mozilla.xul+xml";
+			this->list["zip"] = "application/zip";
+			this->list["3gp"] = "video/3gpp";
+		}
+		~Mime(void) {}
+
+		std::string getMime(std::string &ext) {
+			return this->list[ext];
 		}
 };
+
+
+
