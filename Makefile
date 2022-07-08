@@ -38,6 +38,7 @@ fclean			:	clean
 					rm -f $(NAME)
 
 x				:	all
+					~/clean.sh
 					./$(NAME) config.conf
 
 leaks			:	all

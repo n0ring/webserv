@@ -73,6 +73,7 @@ void	 Header::setConnectionStatus(std::string nConnectionStatus) {
 }
 
 void Header::setHeaderParam(std::vector<std::string>& currentParams, std::string line) {
+	std::cout << "header params: " << line << std::endl;
 	if (currentParams.front() == "HTTP/1.1") {
 		this->status = line;
 	}
@@ -90,19 +91,11 @@ void Header::setHeaderParam(std::vector<std::string>& currentParams, std::string
 	}
 }
 
-bool	Header::validateParams(void) {
-	if (this->contentType.empty()) {
-		return false;
-	}
-	return true;
-}
-
 void	Header::setParam(std::string param) {
 	this->unknownParams.push_back(param);
 }
 
-
-void	Header::checkCgiHeader(std::string& cgiHeader, bool& isCgiHeaderValid) {
+void	Header::checkCgiHeader(std::string& cgiHeader) {
 	size_t						startPos = 0;
 	std::string					line;
 	std::vector<std::string>	currentParams;
@@ -112,7 +105,6 @@ void	Header::checkCgiHeader(std::string& cgiHeader, bool& isCgiHeaderValid) {
 		currentParams = sPPlit(line);
 		setHeaderParam(currentParams, line);
 	}
-	isCgiHeaderValid = validateParams();
 }
 
 

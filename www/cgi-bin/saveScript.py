@@ -29,8 +29,7 @@ def parse_file():
 
     # print(boundary)
     if not boundary:
-        print("Error: boundary is not set")
-        exit(1)
+        raise Exception("Error: boundary is not set")
 
     file_content = sys.stdin.buffer.read()
 
@@ -39,8 +38,7 @@ def parse_file():
 
     parts = file_content.split(boundary)
     if len(parts) < 3:
-        print("Error: no boundary in file")
-        exit(1)
+        raise Exception("Error: no boundary in file")
 
     is_lf_mode = False
 
@@ -50,8 +48,7 @@ def parse_file():
         is_lf_mode = True
         parts = file_content.split(b"\n\n", 1)
         if len(parts) != 2:
-            print("Bad file content")
-            exit(1)
+            raise Exception("Bad file content")
 
     raw_headers, body = parts
     headers = [x.strip() for x in raw_headers.split(b"\n")]
@@ -70,8 +67,7 @@ def parse_file():
                 content_type_filename = match.group(2)
 
     if not content_type_filename:
-        print("Error: filename is not set in Content-Type header")
-        exit(1)
+        raise Exception("Error: filename is not set in Content-Type header")
 
     if is_lf_mode:
         if body.endswith(b"\n"):

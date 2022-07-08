@@ -126,11 +126,11 @@ void Responce::createHeader(location* loc) {
 	std::cout << this->_header << RESET << std::endl;
 }
 
-void	Responce::setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderValid) {
+void	Responce::setCgiHeaderToResponce(std::string& cgiHeader) {
 	if (cgiHeader.empty()) {
 		return ;
 	}
-	this->headerObj.checkCgiHeader(cgiHeader, isCgiHeaderValid);
+	this->headerObj.checkCgiHeader(cgiHeader);
 }
 
 void	Responce::setParamToHeader(std::string param) {

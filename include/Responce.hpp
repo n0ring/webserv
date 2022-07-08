@@ -41,7 +41,7 @@ class Responce {
 		void		createHeader(location* loc);
 		std::string	getCgiHeader(void);
 		void		createCGiHeader(void);
-		void		setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderValid);
+		void		setCgiHeaderToResponce(std::string& cgiHeader);
 		void		setParamToHeader(std::string param);
 
 };

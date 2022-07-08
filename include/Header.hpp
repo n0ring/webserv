@@ -26,9 +26,8 @@ class Header {
 		void		setContentType(std::string nContentType);
 		void		setContentLength(std::string nContentLenth);
 		void		setConnectionStatus(std::string nConnectionStatus);
-		void		checkCgiHeader(std::string& cgiHeader, bool& isCgiHeaderValid);
+		void		checkCgiHeader(std::string& cgiHeader);
 		void		setHeaderParam(std::vector<std::string>& currentParams, std::string line);
-		bool		validateParams(void);
 		void		setParam(std::string param);
 		void		appendToHeaderStr(std::string& param);
 

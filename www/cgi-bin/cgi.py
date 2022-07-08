@@ -22,7 +22,9 @@ for line in fileinput.input():
 print("</div>")
 
 print( "queryString: ")
+print("<div style=\"color: green;\" >")
 print(os.getenv("QUERY_STRING"))
+print("</div>")
 print( "content type: ")
 print(os.getenv("CONTENT_TYPE"))
 print( "Method: ")

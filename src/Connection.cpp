@@ -124,11 +124,11 @@ int Connection::receiveData() {  // viHost
 		this->unchunkBuffer();
 		this->saveBody();
 	}
-	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
-	std::string tmp;
-	tmp.append(buf, ret);
-	std::cout << tmp << std::endl;
-	std::cout << "-----------buffer-in-end--------------" << std::endl;
+	// std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	// std::string tmp;
+	// tmp.append(buf, ret);
+	// std::cout << tmp << std::endl;
+	// std::cout << "-----------buffer-in-end--------------" << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
@@ -179,27 +179,24 @@ int Connection::sendData() {
 		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
 		remove(this->defaultErrorPageName.c_str());
 		if (this->currentLoc && this->currentLoc->isCgi()) {
-			// remove(this->inputBufferName.c_str());
 			remove(this->cgiOutput.c_str());
 		}
-			remove(this->inputBufferName.c_str());
 		remove(this->inputBufferName.c_str());
 		bzero(&this->routeObj, sizeof(this->routeObj));
 		this->_writed = 0;
 		this->_needToWrite = 0;
 		this->buffer_in.clear();
 		bzero(&(this->routeObj), sizeof(this->routeObj));
-		this->currentLoc = NULL;
 		this->bodyRecieved = 0;
 		this->lastChunkSize = -1;
-		if (this->_request.getCurrentCode() >= 400) {
+		if (!this->_request.getParamByName("Connection").compare("close") 
+			|| (this->currentLoc && this->currentLoc->isCgi()) || this->_request.getCurrentCode() >= 400 ) {
+				std::cout << "\nclose connection\n" << std::endl;
 			return -1;
 		}
+		this->currentLoc = NULL;
 		this->_request.resetObj();
 		this->_responce.resetObj();
-		if (!this->_request.getParamByName("Connection").compare("close")) {
-			return -1;
-		}
 		return 0;
 	}
 	return sended;
@@ -229,12 +226,82 @@ std::string Connection::getErrorPageName(int code) {
 	return pageName;
 }
 
+
+void GET(Request& request, routeParams &paramObj) {
+	request.setFileNameToSend(paramObj.finalPathToFile);
+}
+
+void Connection::POST() {
+	std::ifstream	ifs;
+	std::ofstream	ofss;
+	std::string		uploadPath;
+	std::string conLength = this->_request.getParamByName("Content-Length");
+	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
+
+	if (!this->currentLoc) {
+		this->setCurrentCode(404);
+		return ;
+	}
+	uploadPath = this->currentLoc->getParamByName("upload");
+	if (uploadPath.empty()) {
+		this->setCurrentCode(999);
+		std::cout << "Upload path is not define. You config suck" << std::endl;
+		return ;
+	}
+	if ( (conLength.empty() || std::stoi(conLength) == 0) && encoding.empty()) {
+		this->setCurrentCode(999);
+		return ; // change code? 
+	}
+	this->ofs.close();
+	ifs.open(this->inputBufferName);
+	// name == route? 
+	ofss.open(uploadPath, std::ofstream::out | std::ofstream::trunc); // where get file name? 
+	if (ofss.is_open() && ifs.is_open()) {
+		ofss << ifs.rdbuf();
+	} else {
+		this->setCurrentCode(500);
+	}
+	this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
+	ofss.close();
+	ifs.close();
+}
+
+void Connection::executeOrder66() { // all data recieved
+	if (this->getCurrectCode() >= 400) {
+		return ;
+	}
+	if (this->currentLoc && this->currentLoc->isCgi()) {
+		std::cout << "CGI" << std::endl;
+		remove(this->cgiOutput.c_str());
+		this->ofs.close();
+		if (Cgi::start(*this->currentLoc, this->inputBufferName, this->cgiOutput, this->_request)) {
+			this->setCurrentCode(500);
+		}
+		this->_request.setFileNameToSend( this->cgiOutput.c_str());
+	}
+	else {
+		std::string method = this->_request.getParamByName("Method");
+		if (!method.compare("GET")) {
+			std::cout << "Method GET" << std::endl;
+			GET(this->_request, this->routeObj);
+		}
+		else if (!method.compare("POST")) {
+			std::cout << "Method POST" << std::endl;
+			// this->setCurrentCode(696);
+			this->POST();
+		}
+		else if (!method.compare("DELETE")) {
+			std::cout << "Method DELETE" << std::endl;
+		}
+	}
+}
+
 void	Connection::setResponceFile() {
 	if (this->_request.getCurrentCode() == 0) {
 		std::cout << "HTTP not found in set Responce" << std::endl;
 		this->_request.setCurrentCode(505);
 	}
-	if (this->_request.getCurrentCode() >= 400) { // set erorr page
+	if (this->_request.getCurrentCode() >= 400 && this->_request.getFileToSend().empty()) { // set erorr page
 		this->_request.setFileNameToSend(this->getErrorPageName(this->getCurrectCode()));
 	}
 	// check is it a file
@@ -250,78 +317,20 @@ void	Connection::setResponceFile() {
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
 
-void GET(Request& request, routeParams &paramObj) {
-	request.setFileNameToSend(paramObj.finalPathToFile);
-}
-
-void Connection::POST() {
-	std::ifstream ifs;
-	std::ofstream ofss;
-	
-	std::string conLength = this->_request.getParamByName("Content-Length");
-	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
-
-	if ( (conLength.empty() || std::stoi(conLength) == 0) && encoding.empty()) {
-		return ; // change code? 
-	}
-	this->ofs.close();
-	ifs.open(this->inputBufferName);
-	// name == route? 
-	ofss.open("TMPFILENAME", std::ofstream::out | std::ofstream::trunc); // where get file name? 
-	if (ofss.is_open() && ifs.is_open()) {
-		ofss << ifs.rdbuf();
-	} else {
-		this->setCurrentCode(500);
-	}
-	ofss.close();
-	ifs.close();
-}
-
-void Connection::executeOrder66() { // all data recieved
-	if (this->getCurrectCode() >= 400) {
-		return ;
-	}
-	if (this->currentLoc && this->currentLoc->isCgi()) {
-		std::cout << "CGI" << std::endl;
-		remove(this->cgiOutput.c_str());
-		this->ofs.close();
-		if (Cgi::start(*this->currentLoc, this->inputBufferName, this->cgiOutput, this->_request)) {
-			this->setCurrentCode(500);
-			return ;
-		}
-		this->_request.setFileNameToSend( this->cgiOutput.c_str());
-	}
-	else {
-		std::string method = this->_request.getParamByName("Method");
-		if (!method.compare("GET")) {
-			std::cout << "Method GET" << std::endl;
-			GET(this->_request, this->routeObj);
-		}
-		else if (!method.compare("POST")) {
-			std::cout << "Method POST" << std::endl;
-			this->setCurrentCode(696);
-			this->POST();
-		}
-		else if (!method.compare("DELETE")) {
-			std::cout << "Method DELETE" << std::endl;
-		}
-	}
-}
 
 void Connection::prepareResponceToSend() {
 	std::string	cgiHeader;
-	bool		isCgiHeaderValid = false;
+
 	this->setResponceFile();
-	// if cgi take header from output. send to header obj
-	if (this->currentLoc && this->currentLoc->isCgi()
-		&& this->getCurrectCode() < 400) {
+	if (this->currentLoc && this->currentLoc->isCgi()) {
 		cgiHeader = this->_responce.getCgiHeader();
-		this->_responce.setCgiHeaderToResponce(cgiHeader, isCgiHeaderValid);
-		if (cgiHeader.empty() || !isCgiHeaderValid) {
+		this->_responce.setCgiHeaderToResponce(cgiHeader);
+		if (cgiHeader.empty()) {
+			std::cout << "here shit some" << std::endl;
 			this->setCurrentCode(502);
+			this->_request.setFileNameToSend("");
 			this->setResponceFile();
 		}
-		// send cgiHeader to header. fill some fields
 	}
 	this->buffer_in.clear();
 	this->_responce.createHeader(this->currentLoc);
@@ -344,7 +353,6 @@ void	Connection::checkForVhostChange() {
 }
 
 void	Connection::saveBody() {
-	// write(this->inputFileFd, this->buffer_in.c_str(), this->buffer_in.length());
 	if (this->getCurrectCode() >= 400) {
 		return ;
 	}
@@ -368,7 +376,3 @@ void	Connection::preparaBufferForBody() {
 		return ;
 	}
 }
-
-// Responce::getCgiHeader (from output)
-// Responce::fillSomeFieldsInHeaderObj(cgiHeader)
-// in createHeader: HeaderObj::getHeaderStr(loc, responceObj)
