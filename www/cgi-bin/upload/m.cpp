@@ -1,7 +1,3 @@
-------WebKitFormBoundaryUEPf1sCfkK42GkwF
-Content-Disposition: form-data; name="text"; filename="m.cpp"
-Content-Type: application/octet-stream
-
 #include <vector>
 #include <iostream>
 
@@ -28,4 +24,3 @@ int main(void) {
 	std::cout << maxSumArr(arr, 3) << std::endl;
 	return 0;
 }
-------WebKitFormBoundaryUEPf1sCfkK42GkwF--
