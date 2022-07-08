@@ -24,11 +24,9 @@ class Responce {
 		Header			headerObj;
 		Mime			mimeList;
 
-
 	public:
 		Responce(void);
 		~Responce(void) {};
-
 
 		void		setHeader(std::string header);
 		
@@ -43,6 +41,9 @@ class Responce {
 		void		createCGiHeader(void);
 		void		setCgiHeaderToResponce(std::string& cgiHeader);
 		void		setParamToHeader(std::string param);
+		void		closeBuffer(void) {
+			this->ifs.close();
+		}
 
 };
 

@@ -177,23 +177,23 @@ int Connection::sendData() {
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) { // end of sending 
 		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
+		this->_responce.closeBuffer();
 		remove(this->defaultErrorPageName.c_str());
 		if (this->currentLoc && this->currentLoc->isCgi()) {
 			remove(this->cgiOutput.c_str());
 		}
 		remove(this->inputBufferName.c_str());
-		bzero(&this->routeObj, sizeof(this->routeObj));
-		this->_writed = 0;
-		this->_needToWrite = 0;
-		this->buffer_in.clear();
-		bzero(&(this->routeObj), sizeof(this->routeObj));
-		this->bodyRecieved = 0;
-		this->lastChunkSize = -1;
 		if (!this->_request.getParamByName("Connection").compare("close") 
 			|| (this->currentLoc && this->currentLoc->isCgi()) || this->_request.getCurrentCode() >= 400 ) {
 				std::cout << "\nclose connection\n" << std::endl;
 			return -1;
 		}
+		bzero(&this->routeObj, sizeof(this->routeObj));
+		this->_writed = 0;
+		this->_needToWrite = 0;
+		this->buffer_in.clear();
+		this->bodyRecieved = 0;
+		this->lastChunkSize = -1;
 		this->currentLoc = NULL;
 		this->_request.resetObj();
 		this->_responce.resetObj();
@@ -235,9 +235,10 @@ void Connection::POST() {
 	std::ifstream	ifs;
 	std::ofstream	ofss;
 	std::string		uploadPath;
-	std::string conLength = this->_request.getParamByName("Content-Length");
+	int				conLength; 
 	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
 
+	stringToNum(this->_request.getParamByName("Content-Length"), conLength);
 	if (!this->currentLoc) {
 		this->setCurrentCode(404);
 		return ;
@@ -248,7 +249,7 @@ void Connection::POST() {
 		std::cout << "Upload path is not define. You config suck" << std::endl;
 		return ;
 	}
-	if ( (conLength.empty() || std::stoi(conLength) == 0) && encoding.empty()) {
+	if (conLength == 0 && encoding.empty()) {
 		this->setCurrentCode(999);
 		return ; // change code? 
 	}

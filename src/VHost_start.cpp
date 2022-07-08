@@ -99,6 +99,8 @@ void VHost::setNewLocation(std::vector<std::string> params) {
 
 void	setErrorPages(std::map<int, std::string>& errorMap,
 						std::vector<std::string> params) {
+	int code;
+
 	truncStr(params.back());
 	size_t posToChange = params.back().find("*");
 	if (posToChange == std::string::npos) {
@@ -106,7 +108,7 @@ void	setErrorPages(std::map<int, std::string>& errorMap,
 		return ;
 	}
 	for (size_t i = 1; i < params.size() - 1; i++) {
-		int code = std::stoi(params[i]);
+		stringToNum(params[i], code);
 		std::string pathRaw =  params.back();
 		errorMap[code] = pathRaw.replace(posToChange, 1, params[i]);
 	}
@@ -126,7 +128,7 @@ void VHost::setServerParams(std::vector<std::string> params) {
 		return ;
 	}
 	if (params.front().compare("port") == 0) {
-		this->_port = std::stoi(params.back());
+		stringToNum(params.back(), this->_port);
 		return ;
 	}
 	if (params.front().compare("server_name") == 0) {
@@ -134,7 +136,7 @@ void VHost::setServerParams(std::vector<std::string> params) {
 		return ;
 	}
 	if (params.front().compare("max_client_body_size") == 0) {
-		this->_maxBody = std::stoi(params.back());
+		stringToNum(params.back(), this->_maxBody);
 		return ;
 	}
 }
@@ -153,7 +155,7 @@ void VHost::setLocationParam(std::vector<std::string> inputParams) {
 		return ;
 	}
 	if (inputParams.front().compare("redirect") == 0 && inputParams.size() == 3) {
-		this->locations.back().redirectCode = std::stoi(inputParams[1]);
+		stringToNum(inputParams[1], this->locations.back().redirectCode);
 	} else {
 		truncStr(inputParams.back());
 	}
