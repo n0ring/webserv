@@ -6,13 +6,6 @@ int VHost::getListener(void) const {
 	return this->_listener;
 }
 
-/*
-foo://example.com:8042 /over/there/file.fl?name=ferret
-\_/   \______________/ \_________/ \_________/ \__/
- |           |            |            |        |
-scheme     authority       path        query   fragment
-*/
-
 void setQueryString(routeParams& params) {
 	size_t queryStringStart = params.fullRoute.find("?");
 	if (queryStringStart == std::string::npos) {
@@ -94,7 +87,10 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	}
 	it = findLocationMatch(this->locations, params.ext);
 	if (it == ite) {
-		it =  findLocationMatch(this->locations, "/");
+		it = findLocationMatch(this->locations, "/");
+	}
+	if (params.ext.empty()) {
+		return ite;
 	}
 	setFinalPathToFile(it, params);
 	return it;

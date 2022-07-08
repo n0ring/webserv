@@ -237,7 +237,7 @@ void	Connection::setResponceFile() {
 	if (this->_request.getCurrentCode() >= 400) { // set erorr page
 		this->_request.setFileNameToSend(this->getErrorPageName(this->getCurrectCode()));
 	}
-
+	// check is it a file
 	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
 		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
 		if (this->_request.getCurrentCode() >= 400) {
