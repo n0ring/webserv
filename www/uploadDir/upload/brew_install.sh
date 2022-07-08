@@ -1,7 +1,3 @@
-------WebKitFormBoundary40hc445yX6D9Wvzt
-Content-Disposition: form-data; name="inputfileName"; filename="brew_install.sh"
-Content-Type: text/x-sh
-
 # MY HOMEBREW CONFIG
 
 DIR="~/goinfre"
@@ -59,5 +55,3 @@ DIR="~/goinfre"
 source $DIR/.brewconfig.zsh
 EOL
 fi
-
-------WebKitFormBoundary40hc445yX6D9Wvzt--

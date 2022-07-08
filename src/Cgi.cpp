@@ -81,11 +81,13 @@ int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputF
 	std::string			pathToApp;
 	int					pid, status;
 	std::vector<char *>	argv;
-	std::string			fileToExec = loc.params["root"] + "/" + loc.params["cgi"];
+	// std::string			fileToExec = loc.params["root"] + "/" + loc.params["cgi"];
+	std::string			fileToExec = loc.params["cgi"];
 
 	if (loc.params.count("bin")) {
 		pathToApp.append("/" + loc.params["bin"]);
 	} else {
+		// error?? 
 		findPathToApp(pathToApp, fileToExec);
 	}
 	if (access(pathToApp.c_str(), X_OK) == 0) {

@@ -1,6 +1,7 @@
 #include "VHost.hpp"
 
 // ver. 3 of route parsing (full path. start to search and remove last parts)
+// ver. 3.1 change logic for cgi location. root is root. cgi is full path to exec file
 
 int VHost::getListener(void) const {
 	return this->_listener;
