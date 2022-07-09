@@ -19,6 +19,7 @@ void	ConnectionPool::onClientConnect(VHost& vHost, std::vector<pollfd>& fds,
 			}
 			break ;
 		}
+		// fcntl(newSocket, F_SETFL, O_NONBLOCK);
 		fds.push_back(make_fd(newSocket, POLLIN));
 		this->_pool.insert(std::make_pair(newSocket, Connection( vHost.getListener(), newSocket, vHost )));
 		std::cout << "connect added: " << this->_pool.size() << std::endl;
@@ -28,6 +29,13 @@ void	ConnectionPool::onClientConnect(VHost& vHost, std::vector<pollfd>& fds,
 
 void	ConnectionPool::onClientDisconnect(std::vector<pollfd>::iterator& iter,
 			std::vector<pollfd> &fds) { // take iterator &make 
+	std::map<int, Connection>::iterator it_connection;
+	it_connection = this->_pool.find(iter->fd);
+	if (it_connection == this->_pool.end()) {
+		std::cout << "connetion not found for some reasons..." << std::endl;
+		return ;
+	}
+	it_connection->second.closeConnection();
 	close(iter->fd);
 	this->_pool.erase(iter->fd);
 	iter = fds.erase(iter);

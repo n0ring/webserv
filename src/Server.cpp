@@ -47,9 +47,9 @@ void	Server::start(std::string configName) {
 	else {
 		std::cerr << "no vHosts" << std::endl;
 	}
+	signal(SIGPIPE, SIG_IGN);
 	while (readyForWork) { //////////// !!!!!!!!
 		this->nfds = this->fds.size();
-		// showVector(this->fds, *this, this->nfds);
 		if (poll(&(this->fds[0]), this->nfds, NO_TIMEOUT) < 0 ) {
 			return perror("poll");
 		}
@@ -65,6 +65,7 @@ void	Server::start(std::string configName) {
 			}
 			if (it->revents == POLLOUT || !this->isFdListener(it->fd)) {
 				if (this->connectionPool.onClientDataExchange(it) == -1) {
+					showVector(this->fds, *this, this->nfds);
 					this->connectionPool.onClientDisconnect(it, this->fds);
 					continue;
 				}

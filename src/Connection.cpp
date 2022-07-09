@@ -1,6 +1,15 @@
 #include <unistd.h>
 #include "Connection.hpp"
 
+#ifndef MSG_NOSIGNAL
+# define MSG_NOSIGNAL 0
+# ifdef SO_NOSIGPIPE
+#  define CEPH_USE_SO_NOSIGPIPE
+# else
+#  error "Cannot block SIGPIPE!"
+# endif
+#endif
+
 Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenner),
 				_fd(fd), _vHost(&vH) {
 	this->_writed = 0;
@@ -118,7 +127,7 @@ int Connection::receiveData() {  // viHost
 	char	buf[BUFFER];
 	int		ret;
 	bzero(buf, BUFFER);
-	ret = recv(this->_fd, buf, BUFFER, 0);
+	ret = recv(this->_fd, buf, BUFFER, SO_NOSIGPIPE);
 	this->buffer_in.append(buf, ret);
 	if (this->ofs.is_open()) { // if post?  // body only here???
 		this->unchunkBuffer();
@@ -129,11 +138,13 @@ int Connection::receiveData() {  // viHost
 	// tmp.append(buf, ret);
 	// std::cout << tmp << std::endl;
 	// std::cout << "-----------buffer-in-end--------------" << std::endl;
+	std::cout << YELLOW << "recieved: " << ret << RESET << std::endl;
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");
 		return -1;
 	}
+
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
 		this->checkForVhostChange();
@@ -199,6 +210,7 @@ int Connection::sendData() {
 		this->_responce.resetObj();
 		return 0;
 	}
+
 	return sended;
 }
 
@@ -376,4 +388,9 @@ void	Connection::preparaBufferForBody() {
 		this->setCurrentCode(500);
 		return ;
 	}
+}
+
+void Connection::closeConnection(void) {
+	this->_responce.closeBuffer();
+	this->ofs.close();
 }

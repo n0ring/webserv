@@ -41,8 +41,12 @@ class Responce {
 		void		createCGiHeader(void);
 		void		setCgiHeaderToResponce(std::string& cgiHeader);
 		void		setParamToHeader(std::string param);
+		
 		void		closeBuffer(void) {
-			this->ifs.close();
+			if (this->ifs.is_open()) {
+				this->ifs.close();
+				std::cout << YELLOW << "ifs closed" << RESET << std::endl;
+			}
 		}
 
 };

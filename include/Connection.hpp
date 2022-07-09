@@ -61,4 +61,5 @@ class Connection {
 		void		POST();
 		void		unchunkBuffer();
 		void		preparaBufferForBody();
+		void		closeConnection(void);
 };
