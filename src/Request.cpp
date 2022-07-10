@@ -1,30 +1,20 @@
 #include "Request.hpp"
 
+Request::Request(void) {
+	this->_currentCode = 0;
+};
 
-Request::Request(Request const & other) : _currentCode(0), _cgiPid(other._cgiPid) {
-	}
-
-
-Request & Request::operator=(Request const &other) {
-	if (this != &other) {
-		
-	}
-	return *this;
-}
-
+Request::~Request(void) {}
 
 std::string& Request::getParamByName(std::string paramName) {
 	return this->_headerParams[paramName];
 }
 
 void Request::resetObj(void) {
-
 	this->_header.clear();
 	this->_headerParams.clear();
 	this->_fileToSend.clear();
-	this->_fileToSave= -1;
 	this->_currentCode = 0;
-	this->_cgiPid = -1;
 }
 
 std::string& Request::getHeader(void) { return this->_header; }
@@ -75,4 +65,8 @@ void Request::setHeaderParam(std::string param, std::string& val) {
 	if (!val.empty()) {
 		this->_headerParams[param] = val;
 	}
+}
+
+void	Request::setFileNameToSend(std::string fileName) { 
+	this->_fileToSend = fileName;
 }

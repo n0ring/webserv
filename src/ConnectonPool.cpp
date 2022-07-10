@@ -35,7 +35,6 @@ void	ConnectionPool::onClientDisconnect(std::vector<pollfd>::iterator& iter,
 		std::cout << "connetion not found for some reasons..." << std::endl;
 		return ;
 	}
-	it_connection->second.closeConnection();
 	close(iter->fd);
 	this->_pool.erase(iter->fd);
 	iter = fds.erase(iter);

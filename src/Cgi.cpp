@@ -43,7 +43,7 @@ void setEnv(std::vector<std::string>& envVector, Request& request) {
 	}
 }
 
-void child(std::string& tmpInputFile, std::string& tmpOutputFile,
+void child(const std::string& tmpInputFile, const std::string& tmpOutputFile,
 			std::vector<char *>& argv,  Request& request) {
 	int	ofd, ifd;
 	std::vector<std::string> envVector;
@@ -54,7 +54,6 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 		env[i] = (char *) envVector[i].c_str();
 	}
 	env[envVector.size()] = NULL;
-
 	remove(tmpOutputFile.c_str());
 	ofd = open(tmpOutputFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, 777);
 	ifd = open(tmpInputFile.c_str(), O_RDONLY);
@@ -77,7 +76,7 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 	}
 }
 
-int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputFile, Request& request) { // return exit status
+int	Cgi::start(location &loc, const std::string& tmpInputFile, const std::string& tmpOutputFile, Request& request) { // return exit status
 	std::string			pathToApp;
 	int					pid, status;
 	std::vector<char *>	argv;

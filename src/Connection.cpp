@@ -1,51 +1,46 @@
 #include <unistd.h>
 #include "Connection.hpp"
 
-#ifndef MSG_NOSIGNAL
-# define MSG_NOSIGNAL 0
-# ifdef SO_NOSIGPIPE
-#  define CEPH_USE_SO_NOSIGPIPE
-# else
-#  error "Cannot block SIGPIPE!"
-# endif
-#endif
-
-Connection::Connection(int listenner, int fd, VHost& vH) : _listennerFd(listenner),
-				_fd(fd), _vHost(&vH) {
+Connection::Connection(int listenner, int fd, VHost& vH) : 
+		inputBufferName(INPUT_FILE_POST + std::to_string(fd)),
+		defaultErrorPageName(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html"),
+		cgiOutput(CGI_FILE_OUT_PREFIX + std::to_string(fd)) {
+	this->_listennerFd = listenner;
+	this->_fd = fd;
+	this->_vHost = &vH;
 	this->_writed = 0;
 	this->_needToWrite = 0;
-	this->_request.setFd(fd);
 	this->currentLoc = NULL;
-	this->cgiOutput.append(CGI_FILE_OUT_PREFIX + std::to_string(fd));
-	this->inputBufferName.append(INPUT_FILE_POST + std::to_string(fd));
-	this->defaultErrorPageName.append(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html");
 	this->bodyRecieved = 0;
 	this->lastChunkSize = -1;
 	this->currentChunkNotEnded = false;
 }
 
-Connection::Connection(Connection const &other) {
-	*this = other;
+Connection::Connection(Connection const &other) : inputBufferName(other.inputBufferName),
+		defaultErrorPageName(other.defaultErrorPageName), cgiOutput(other.cgiOutput) {
+	this->_listennerFd = other._listennerFd;
+	this->_fd = other._fd;
+	this->_vHost = other._vHost;
+	this->routeObj = other.routeObj;
+	this->currentLoc = other.currentLoc;
+	this->_writed = other._writed;
+	this->_needToWrite = other._needToWrite;
+	this->bodyRecieved = other.bodyRecieved;
+	this->lastChunkSize = other.lastChunkSize;
+	this->currentChunkNotEnded = other.currentChunkNotEnded;
+	// this->ofs = other.ofs;
 }
 
-Connection & Connection::operator=(Connection const &other) {
-	if (this != &other) {
-		this->_listennerFd = other._listennerFd;
-		this->_fd = other._fd;
-		this->_vHost = other._vHost;
-		this->_writed = other._writed;
-		this->_needToWrite = other._needToWrite;
-		this->currentLoc = other.currentLoc;
-		this->inputBufferName = other.inputBufferName;
-		this->cgiOutput = other.cgiOutput;
-		this->defaultErrorPageName = other.defaultErrorPageName;
-		this->bodyRecieved = other.bodyRecieved;
-		this->lastChunkSize = other.lastChunkSize;
-		this->currentChunkNotEnded = other.currentChunkNotEnded;
-		// add others
+Connection::~Connection(void) {
+	std::cout << "destructor" << std::endl;
+	if (this->ofs.is_open()) {
+		this->ofs.close();
 	}
-	return *this;
+	remove(this->inputBufferName.c_str());
+	remove(this->defaultErrorPageName.c_str());
+	remove(this->cgiOutput.c_str());
 }
+
 
 int Connection::getFd() const {
 	return this->_fd;
@@ -128,6 +123,11 @@ int Connection::receiveData() {  // viHost
 	int		ret;
 	bzero(buf, BUFFER);
 	ret = recv(this->_fd, buf, BUFFER, SO_NOSIGPIPE);
+	if (ret == -1) {
+		std::cerr << this->_fd << " ";
+		perror("recv");
+		return -1;
+	}
 	this->buffer_in.append(buf, ret);
 	if (this->ofs.is_open()) { // if post?  // body only here???
 		this->unchunkBuffer();
@@ -138,12 +138,6 @@ int Connection::receiveData() {  // viHost
 	// tmp.append(buf, ret);
 	// std::cout << tmp << std::endl;
 	// std::cout << "-----------buffer-in-end--------------" << std::endl;
-	std::cout << YELLOW << "recieved: " << ret << RESET << std::endl;
-	if (ret == -1) {
-		std::cerr << this->_fd << " ";
-		perror("recv");
-		return -1;
-	}
 
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
@@ -179,38 +173,25 @@ int Connection::sendData() {
 	bzero(buf, BUFFER);
 
 	readyToSend = this->_responce.fillBuffer(buf);
+	std::cout << "ready to send: " << readyToSend << std::endl;
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
 	if (sended == -1) {
-		perror("send");
+		perror("send error: ");
 		std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
 		return -1;
 	}
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) { // end of sending 
 		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
-		this->_responce.closeBuffer();
-		remove(this->defaultErrorPageName.c_str());
-		if (this->currentLoc && this->currentLoc->isCgi()) {
-			remove(this->cgiOutput.c_str());
-		}
-		remove(this->inputBufferName.c_str());
 		if (!this->_request.getParamByName("Connection").compare("close") 
-			|| (this->currentLoc && this->currentLoc->isCgi()) || this->_request.getCurrentCode() >= 400 ) {
-				std::cout << "\nclose connection\n" << std::endl;
+				|| (this->currentLoc && this->currentLoc->isCgi())
+				|| this->_request.getCurrentCode() >= 400 ) {
+			std::cout << "\nclose connection\n" << std::endl;
 			return -1;
 		}
-		bzero(&this->routeObj, sizeof(this->routeObj));
-		this->_writed = 0;
-		this->_needToWrite = 0;
-		this->buffer_in.clear();
-		this->bodyRecieved = 0;
-		this->lastChunkSize = -1;
-		this->currentLoc = NULL;
-		this->_request.resetObj();
-		this->_responce.resetObj();
+		this->resetConnection();
 		return 0;
 	}
-
 	return sended;
 }
 
@@ -374,7 +355,6 @@ void	Connection::saveBody() {
 	this->buffer_in.clear();
 }
 
-Connection::~Connection(void) {}
 Request& Connection::getRequestObj() {return this->_request; }
 Responce& Connection::getResponceObj() {return this->_responce; }
 int Connection::getListener() const {return this->_listennerFd; }
@@ -390,7 +370,54 @@ void	Connection::preparaBufferForBody() {
 	}
 }
 
-void Connection::closeConnection(void) {
-	this->_responce.closeBuffer();
-	this->ofs.close();
+// void Connection::closeConnection(void) {
+// 	this->ofs.close();
+// }
+
+void	Connection::resetConnection(void) {
+	std::cout << "reset connection" << std::endl;
+	this->_request.resetObj();
+	this->_responce.resetObj();
+	bzero(&this->routeObj, sizeof(this->routeObj));
+	this->currentLoc = NULL;
+	this->_writed = 0;
+	this->_needToWrite = 0;
+	this->buffer_in.clear();
+	this->bodyRecieved = 0;
+	this->lastChunkSize = -1;
+	this->currentChunkNotEnded = false;
+	if (this->ofs.is_open()) {
+		this->ofs.close();
+	}
+	remove(this->inputBufferName.c_str());
+	remove(this->defaultErrorPageName.c_str());
+	remove(this->cgiOutput.c_str());
 }
+
+
+
+
+
+// remove(this->defaultErrorPageName.c_str());
+// if (this->currentLoc && this->currentLoc->isCgi()) {
+// 	remove(this->cgiOutput.c_str());
+// }
+// remove(this->inputBufferName.c_str());
+// if (!this->_request.getParamByName("Connection").compare("close") 
+// 	|| (this->currentLoc && this->currentLoc->isCgi()) || this->_request.getCurrentCode() >= 400 ) {
+// 		std::cout << "\nclose connection\n" << std::endl;
+// 	return -1;
+// }
+// bzero(&this->routeObj, sizeof(this->routeObj));
+// this->_writed = 0;
+// this->_needToWrite = 0;
+// this->buffer_in.clear();
+// this->bodyRecieved = 0;
+// this->lastChunkSize = -1;
+// this->currentLoc = NULL;
+// this->_request.resetObj();
+// this->_responce.resetObj();
+
+
+// restart connection
+// close connection

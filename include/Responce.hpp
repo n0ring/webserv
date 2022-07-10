@@ -24,12 +24,13 @@ class Responce {
 		Header			headerObj;
 		Mime			mimeList;
 
+		Responce(Responce const &other);
+		Responce& operator=(Responce const &other);
 	public:
 		Responce(void);
-		~Responce(void) {};
+		~Responce(void);
 
 		void		setHeader(std::string header);
-		
 		bool		prepareFileToSend(std::string fileName);
 		void		setCode(int c);
 		size_t		getFileSize();
@@ -41,13 +42,6 @@ class Responce {
 		void		createCGiHeader(void);
 		void		setCgiHeaderToResponce(std::string& cgiHeader);
 		void		setParamToHeader(std::string param);
-		
-		void		closeBuffer(void) {
-			if (this->ifs.is_open()) {
-				this->ifs.close();
-				std::cout << YELLOW << "ifs closed" << RESET << std::endl;
-			}
-		}
-
+		void		closeOutputFile(void);
 };
 

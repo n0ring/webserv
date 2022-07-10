@@ -13,31 +13,30 @@
 #define INPUT_FILE_POST ".inputFile"
 class Connection {
 	private:
-		int			_listennerFd;
-		int			_fd;
-		VHost*		_vHost;
-		Request		_request;
-		Responce	_responce;
-		routeParams	routeObj;
-		location*	currentLoc;
-		int			_writed;
-		int			_needToWrite;
-		std::string buffer_in;
-		int			bodyRecieved;
-		size_t		lastChunkSize;
-		bool		currentChunkNotEnded;
-		std::string inputBufferName;
+		int					_listennerFd;
+		int					_fd;
+		VHost*				_vHost;
+		Request				_request;
+		Responce			_responce;
+		routeParams			routeObj;
+		location*			currentLoc;
+		int					_writed;
+		int					_needToWrite;
+		std::string 		buffer_in;
+		int					bodyRecieved;
+		size_t				lastChunkSize;
+		bool				currentChunkNotEnded;
+		const std::string	inputBufferName;
+		const std::string	defaultErrorPageName;
+		const std::string	cgiOutput;
+		std::ofstream		ofs;
 
-		std::string		defaultErrorPageName;
-		std::string		cgiOutput;
-		std::ofstream	ofs;
 
-
+		Connection & operator=(Connection const &other);
 
 	public:
 		Connection(Connection const &other);
 		Connection(int listenner, int fd, VHost& vHost);
-		Connection & operator=(Connection const &other);
 		~Connection(void);
 
 		int		receiveData();
@@ -61,5 +60,6 @@ class Connection {
 		void		POST();
 		void		unchunkBuffer();
 		void		preparaBufferForBody();
-		void		closeConnection(void);
+		// void		closeConnection(void);
+		void		resetConnection(void);
 };

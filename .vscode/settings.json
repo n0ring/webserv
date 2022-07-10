@@ -69,6 +69,7 @@
 		"utility": "cpp",
 		"vector": "cpp",
 		"filesystem": "cpp",
-		"*.cgi_input4": "cpp"
+		"*.cgi_input4": "cpp",
+		"testupload": "cpp"
 	}
 }

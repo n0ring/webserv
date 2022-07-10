@@ -9,6 +9,25 @@ Responce::Responce(void) {
 	this->contentLength = 0;	
 }
 
+Responce::~Responce(void) {
+	this->ifs.close();
+}
+
+void Responce::resetObj() {
+	this->_header.clear();
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
+	this->fileLen = 0;
+	this->headerSended = 0;
+	this->bodySended = 0;
+	this->code = 0;
+	this->contentLength = 0;
+	this->contentType.clear();
+	this->MIME.clear();
+	this->fileExtToSend.clear();
+	this->headerObj.reset();
+}
 
 void Responce::setHeader(std::string header) {
 	this->_header = header;
@@ -26,11 +45,11 @@ bool Responce::prepareFileToSend(std::string fileName) {
 	if (this->ifs.is_open() == false) {
 		return false;
 	}
+	// count file size
 	this->ifs.seekg (0, ifs.end);
 	this->fileLen = this->ifs.tellg();
 	ifs.seekg(0, ifs.beg);
 	this->fileExtToSend = fileName.substr(fileName.find_last_of(".") + 1);
-	std::cout << fileName << " filelen: " << this->fileLen << std::endl;
 	if (this->fileLen == 0)  {
 		return false;
 	}
@@ -66,19 +85,7 @@ size_t Responce::fillBuffer(char *buf) {
 	return shiftHead + (this->bodySended - shiftBody);
 }
 
-void Responce::resetObj() {
-	this->_header.clear();
-	this->ifs.close();
-	this->fileLen = 0;
-	this->headerSended = 0;
-	this->bodySended = 0;
-	this->code = 0;
-	this->contentLength = 0;
-	this->contentType.clear();
-	this->MIME.clear();
-	this->fileExtToSend.clear();
-	this->headerObj.reset();
-}
+
 
 void Responce::setCode(int c) {
 	this->code = c;
@@ -135,4 +142,10 @@ void	Responce::setCgiHeaderToResponce(std::string& cgiHeader) {
 
 void	Responce::setParamToHeader(std::string param) {
 	this->headerObj.setParam(param);
+}
+
+void	Responce::closeOutputFile(void) {
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
 }
