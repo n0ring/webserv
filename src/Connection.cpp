@@ -172,9 +172,7 @@ int Connection::sendData() {
 	bzero(buf, BUFFER);
 
 	readyToSend = this->_responce.fillBuffer(buf);
-	std::cout << "ready to send: " << readyToSend << " to fd: " << this->_fd;
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
-	std::cout << " sended: " << sended << " (" << this->_writed << ") " << " of " << this->_needToWrite  << std::endl;
 	if (sended == -1) {
 		perror("send error: ");
 		std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
@@ -182,11 +180,11 @@ int Connection::sendData() {
 	}
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) { // end of sending 
-		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
+		std::cout << GREEN <<  this->_request.getFileToSend()
+		<< " sended-OK" << RESET << std::endl;
 		if (this->_request.getParamByName("Connection") == "close" 
 				|| (this->currentLoc && this->currentLoc->isCgi())
 				|| this->_request.getCurrentCode() >= 400 ) {
-			std::cout << "\nclose connection\n" << std::endl;
 			return -1;
 		}
 		this->resetConnection();
