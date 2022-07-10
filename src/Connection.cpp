@@ -220,8 +220,21 @@ std::string Connection::getErrorPageName(int code) {
 }
 
 
-void GET(Request& request, routeParams &paramObj) {
-	request.setFileNameToSend(paramObj.finalPathToFile);
+void Connection::GET() {
+	this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
+}
+
+void Connection::DELETE() {
+	int res = remove(this->routeObj.finalPathToFile.c_str());
+	std::string index = this->currentLoc->getParamByName("index");
+	if (res < 0)
+		this->_request.setCurrentCode(404);
+	else if (index.empty())
+		this->_request.setCurrentCode(204);
+	else {
+		this->_request.setCurrentCode(200);
+		this->_request.setFileNameToSend(index);
+	}
 }
 
 void Connection::POST() {
@@ -277,7 +290,7 @@ void Connection::executeOrder66() { // all data recieved
 		std::string method = this->_request.getParamByName("Method");
 		if (!method.compare("GET")) {
 			std::cout << "Method GET" << std::endl;
-			GET(this->_request, this->routeObj);
+			this->GET();
 		}
 		else if (!method.compare("POST")) {
 			std::cout << "Method POST" << std::endl;
@@ -285,6 +298,7 @@ void Connection::executeOrder66() { // all data recieved
 		}
 		else if (!method.compare("DELETE")) {
 			std::cout << "Method DELETE" << std::endl;
+			this->DELETE();
 		}
 	}
 }

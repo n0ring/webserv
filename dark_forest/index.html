@@ -86,9 +86,11 @@
 				<script>
 					const target = document.querySelector('#spell-target');
 					const request = new XMLHttpRequest();
-					request.open("DELETE", `/img/${target.value}.png`);
 					const button = document.querySelector('#spell-button');
-					button.addEventListener('click', () => request.send());
+					button.addEventListener('click', () => {
+						request.open("DELETE", `/img/${target.value}.png`);
+						request.send();
+					});
 				</script>
 			</div>
 		</section>
