@@ -121,7 +121,7 @@ int Connection::receiveData() {  // viHost
 	char	buf[BUFFER];
 	int		ret;
 	bzero(buf, BUFFER);
-	ret = recv(this->_fd, buf, BUFFER, SO_NOSIGPIPE);
+	ret = recv(this->_fd, buf, BUFFER, 0);
 	if (ret == -1) {
 		std::cerr << this->_fd << " ";
 		perror("recv");

@@ -29,12 +29,6 @@ void	ConnectionPool::onClientConnect(VHost& vHost, std::vector<pollfd>& fds,
 
 void	ConnectionPool::onClientDisconnect(std::vector<pollfd>::iterator& iter,
 			std::vector<pollfd> &fds) { // take iterator &make 
-	std::map<int, Connection>::iterator it_connection;
-	it_connection = this->_pool.find(iter->fd);
-	if (it_connection == this->_pool.end()) {
-		std::cout << "connetion not found for some reasons..." << std::endl;
-		return ;
-	}
 	close(iter->fd);
 	std::cout << "close connetion: " << iter->fd << std::endl;
 	this->_pool.erase(iter->fd);
