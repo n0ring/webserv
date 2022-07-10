@@ -66,7 +66,7 @@ void	Server::start(std::string configName) {
 			}
 			if (it->revents == POLLOUT || !this->isFdListener(it->fd)) {
 				if (this->connectionPool.onClientDataExchange(it) == -1) {
-					showVector(this->fds, *this, this->nfds);
+					// showVector(this->fds, *this, this->nfds);
 					this->connectionPool.onClientDisconnect(it, this->fds);
 					continue;
 				}
