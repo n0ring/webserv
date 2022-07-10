@@ -36,6 +36,7 @@ void	ConnectionPool::onClientDisconnect(std::vector<pollfd>::iterator& iter,
 		return ;
 	}
 	close(iter->fd);
+	std::cout << "close connetion: " << iter->fd << std::endl;
 	this->_pool.erase(iter->fd);
 	iter = fds.erase(iter);
 }

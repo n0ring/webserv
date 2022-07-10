@@ -28,7 +28,6 @@ Connection::Connection(Connection const &other) : inputBufferName(other.inputBuf
 	this->bodyRecieved = other.bodyRecieved;
 	this->lastChunkSize = other.lastChunkSize;
 	this->currentChunkNotEnded = other.currentChunkNotEnded;
-	// this->ofs = other.ofs;
 }
 
 Connection::~Connection(void) {
@@ -173,8 +172,9 @@ int Connection::sendData() {
 	bzero(buf, BUFFER);
 
 	readyToSend = this->_responce.fillBuffer(buf);
-	std::cout << "ready to send: " << readyToSend << std::endl;
+	std::cout << "ready to send: " << readyToSend << " to fd: " << this->_fd;
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
+	std::cout << " sended: " << sended << " (" << this->_writed << ") " << " of " << this->_needToWrite  << std::endl;
 	if (sended == -1) {
 		perror("send error: ");
 		std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
@@ -183,7 +183,7 @@ int Connection::sendData() {
 	this->_writed += sended;
 	if (this->_writed >= this->_needToWrite) { // end of sending 
 		std::cout << GREEN <<  this->_request.getFileToSend() << " sended-OK" << RESET << std::endl;
-		if (!this->_request.getParamByName("Connection").compare("close") 
+		if (this->_request.getParamByName("Connection") == "close" 
 				|| (this->currentLoc && this->currentLoc->isCgi())
 				|| this->_request.getCurrentCode() >= 400 ) {
 			std::cout << "\nclose connection\n" << std::endl;
@@ -281,7 +281,6 @@ void Connection::executeOrder66() { // all data recieved
 		}
 		else if (!method.compare("POST")) {
 			std::cout << "Method POST" << std::endl;
-			// this->setCurrentCode(696);
 			this->POST();
 		}
 		else if (!method.compare("DELETE")) {
@@ -370,10 +369,6 @@ void	Connection::preparaBufferForBody() {
 	}
 }
 
-// void Connection::closeConnection(void) {
-// 	this->ofs.close();
-// }
-
 void	Connection::resetConnection(void) {
 	std::cout << "reset connection" << std::endl;
 	this->_request.resetObj();
@@ -393,31 +388,3 @@ void	Connection::resetConnection(void) {
 	remove(this->defaultErrorPageName.c_str());
 	remove(this->cgiOutput.c_str());
 }
-
-
-
-
-
-// remove(this->defaultErrorPageName.c_str());
-// if (this->currentLoc && this->currentLoc->isCgi()) {
-// 	remove(this->cgiOutput.c_str());
-// }
-// remove(this->inputBufferName.c_str());
-// if (!this->_request.getParamByName("Connection").compare("close") 
-// 	|| (this->currentLoc && this->currentLoc->isCgi()) || this->_request.getCurrentCode() >= 400 ) {
-// 		std::cout << "\nclose connection\n" << std::endl;
-// 	return -1;
-// }
-// bzero(&this->routeObj, sizeof(this->routeObj));
-// this->_writed = 0;
-// this->_needToWrite = 0;
-// this->buffer_in.clear();
-// this->bodyRecieved = 0;
-// this->lastChunkSize = -1;
-// this->currentLoc = NULL;
-// this->_request.resetObj();
-// this->_responce.resetObj();
-
-
-// restart connection
-// close connection

@@ -50,6 +50,7 @@ void	Server::start(std::string configName) {
 	signal(SIGPIPE, SIG_IGN);
 	while (readyForWork) { //////////// !!!!!!!!
 		this->nfds = this->fds.size();
+		showVector(this->fds, *this, this->nfds);
 		if (poll(&(this->fds[0]), this->nfds, NO_TIMEOUT) < 0 ) {
 			return perror("poll");
 		}

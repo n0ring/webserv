@@ -6,11 +6,13 @@ Responce::Responce(void) {
 	this->headerSended = 0;
 	this->bodySended = 0;
 	this->code = 0;
-	this->contentLength = 0;	
+	this->contentLength = 0;
 }
 
 Responce::~Responce(void) {
-	this->ifs.close();
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
 }
 
 void Responce::resetObj() {
@@ -131,6 +133,7 @@ void Responce::createHeader(location* loc) {
 	this->_header = this->headerObj.getHeaderStr();
 	std::cout << GREEN << "-----header to send------" << std::endl;
 	std::cout << this->_header << RESET << std::endl;
+	std::cout << GREEN << "-----end of header to send------" << std::endl;
 }
 
 void	Responce::setCgiHeaderToResponce(std::string& cgiHeader) {

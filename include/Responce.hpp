@@ -2,7 +2,6 @@
 
 #include <iostream> // string io
 #include <fstream> // ifstream
-#include <sys/stat.h> // stat (check is file regular)
 #include "Location.hpp"
 #include "Header.hpp"
 #include "utils.hpp"

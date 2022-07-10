@@ -2,7 +2,8 @@
 
 Header::Header(void) {}
 
-Header::~Header(void) {}
+Header::~Header(void) {
+}
 
 
 Header::Header(Header const& other) {
@@ -46,6 +47,7 @@ void	Header::reset(void) {
 	this->contentLength.clear();
 	this->connectionStatus.clear();
 	this->unknownParams.clear();
+	this->result.clear();
 }
 
 void	Header::setStatus(std::string nstatus) {
