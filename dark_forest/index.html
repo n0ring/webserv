@@ -12,8 +12,15 @@
 </head>
 <body>
 	<header>
+		<a href="login/login.html">LOGIN</a>
 		<h1>Welcome to the Dark Forest</h1>
-		<h4>your stay here won't be long, believe me</h4>
+		<h4>your stay here, <span id="user-name"></span>, won't be long, believe me</h4>
+		<script>
+			const username = document.cookie.split('; ')
+			.find(row => row.startsWith('login='))
+			?.split('=')[1];;
+			document.querySelector('#user-name').textContent = username || 'stranger';
+		</script>
 	</header>
 	<section class="shooting-stars">
         <span></span>

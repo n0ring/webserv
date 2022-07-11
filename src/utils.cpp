@@ -112,7 +112,7 @@ void truncStr(std::string &s) {
 
 std::string getDefaultErrorPage(int code) {
 	std::string page;
-	std::string message = "This is default page. User don't provide it. Error: ";
+	std::string message = "This is the default page. User didn't provide it. Error: ";
 	page.append("\
 	<!DOCTYPE html>\
 <html>\

@@ -137,8 +137,21 @@ int Connection::receiveData() {  // viHost
 	// tmp.append(buf, ret);
 	// std::cout << tmp << std::endl;
 	// std::cout << "-----------buffer-in-end--------------" << std::endl;
-
 	this->_request.setHeader(this->buffer_in);
+
+	//handle login situation in order to set cookies
+	if (this->_vHost->getServerName() == "dark-forest.ru" 
+		&& this->_request.getParamByName("Referer").find("login") != std::string::npos) 
+		{
+			std::string tmp;
+			tmp.append(buf, ret);
+			std::size_t keyPos = tmp.find("login=");
+			if (keyPos != std::string::npos) {
+				std::string keyValuePair = tmp.substr(keyPos);
+				keyValuePair.erase(keyValuePair.length() - 4);
+				this->_responce.setParamToHeader("Set-Cookie: " + keyValuePair + "; Path=/;");
+			}
+	}
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
 		this->checkForVhostChange();
 		this->_vHost->setLocation(this->_request, this->routeObj, &this->currentLoc);
@@ -221,6 +234,12 @@ std::string Connection::getErrorPageName(int code) {
 
 
 void Connection::GET() {
+	// if (this->_vHost->getServerName() == "dark-forest.ru" && this->_request.getParamByName("Cookie").empty())
+	// 	// && this->_request.getParamByName("Cookie").find("login=") == std::string::npos) 
+	// {
+	// 		this->_responce.setParamToHeader("Location: login/login.html");
+	// 		this->_request.setCurrentCode(this->currentLoc->getRedirectCode());
+	// }
 	this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
 }
 
@@ -252,7 +271,7 @@ void Connection::POST() {
 	uploadPath = this->currentLoc->getParamByName("upload");
 	if (uploadPath.empty()) {
 		this->setCurrentCode(999);
-		std::cout << "Upload path is not define. You config suck" << std::endl;
+		std::cout << "Upload path is not defined. You config sucks" << std::endl;
 		return ;
 	}
 	if (conLength == 0 && encoding.empty()) {
