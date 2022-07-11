@@ -1,0 +1,8 @@
+*.d
+*.o
+client
+server
+a.out
+webserv
+*dSYM
+.DS_Store
