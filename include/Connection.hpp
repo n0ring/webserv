@@ -23,6 +23,7 @@ class Connection {
 		int					_writed;
 		int					_needToWrite;
 		std::string 		buffer_in;
+		std::string			bodyOut;
 		int					bodyRecieved;
 		size_t				lastChunkSize;
 		bool				currentChunkNotEnded;

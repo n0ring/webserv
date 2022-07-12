@@ -5,7 +5,7 @@
 #include "Location.hpp"
 #include "Header.hpp"
 #include "utils.hpp"
-#define BUFFER 2048
+#define BUFFER 100
 
 
 class Responce {
@@ -16,8 +16,8 @@ class Responce {
 		size_t			headerSended;
 		size_t			bodySended;
 		int				code;
-		int				contentLength;
-		std::string		contentType;
+		// int				contentLength;
+		// std::string		contentType;
 		std::string		MIME;
 		std::string		fileExtToSend;
 		Header			headerObj;
@@ -30,11 +30,11 @@ class Responce {
 		~Responce(void);
 
 		void		setHeader(std::string header);
-		bool		prepareFileToSend(std::string fileName);
+		bool		prepareFileToSend(std::string fileName, std::string& bodyOut);
 		void		setCode(int c);
 		size_t		getFileSize();
 		size_t		getHeaderSize();
-		size_t		fillBuffer(char *buf);
+		size_t		fillBuffer(char *buf, std::string& bodyOut);
 		void		resetObj();
 		void		createHeader(location* loc);
 		std::string	getCgiHeader(void);

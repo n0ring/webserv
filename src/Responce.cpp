@@ -6,7 +6,7 @@ Responce::Responce(void) {
 	this->headerSended = 0;
 	this->bodySended = 0;
 	this->code = 0;
-	this->contentLength = 0;
+	// this->contentLength = 0;
 }
 
 Responce::~Responce(void) {
@@ -24,8 +24,8 @@ void Responce::resetObj() {
 	this->headerSended = 0;
 	this->bodySended = 0;
 	this->code = 0;
-	this->contentLength = 0;
-	this->contentType.clear();
+	// this->contentLength = 0;
+	// this->contentType.clear();
 	this->MIME.clear();
 	this->fileExtToSend.clear();
 	this->headerObj.reset();
@@ -35,7 +35,12 @@ void Responce::setHeader(std::string header) {
 	this->_header = header;
 }
 
-bool Responce::prepareFileToSend(std::string fileName) {
+bool Responce::prepareFileToSend(std::string fileName, std::string& bodyOut) {
+	this->fileLen += bodyOut.size();
+	if (!bodyOut.empty()) {
+		this->fileExtToSend = "html";
+		return true;
+	}
 	if (fileName.empty()) {
 		std::cout << "no file to send" << std::endl;
 		return true;
@@ -66,16 +71,18 @@ size_t Responce::getHeaderSize() {
 	return this->_header.length();
 }
 
-size_t Responce::fillBuffer(char *buf) {
+size_t Responce::fillBuffer(char *buf, std::string& bodyOut) {
 	size_t shiftHead = 0;
 	size_t shiftBody = this->bodySended;
 
 	// std::cout << "file pos in fill buffer: " << this->ifs.tellg() << std::endl;
 
 	if (this->headerSended < this->getHeaderSize()) {
-		this->headerSended += shiftHead = this->_header.copy(buf, BUFFER);
+		this->headerSended += shiftHead = this->_header.copy(buf, BUFFER, this->headerSended);
 	}
-	if (this->ifs.is_open() && shiftHead < BUFFER && this->bodySended < this->fileLen) {
+	if (!bodyOut.empty() && shiftHead < BUFFER) {
+		this->bodySended += bodyOut.copy(buf + shiftHead, BUFFER - shiftHead, this->bodySended);
+	} else if (this->ifs.is_open() && shiftHead < BUFFER && this->bodySended < this->fileLen) {
 		this->ifs.read(buf + shiftHead, BUFFER - shiftHead);
 		this->bodySended = this->ifs.eof() ? this->fileLen : (size_t) this->ifs.tellg(); 
 	}

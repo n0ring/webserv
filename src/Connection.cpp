@@ -25,13 +25,14 @@ Connection::Connection(Connection const &other) : inputBufferName(other.inputBuf
 	this->currentLoc = other.currentLoc;
 	this->_writed = other._writed;
 	this->_needToWrite = other._needToWrite;
+	this->buffer_in = other.buffer_in;
+	this->bodyOut = other.bodyOut;
 	this->bodyRecieved = other.bodyRecieved;
 	this->lastChunkSize = other.lastChunkSize;
 	this->currentChunkNotEnded = other.currentChunkNotEnded;
 }
 
 Connection::~Connection(void) {
-	std::cout << "destructor" << std::endl;
 	if (this->ofs.is_open()) {
 		this->ofs.close();
 	}
@@ -171,7 +172,7 @@ int Connection::sendData() {
 	
 	bzero(buf, BUFFER);
 
-	readyToSend = this->_responce.fillBuffer(buf);
+	readyToSend = this->_responce.fillBuffer(buf, this->bodyOut);
 	sended = send(this->_fd, buf, readyToSend, 0); // MSG_MORE FLAG?
 	if (sended == -1) {
 		perror("send error: ");
@@ -204,15 +205,7 @@ std::string Connection::getErrorPageName(int code) {
 		pageName = this->_vHost->getErrorPage(code);
 	}
 	if (pageName.empty()) {
-		std::ofstream ofs;
-		remove(this->defaultErrorPageName.c_str());
-		ofs.open(this->defaultErrorPageName, std::ostream::out | std::ostream::trunc);
-		if (ofs.is_open()) {
-			page = getDefaultErrorPage(code);
-			ofs << page;
-			ofs.close();
-			pageName = this->defaultErrorPageName;
-		}
+		this->bodyOut = getDefaultErrorPage(code);
 	}
 	return pageName;
 }
@@ -296,14 +289,14 @@ void	Connection::setResponceFile() {
 		this->_request.setFileNameToSend(this->getErrorPageName(this->getCurrectCode()));
 	}
 	// check is it a file
-	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend())) {
+	if (!this->_responce.prepareFileToSend(this->_request.getFileToSend(), this->bodyOut)) {
 		std::cerr << "file not open: " << this->_request.getFileToSend() << std::endl;
 		if (this->_request.getCurrentCode() >= 400) {
 			this->_responce.setCode(this->_request.getCurrentCode());
 			return ;
 		}
 		this->_request.setCurrentCode(404);
-		this->_responce.prepareFileToSend(this->getErrorPageName(this->getCurrectCode()));
+		this->_responce.prepareFileToSend(this->getErrorPageName(this->getCurrectCode()), this->bodyOut);
 	}
 	this->_responce.setCode(this->_request.getCurrentCode());
 }
@@ -325,8 +318,14 @@ void Connection::prepareResponceToSend() {
 	}
 	this->buffer_in.clear();
 	this->_responce.createHeader(this->currentLoc);
-	this->_needToWrite = this->_responce.getFileSize()
-		+ this->_responce.getHeaderSize();
+	this->_needToWrite = this->_responce.getHeaderSize();
+	if (this->_request.getFileToSend().empty()) {
+		this->_needToWrite += this->bodyOut.size();
+	} 
+	else {
+		this->_needToWrite += this->_responce.getFileSize();	
+	}
+	
 }
 
 void	Connection::checkForVhostChange() {
@@ -368,7 +367,6 @@ void	Connection::preparaBufferForBody() {
 }
 
 void	Connection::resetConnection(void) {
-	std::cout << "reset connection" << std::endl;
 	this->_request.resetObj();
 	this->_responce.resetObj();
 	bzero(&this->routeObj, sizeof(this->routeObj));
@@ -379,6 +377,7 @@ void	Connection::resetConnection(void) {
 	this->bodyRecieved = 0;
 	this->lastChunkSize = -1;
 	this->currentChunkNotEnded = false;
+	this->bodyOut.clear();
 	if (this->ofs.is_open()) {
 		this->ofs.close();
 	}
