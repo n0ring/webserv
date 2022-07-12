@@ -25,7 +25,7 @@ class Connection {
 		std::string 		buffer_in;
 		std::string			bodyOut;
 		int					bodyRecieved;
-		size_t				lastChunkSize;
+		size_t				lastChunkSize; // change to int
 		bool				currentChunkNotEnded;
 		const std::string	inputBufferName;
 		const std::string	cgiOutput;

@@ -31,13 +31,17 @@ void splitByChar(std::string &s, char delimiter, std::vector<std::string>& v);
 std::string getDefaultErrorPage(int code);
 
 template<typename T>
-void stringToNum(std::string &s, T& num) {
+void stringToNum(std::string &s, T& num, bool isHex = false) {
 	if (s.empty()) {
 		num = 0;
 		return ;
 	}
 	std::stringstream ss;
-	ss << s;
+	if (isHex) {
+		ss << std::hex << s;
+	} else {
+		ss << s;
+	}
 	ss >> num;
 }
 

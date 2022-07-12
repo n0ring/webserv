@@ -87,7 +87,7 @@ void Connection::unchunkBuffer() {
 	while (startPos < this->buffer_in.length()) {
 		if (!currentChunkNotEnded) {
 			line = getLine(this->buffer_in, startPos);
-			stringToNum(line, this->lastChunkSize);
+			stringToNum(line, this->lastChunkSize, true);
 			if (this->lastChunkSize == 0) {
 				break; ;
 			}
@@ -113,6 +113,7 @@ void Connection::unchunkBuffer() {
 			break;
 		}
 	}
+	std::cout << "Unchucnked: " << newBuff << std::endl;
 	this->buffer_in = newBuff;
 }
 
@@ -131,11 +132,11 @@ int Connection::receiveData() {  // viHost
 		this->unchunkBuffer();
 		this->saveBody();
 	}
-	// std::cout << "-----------buffer-in (recv)-------------" << std::endl;
-	// std::string tmp;
-	// tmp.append(buf, ret);
-	// std::cout << tmp << std::endl;
-	// std::cout << "-----------buffer-in-end--------------" << std::endl;
+	std::cout << "-----------buffer-in (recv)-------------" << std::endl;
+	std::string tmp;
+	tmp.append(buf, ret);
+	std::cout << tmp << std::endl;
+	std::cout << "-----------buffer-in-end--------------" << std::endl;
 
 	this->_request.setHeader(this->buffer_in);
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
@@ -186,6 +187,11 @@ int Connection::sendData() {
 				|| this->_request.getCurrentCode() >= 400 ) {
 			return -1;
 		}
+		if (this->_request.getParamByName("Method") == "GET"
+			&& !this->_responce.getFileSize()
+			&& this->bodyOut.empty()) {
+			return -1;
+		}
 		this->resetConnection();
 		return 0;
 	}
@@ -234,12 +240,12 @@ void Connection::POST() {
 	}
 	uploadPath = this->currentLoc->getParamByName("upload");
 	if (uploadPath.empty()) {
-		this->setCurrentCode(999);
+		this->setCurrentCode(400);
 		std::cout << "Upload path is not define. You config suck" << std::endl;
 		return ;
 	}
 	if (conLength == 0 && encoding.empty()) {
-		this->setCurrentCode(999);
+		this->setCurrentCode(411);
 		return ; // change code? 
 	}
 	this->ofs.close();
@@ -250,8 +256,11 @@ void Connection::POST() {
 		ofss << ifs.rdbuf();
 	} else {
 		this->setCurrentCode(500);
+		return ;
 	}
-	this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
+	this->_request.setFileNameToSend(this->currentLoc->getParamByName("root") + this->currentLoc->getParamByName("index"));
+	// this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
+	this->setCurrentCode(201);
 	ofss.close();
 	ifs.close();
 }
@@ -281,6 +290,10 @@ void Connection::executeOrder66() { // all data recieved
 		}
 		else if (!method.compare("DELETE")) {
 			std::cout << "Method DELETE" << std::endl;
+		}
+		else if (!method.compare("PUT")) {
+			std::cout << "Method PUT" << std::endl;
+			this->POST();
 		}
 	}
 }
