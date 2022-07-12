@@ -141,7 +141,8 @@ int Connection::receiveData() {  // viHost
 
 	//handle login situation in order to set cookies
 	if (this->_vHost->getServerName() == "dark-forest.ru" 
-		&& this->_request.getParamByName("Referer").find("login") != std::string::npos) 
+		&& this->_request.getParamByName("Referer").find("login") != std::string::npos
+		&& this->_request.getParamByName("Cookie").empty()) 
 		{
 			std::string tmp;
 			tmp.append(buf, ret);
@@ -234,12 +235,13 @@ std::string Connection::getErrorPageName(int code) {
 
 
 void Connection::GET() {
-	// if (this->_vHost->getServerName() == "dark-forest.ru" && this->_request.getParamByName("Cookie").empty())
-	// 	// && this->_request.getParamByName("Cookie").find("login=") == std::string::npos) 
-	// {
-	// 		this->_responce.setParamToHeader("Location: login/login.html");
-	// 		this->_request.setCurrentCode(this->currentLoc->getRedirectCode());
-	// }
+	if (this->_vHost->getServerName() == "dark-forest.ru" && this->_request.getParamByName("Cookie").empty()
+	&& this->routeObj.finalPathToFile.find("index.html") != std::string::npos)
+		// && this->_request.getParamByName("Cookie").find("login=") == std::string::npos) 
+	{
+			this->_responce.setParamToHeader("Location: login/login.html");
+			this->_request.setCurrentCode(this->currentLoc->getRedirectCode());
+	}
 	this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
 }
 
