@@ -5,7 +5,7 @@
 #include "Location.hpp"
 #include "Header.hpp"
 #include "utils.hpp"
-#define BUFFER 100
+#define BUFFER 2048
 
 
 class Responce {

@@ -3,7 +3,6 @@
 
 Connection::Connection(int listenner, int fd, VHost& vH) : 
 		inputBufferName(INPUT_FILE_POST + std::to_string(fd)),
-		defaultErrorPageName(DEFAULT_ERROR_PAGE_PREFIX + std::to_string(fd) + ".html"),
 		cgiOutput(CGI_FILE_OUT_PREFIX + std::to_string(fd)) {
 	this->_listennerFd = listenner;
 	this->_fd = fd;
@@ -17,7 +16,7 @@ Connection::Connection(int listenner, int fd, VHost& vH) :
 }
 
 Connection::Connection(Connection const &other) : inputBufferName(other.inputBufferName),
-		defaultErrorPageName(other.defaultErrorPageName), cgiOutput(other.cgiOutput) {
+				cgiOutput(other.cgiOutput) {
 	this->_listennerFd = other._listennerFd;
 	this->_fd = other._fd;
 	this->_vHost = other._vHost;
@@ -37,7 +36,6 @@ Connection::~Connection(void) {
 		this->ofs.close();
 	}
 	remove(this->inputBufferName.c_str());
-	remove(this->defaultErrorPageName.c_str());
 	remove(this->cgiOutput.c_str());
 }
 
@@ -211,8 +209,15 @@ std::string Connection::getErrorPageName(int code) {
 }
 
 
-void GET(Request& request, routeParams &paramObj) {
-	request.setFileNameToSend(paramObj.finalPathToFile);
+
+void Connection::GET() {
+	std::string route = this->_request.getParamByName("Route");
+	if (this->currentLoc && route == this->currentLoc->getLocationName()
+			&& this->currentLoc->getParamByName("autoindex") == "on") {
+		this->bodyOut = FileList::getFileListHTML(this->currentLoc->getParamByName("root"), route);
+	} else {
+		this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
+	}
 }
 
 void Connection::POST() {
@@ -220,7 +225,7 @@ void Connection::POST() {
 	std::ofstream	ofss;
 	std::string		uploadPath;
 	int				conLength; 
-	std::string	encoding = this->_request.getParamByName("Transfer-Encoding");
+	std::string		encoding = this->_request.getParamByName("Transfer-Encoding");
 
 	stringToNum(this->_request.getParamByName("Content-Length"), conLength);
 	if (!this->currentLoc) {
@@ -268,7 +273,7 @@ void Connection::executeOrder66() { // all data recieved
 		std::string method = this->_request.getParamByName("Method");
 		if (!method.compare("GET")) {
 			std::cout << "Method GET" << std::endl;
-			GET(this->_request, this->routeObj);
+			this->GET();
 		}
 		else if (!method.compare("POST")) {
 			std::cout << "Method POST" << std::endl;
@@ -382,6 +387,5 @@ void	Connection::resetConnection(void) {
 		this->ofs.close();
 	}
 	remove(this->inputBufferName.c_str());
-	remove(this->defaultErrorPageName.c_str());
 	remove(this->cgiOutput.c_str());
 }

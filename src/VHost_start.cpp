@@ -170,6 +170,7 @@ void VHost::validate() {
 	// dir name has to start with / (/test)
 	// valid methods (only 3)
 	// post only for cgi location
+	// on location only index or autoindex
 	bool isValid = true;
 	// if (this->_ip.empty()) {
 	// 	isValid = false;

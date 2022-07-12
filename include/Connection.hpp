@@ -6,10 +6,10 @@
 #include "Responce.hpp"
 #include "VHost.hpp"
 #include "Cgi.hpp"
+#include "FileList.hpp"
 
 #define CGI_FILE_IN_PREFIX ".cgi_input"
 #define CGI_FILE_OUT_PREFIX ".cgi_output"
-#define DEFAULT_ERROR_PAGE_PREFIX ".defaultErrorPage"
 #define INPUT_FILE_POST ".inputFile"
 class Connection {
 	private:
@@ -28,7 +28,6 @@ class Connection {
 		size_t				lastChunkSize;
 		bool				currentChunkNotEnded;
 		const std::string	inputBufferName;
-		const std::string	defaultErrorPageName;
 		const std::string	cgiOutput;
 		std::ofstream		ofs;
 
@@ -58,6 +57,7 @@ class Connection {
 		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
 		void		processLocation(void);
 		bool		isMoreBody(void);
+		void		GET();
 		void		POST();
 		void		unchunkBuffer();
 		void		preparaBufferForBody();

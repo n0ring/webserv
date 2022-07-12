@@ -80,7 +80,13 @@ class location {
 			return "";
 		 }
 
-		 int getRedirectCode(void) { return this->redirectCode; }
+		int getRedirectCode(void) { return this->redirectCode; }
+		std::string getLocationName() {
+			if (names.empty()) {
+				return "";
+			}
+			return this->names[0];
+		}
 
 
 		void toString() {
