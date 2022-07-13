@@ -24,8 +24,6 @@ void Responce::resetObj() {
 	this->headerSended = 0;
 	this->bodySended = 0;
 	this->code = 0;
-	// this->contentLength = 0;
-	// this->contentType.clear();
 	this->MIME.clear();
 	this->fileExtToSend.clear();
 	this->headerObj.reset();
@@ -57,9 +55,6 @@ bool Responce::prepareFileToSend(std::string fileName, std::string& bodyOut) {
 	this->fileLen = this->ifs.tellg();
 	ifs.seekg(0, ifs.beg);
 	this->fileExtToSend = fileName.substr(fileName.find_last_of(".") + 1);
-	// if (this->fileLen == 0)  {
-	// 	return false;
-	// }
 	return true;
 }
 

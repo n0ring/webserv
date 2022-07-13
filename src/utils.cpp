@@ -111,7 +111,7 @@ void truncStr(std::string &s) {
 
 
 std::string Utils::getDefaultErrorPage(int code) {
-	std::string page;
+	std::string page = "\n";
 	std::string message = "This is default page. User don't provide it. Error: ";
 	page.append("\
 	<!DOCTYPE html>\
@@ -253,6 +253,11 @@ std::string Utils::getMime(std::string& ext) {
 
 std::string Utils::getResponceName(int code) {
 	return this->responceNames.getName(code);
+}
+
+void	exitWithMsg(std::string msg) {
+	std::cerr << msg << std::endl;
+	exit(-1);
 }
 
 

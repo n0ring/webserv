@@ -75,7 +75,6 @@ void	 Header::setConnectionStatus(std::string nConnectionStatus) {
 }
 
 void Header::setHeaderParam(std::vector<std::string>& currentParams, std::string line) {
-	std::cout << "header params: " << line << std::endl;
 	if (currentParams.front() == "HTTP/1.1") {
 		this->status = line;
 	}

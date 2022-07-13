@@ -80,8 +80,9 @@ int	Cgi::start(location &loc, const std::string& tmpInputFile, const std::string
 	std::string			pathToApp;
 	int					pid, status;
 	std::vector<char *>	argv;
-	// std::string			fileToExec = loc.params["root"] + "/" + loc.params["cgi"];
 	std::string			fileToExec = loc.params["cgi"];
+	int 				waitExec = 1000;
+
 
 	if (loc.params.count("bin")) {
 		pathToApp.append("/" + loc.params["bin"]);
@@ -104,7 +105,16 @@ int	Cgi::start(location &loc, const std::string& tmpInputFile, const std::string
 		child(tmpInputFile, tmpOutputFile, argv, request);
 	}
 	else {
-		waitpid(pid, &status, 0);
+		while (waitpid(pid, &status, WNOHANG) == 0 && waitExec) {
+			usleep(1000);
+			waitExec--;
+		}
+		if (waitExec == 0) {
+			std::cout << "-42" << std::endl;
+			return -42;
+		}
+		std::cout << "cgi norm" << std::endl;
+
 		if (WIFEXITED(status))
 			return WEXITSTATUS(status);
 	}

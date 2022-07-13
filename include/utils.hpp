@@ -57,7 +57,7 @@ std::string getLine(std::string& str, size_t& startPos);
 void truncStr(std::string &s);
 std::pair<std::string, std::string> splitInPair(std::string &line);
 void splitByChar(std::string &s, char delimiter, std::vector<std::string>& v);
-
+void	exitWithMsg(std::string msg);
 
 template<typename T>
 void stringToNum(std::string &s, T& num, bool isHex = false) {

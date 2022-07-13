@@ -37,8 +37,6 @@ print(os.getenv("PATH_TRANSLATED"))
 print ("</pre>")
 print( "</h3>")
 
-
-
 # ------WebKitFormBoundaryjj9QGM7Sj9b6ZntI
 # Content-Disposition: form-data; name="file"; filename="m.cpp"
 # Content-Type: application/octet-stream

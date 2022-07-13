@@ -29,7 +29,7 @@ VHost & VHost::operator=(VHost const &other) {
 		this->_address = other._address;
 		this->_addrlen = other._addrlen;
 		this->vHostsWithSamePort = other.vHostsWithSamePort;
-		this->locations= other.locations;
+		this->locations = other.locations;
 		this->errorPages = other.errorPages;
 	}
 	return *this;
@@ -162,33 +162,13 @@ void VHost::setLocationParam(std::vector<std::string> inputParams) {
 }
 
 void VHost::validate() {
-	// check index in dirs location 
-	// check for names > 1 if [0] != *
-	// check for file formats != dirs
-	// root has to start with /
-	// dir name has to start with / (/test)
-	// valid methods (only 3)
-	// post only for cgi location
 	// on location only index or autoindex
-	bool isValid = true;
-	// if (this->_ip.empty()) {
-	// 	isValid = false;
-	// 	std::cerr << "Ip address not found" << std::endl;		
-	// }
-	// if (this->_port == -1) {
-	// 	isValid = false;
-	// 	std::cerr << "Port not found" << std::endl;		
-	// }
-	// if (this->_maxBody == -1) {
-	// 	isValid = false;
-	// 	std::cerr << "Max body size not found" << std::endl;		
-	// }
-	if (this->locations.size() == 0) {
-		isValid = false;
-		std::cerr << "Locations not found" << std::endl;		
-	}
-	if (!isValid) {
-		exit(-1);
+	if (this->getHost().empty()) exitWithMsg("Host (ip) not found");
+	if (this->getPort() == -1) exitWithMsg("Port not found");
+	if (this->locations.size() == 0) exitWithMsg("Locations not found");
+	if (this->_maxBody == -1) exitWithMsg("Max body nit found");
+	for (size_t i = 0; i < this->locations.size(); i++) {
+		this->locations[i].validate();
 	}
 }
 

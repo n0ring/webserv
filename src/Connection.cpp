@@ -274,10 +274,15 @@ void Connection::executeOrder66() { // all data recieved
 		return ;
 	}
 	if (this->currentLoc && this->currentLoc->isCgi()) {
-		std::cout << "CGI" << std::endl;
+		// std::cout << "CGI" << std::endl;
 		remove(this->cgiOutput.c_str());
 		this->ofs.close();
-		if (Cgi::start(*this->currentLoc, this->inputBufferName, this->cgiOutput, this->_request)) {
+		int ret = Cgi::start(*this->currentLoc, this->inputBufferName, this->cgiOutput, this->_request);
+		if (ret == -42) {
+			this->setCurrentCode(CODE_GATEWAY_TIMEOUT);
+			return ;
+		}
+		if (ret != 0) {
 			this->setCurrentCode(CODE_INTERNAL_SERVER_ERROR);
 		}
 		this->_request.setFileNameToSend( this->cgiOutput.c_str());
@@ -324,7 +329,8 @@ void Connection::prepareResponceToSend() {
 	std::string	cgiHeader;
 
 	this->setResponceFile();
-	if (this->currentLoc && this->currentLoc->isCgi()) {
+	if (this->currentLoc && this->currentLoc->isCgi()
+		&& this->getCurrectCode() != CODE_GATEWAY_TIMEOUT) {
 		cgiHeader = this->_responce.getCgiHeader();
 		this->_responce.setCgiHeaderToResponce(cgiHeader);
 		if (cgiHeader.empty()) {
