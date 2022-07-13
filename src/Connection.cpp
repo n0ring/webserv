@@ -8,7 +8,7 @@ Connection::Connection(int listenner, int fd, VHost& vH, Utils* nUtils) :
 	this->_listennerFd = listenner;
 	this->_fd = fd;
 	this->_vHost = &vH;
-	this->_writed = 0;
+	this->_written = 0;
 	this->_needToWrite = 0;
 	this->currentLoc = NULL;
 	this->bodyRecieved = 0;
@@ -25,7 +25,7 @@ Connection::Connection(Connection const &other) : _responce(other.utils),
 	this->_vHost = other._vHost;
 	this->routeObj = other.routeObj;
 	this->currentLoc = other.currentLoc;
-	this->_writed = other._writed;
+	this->_written = other._written;
 	this->_needToWrite = other._needToWrite;
 	this->buffer_in = other.buffer_in;
 	this->bodyOut = other.bodyOut;
@@ -182,8 +182,8 @@ int Connection::sendData() {
 		// std::cout << RED  << this->_request.getFileToSend() <<  " sended-FAIL" << RESET << std::endl;
 		return -1;
 	}
-	this->_writed += sended;
-	if (this->_writed >= this->_needToWrite) { // end of sending 
+	this->_written += sended;
+	if (this->_written >= this->_needToWrite) { // end of sending 
 		// std::cout << GREEN <<  this->_request.getFileToSend()
 		// << " sended-OK" << RESET << std::endl;
 		if (this->_request.getParamByName("Connection") == "close" 
@@ -252,6 +252,10 @@ void Connection::POST() {
 	if (conLength == 0 && encoding.empty()) {
 		this->setCurrentCode(CODE_LENGTH_REQUIRED);
 		return ; // change code? 
+	}
+	if (this->currentLoc->isMaxBodyExceeded(conLength)) {
+		this->_request.setCurrentCode(CODE_REQUEST_ENTITY_TOO_LARGE);
+		return ;
 	}
 	this->ofs.close();
 	ifs.open(this->inputBufferName);
@@ -394,7 +398,7 @@ void	Connection::resetConnection(void) {
 	this->_responce.resetObj();
 	bzero(&this->routeObj, sizeof(this->routeObj));
 	this->currentLoc = NULL;
-	this->_writed = 0;
+	this->_written = 0;
 	this->_needToWrite = 0;
 	this->buffer_in.clear();
 	this->bodyRecieved = 0;

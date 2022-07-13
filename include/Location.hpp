@@ -41,4 +41,5 @@ class location {
 		std::string getLocationName();
 		void validate(void);
 		void toString();
+		bool	isMaxBodyExceeded(int bodyLen);
 };

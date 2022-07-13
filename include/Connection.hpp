@@ -20,7 +20,7 @@ class Connection {
 		Responce			_responce;
 		routeParams			routeObj;
 		location*			currentLoc;
-		int					_writed;
+		int					_written;
 		int					_needToWrite;
 		std::string 		buffer_in;
 		std::string			bodyOut;

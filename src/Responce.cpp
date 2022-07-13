@@ -117,9 +117,15 @@ std::string Responce::getCgiHeader(void) {
 std::string getCurrentTime(void) {
 	char buf[1000];
 	time_t now = time(0);
-	struct tm tm = *gmtime(&now);
+	struct tm tm = *localtime(&now);
 	strftime(buf, sizeof buf, "%a, %d %b %Y %H:%M:%S %Z", &tm);
  	return std::string(buf);
+
+
+	time_t my_time = time(NULL);
+  
+    // ctime() used to give the present time
+	return ctime(&my_time);
 }
 
 void Responce::createHeader(location* loc) {

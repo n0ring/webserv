@@ -96,3 +96,13 @@ void location::toString() {
 	std::cout << GREEN << " } " << RESET << std::endl;
 }
 
+bool	location::isMaxBodyExceeded(int bodyLen) {
+	int			maxBody;
+	std::string	maxBodyStr = this->getParamByName("max_client_body_size");
+
+	if (maxBodyStr.empty()) {
+		return false;
+	}
+	stringToNum(maxBodyStr, maxBody);
+	return bodyLen > maxBody;
+}
