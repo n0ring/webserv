@@ -71,7 +71,7 @@ void setFinalPathToFile(VHost::locations_iter it, routeParams& params) {
 		params.finalPathToFile.append("/");
 		params.finalPathToFile.append(it->getParamByName("index"));
 	}
-	std::cout << RED << "final route path: " << params.finalPathToFile << RESET << std::endl;
+	// std::cout << RED << "final route path: " << params.finalPathToFile << RESET << std::endl;
 }
 
 VHost::locations_iter	VHost::getLocation(routeParams& params) {

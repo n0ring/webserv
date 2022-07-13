@@ -5,8 +5,6 @@
 #include "Location.hpp"
 #include "Header.hpp"
 #include "utils.hpp"
-#define BUFFER 2048
-
 
 class Responce {
 	private:
@@ -16,17 +14,15 @@ class Responce {
 		size_t			headerSended;
 		size_t			bodySended;
 		int				code;
-		// int				contentLength;
-		// std::string		contentType;
 		std::string		MIME;
 		std::string		fileExtToSend;
 		Header			headerObj;
-		Mime			mimeList;
+		Utils*			utils;
 
 		Responce(Responce const &other);
 		Responce& operator=(Responce const &other);
 	public:
-		Responce(void);
+		Responce(Utils* utils);
 		~Responce(void);
 
 		void		setHeader(std::string header);

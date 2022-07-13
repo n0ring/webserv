@@ -41,8 +41,8 @@ int VHost::setup(void) {
 
 	int	rec = bind(this->_listener, &_address, this->_addrlen);
 	if (rec == -1) {
-		perror("Can't bind params: ");
-		std::cout << this->_ip << ":" << this->_port << std::endl; 
+		std::cerr << "For " << this->_ip << ":" << this->_port; 
+		perror(" can't bind params");
 		return (-1);
 	}
 	rec = listen(_listener, _backlog);
@@ -82,7 +82,6 @@ int		VHost::acceptNewConnection() {
 	if (newSocket < 0) {
 		return -1;
 	}
-	std::cout << "accepting connect on fd " << this->_listener << std::endl;
 	fcntl(newSocket, F_SETFL, O_NONBLOCK);
 	return newSocket;
 }

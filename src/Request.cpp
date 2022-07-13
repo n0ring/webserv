@@ -70,3 +70,11 @@ void Request::setHeaderParam(std::string param, std::string& val) {
 void	Request::setFileNameToSend(std::string fileName) { 
 	this->_fileToSend = fileName;
 }
+
+std::string&	Request::getFileToSend() { return this->_fileToSend; }
+void			Request::setCurrentCode(int code) { this->_currentCode = code; }
+int				Request::getCurrentCode() { return  this->_currentCode; }
+
+
+
+

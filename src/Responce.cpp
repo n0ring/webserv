@@ -1,12 +1,12 @@
 #include "Responce.hpp"
 
 
-Responce::Responce(void) {
+Responce::Responce(Utils* nUtils) {
+	this->utils = nUtils;
 	this->fileLen = 0;
 	this->headerSended = 0;
 	this->bodySended = 0;
 	this->code = 0;
-	// this->contentLength = 0;
 }
 
 Responce::~Responce(void) {
@@ -129,8 +129,8 @@ std::string getCurrentTime(void) {
 
 void Responce::createHeader(location* loc) {
 	(void) loc;
-	this->MIME = this->mimeList.getMime(this->fileExtToSend);
-	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " OK");
+	this->MIME = this->utils->getMime(this->fileExtToSend);
+	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " " + this->utils->getResponceName(this->code));
 	if (this->fileLen) {
 		this->headerObj.setContentType("Content-Type: " + this->MIME);
 		this->headerObj.setContentLength("Content-Length: " + std::to_string(this->fileLen));
@@ -139,8 +139,8 @@ void Responce::createHeader(location* loc) {
 	this->headerObj.setParam("Date: " + getCurrentTime());
 	this->_header = this->headerObj.getHeaderStr();
 	std::cout << GREEN << "-----header to send------" << std::endl;
-	std::cout << this->_header << RESET << std::endl;
-	std::cout << GREEN << "-----end of header to send------" << std::endl;
+	std::cout << this->_header << std::endl;
+	std::cout << GREEN << "-----end of header to send------" << RESET << std::endl;
 }
 
 void	Responce::setCgiHeaderToResponce(std::string& cgiHeader) {

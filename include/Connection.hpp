@@ -30,13 +30,13 @@ class Connection {
 		const std::string	inputBufferName;
 		const std::string	cgiOutput;
 		std::ofstream		ofs;
-
+		Utils*				utils;
 
 		Connection & operator=(Connection const &other);
 
 	public:
 		Connection(Connection const &other);
-		Connection(int listenner, int fd, VHost& vHost);
+		Connection(int listenner, int fd, VHost& vHost, Utils* utils);
 		~Connection(void);
 
 		int		receiveData();
@@ -61,6 +61,5 @@ class Connection {
 		void		POST();
 		void		unchunkBuffer();
 		void		preparaBufferForBody();
-		// void		closeConnection(void);
 		void		resetConnection(void);
 };

@@ -24,11 +24,10 @@ class Request {
 		std::string&	getHeader(void);
 		void			parseHeader();
 		void			resetObj(void);
-
-		std::string&	getFileToSend() { return this->_fileToSend; }
+		std::string&	getFileToSend();
 		void			setFileNameToSend(std::string fileName);
-		void			setCurrentCode(int code) { this->_currentCode = code; }
-		int				getCurrentCode() { return  this->_currentCode; }
+		void			setCurrentCode(int code);
+		int				getCurrentCode();
 		std::string&	getParamByName(std::string paramName);
 		void			setHeaderParam(std::string param, std::string& val);
 };
