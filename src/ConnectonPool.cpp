@@ -22,7 +22,8 @@ void	ConnectionPool::onClientConnect(VHost& vHost, std::vector<pollfd>& fds,
 		// fcntl(newSocket, F_SETFL, O_NONBLOCK);
 		fds.push_back(make_fd(newSocket, POLLIN));
 		this->_pool.insert(std::make_pair(newSocket, Connection( vHost.getListener(), newSocket, vHost, &this->utils)));
-		std::cout << RESET << "server: " << vHost.getHost() << ":" << vHost.getPort() << " has new connection on fd: " << newSocket << std::endl;
+		std::cout << RESET << "server: " << vHost.getHost() << ":" << vHost.getPort()
+				<< " has new connection on fd: " << newSocket << std::endl;
 	}
 	iter = fds.begin() + pos; // need to update iter because realloc in vector 
 }

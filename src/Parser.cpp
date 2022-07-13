@@ -31,7 +31,6 @@ VHost createObj(std::string configText) {
 			}
 		}
 	}
-	// vHost.toString();
 	return vHost;
 }
 
@@ -80,9 +79,7 @@ void Parser::parseConfig(std::vector<VHost> &vHosts, std::string configName) {
 		vHostObj = createObj(*it);
 		// check for match 
 		vHostObj.validate();
-		if (checkForMatchIpPort(vHosts, vHostObj)) {
-			
-		} else {
+		if (!checkForMatchIpPort(vHosts, vHostObj)) {
 			vHosts.push_back(vHostObj);
 		}
 	}
