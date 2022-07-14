@@ -1,5 +1,12 @@
 #include <unistd.h>
 #include "Connection.hpp"
+#include "utils.hpp"
+
+bool	userAuthorized(VHost *vhost, Request *req) {
+	return (vhost->getServerName() == "dark-forest.ru"
+		&& !req->getParamByName("Cookie").empty() 
+		&& req->getParamByName("Cookie").find("login=") != std::string::npos);
+}
 
 Connection::Connection(int listenner, int fd, VHost& vH) : 
 		inputBufferName(INPUT_FILE_POST + std::to_string(fd)),
@@ -140,9 +147,8 @@ int Connection::receiveData() {  // viHost
 	this->_request.setHeader(this->buffer_in);
 
 	//handle login situation in order to set cookies
-	if (this->_vHost->getServerName() == "dark-forest.ru" 
-		&& this->_request.getParamByName("Referer").find("login") != std::string::npos
-		&& this->_request.getParamByName("Cookie").empty()) 
+	if (!userAuthorized(this->_vHost, &(this->_request))
+		&& this->_request.getParamByName("Referer").find("login") != std::string::npos) 
 		{
 			std::string tmp;
 			tmp.append(buf, ret);
@@ -235,9 +241,8 @@ std::string Connection::getErrorPageName(int code) {
 
 
 void Connection::GET() {
-	if (this->_vHost->getServerName() == "dark-forest.ru" && this->_request.getParamByName("Cookie").empty()
+	if (!userAuthorized(this->_vHost, &(this->_request))
 	&& this->routeObj.finalPathToFile.find("index.html") != std::string::npos)
-		// && this->_request.getParamByName("Cookie").find("login=") == std::string::npos) 
 	{
 			this->_responce.setParamToHeader("Location: login/login.html");
 			this->_request.setCurrentCode(this->currentLoc->getRedirectCode());

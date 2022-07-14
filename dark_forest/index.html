@@ -12,7 +12,6 @@
 </head>
 <body>
 	<header>
-		<a href="login/login.html">LOGIN</a>
 		<h1>Welcome to the Dark Forest</h1>
 		<h4>your stay here, <span id="user-name"></span>, won't be long, believe me</h4>
 		<script>
@@ -81,20 +80,35 @@
 		<section class="send-spell">
 			<h2>Well, of course you don't want to leave the festivity of the cosmos alone, do you?</h2>
 			<div class="spell-form">
-				<label for="spell-target">Choose the "lucky" ones to go with you</label>
 				<!-- <input type="text" name="spell-target" id="spell-target"> -->
-				<select name="spell-target" id="spell-target">
-					<option value="alpha-centauri">Alpha Centauri</option>
-    				<option value="barnard-star">Barnard's Star</option>
-    				<option value="wolf-359">Wolf 359</option>
-    				<option value="lalande-21185">Lalande 21185</option>
-				</select>
+				<form id="spell-target">
+					<fieldset id="spell-target" class="spell-target">
+						<legend>Choose the "lucky" one to go with you</legend>
+						<div class="spell-target-star spell-target-star-1">
+							<label for="alpha-centauri">Alpha Centauri</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="alpha-centauri" id="alpha-centauri">
+						</div>
+						<div class="spell-target-star spell-target-star-2">
+							<label for="barnard-star">Barnard's Star</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="barnard-star" id="barnard-star">
+						</div>
+						<div class="spell-target-star spell-target-star-3">
+							<label for="wolf-359">Wolf 359</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="wolf-359" id="wolf-359" checked>
+						</div>
+						<div class="spell-target-star spell-target-star-4">
+							<label for="lalande-21185">Lalande 21185</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="lalande-21185" id="lalande-21185">
+						</div>
+					</fieldset>
+				</form>
 				<button id="spell-button">SEND THE SPELL</button>
 				<script>
-					const target = document.querySelector('#spell-target');
+					const targets = Array.from(document.querySelectorAll('.spell-target-radio'));
 					const request = new XMLHttpRequest();
 					const button = document.querySelector('#spell-button');
 					button.addEventListener('click', () => {
+						const target = targets.find(elt => elt.checked);
 						request.open("DELETE", `/img/${target.value}.png`);
 						request.send();
 					});

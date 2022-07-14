@@ -21,6 +21,14 @@
     box-shadow: inset 0px 0px 10px 2px rgba(136, 28, 65, 0.5), 0px 0px 30px 2px rgba(152, 36, 65, 0.3);
   }
 }
+@keyframes glow {
+  from {
+    box-shadow: 0 0 2px white, 0 0 3px white, 0 0 4px #e6bbad, 0 0 5px 0px #e6bbad, 0 0 5px 0px #ff004c, 0 0 8px 0px #ff004c, 0 0 12px 0px #ff004c, 0 0 20px 0px #ff004c, 0 0 30px 0px #e6bbad, 0 0 40px 0px #e6bbad, 0 0 50px 0px white, 0 0 60px 0px white, 0 0 80px white, 0 0 100px white;
+  }
+  to {
+    box-shadow: 0 0 2px white, 0 0 3px white, 0 0 4px #e6bbad, 0 0 5px 3px #e6bbad, 0 0 5px 3px #ff004c, 0 0 8px 3px #ff004c, 0 0 12px 3px #ff004c, 0 0 20px 3px #ff004c, 0 0 30px 3px #e6bbad, 0 0 40px 3px #e6bbad, 0 0 50px 3px white, 0 0 60px 3px white, 0 0 80px white, 0 0 100px white;
+  }
+}
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -75,6 +83,15 @@ body {
 }
 body b {
   font-weight: 600;
+}
+
+.forty-two-answer {
+  width: 70%;
+  margin: 3rem auto;
+  line-height: 1.5rem;
+  padding: 2.75rem;
+  border: 0.25rem dashed rgba(247, 238, 223, 0.5);
+  border-radius: 2rem;
 }
 
 .shooting-stars {
@@ -282,7 +299,7 @@ header h1 {
   border-right: 3px dotted rgba(229, 106, 43, 0.3);
   padding-right: 1rem;
 }
-.send-receive-container .send input::file-selector-button {
+.send-receive-container .send input::file-selector-button, .send-receive-container .send button {
   border: 1px solid #f7eedf;
   background-color: #100E12;
   color: #f7eedf;
@@ -313,20 +330,15 @@ header h1 {
   margin-top: 2rem;
 }
 .send-spell h2 {
-  margin-bottom: 0.75rem;
+  margin-bottom: 1.75rem;
 }
 .send-spell div label {
-  font-size: 1.25rem;
+  font-size: 0.85rem;
   text-shadow: none;
-  font-weight: 600;
-}
-.send-spell div input {
-  border: 1px solid #B8373E;
-  background-color: #100E12;
+  font-weight: 400;
 }
 .send-spell div button {
   font-family: inherit;
-  margin: 3rem auto 0;
   font-weight: 600;
   display: block;
   border: none;
@@ -338,6 +350,74 @@ header h1 {
   cursor: pointer;
   text-shadow: 3px 3px 6px #e56a2b;
   box-shadow: 4px -4px 15px 0px #CC453E, 12px -11px 7px 0px #D04C38, 20px -5px 7px 0px #E56A2B, 20px 6px 7px 0px #E56A2B, 13px 12px 17px 0px #D04C38, 2px 17px 17px 0px #CC453E, -9px 21px 18px 0px #E56A2B, -9px 6px 11px 0px #CC453E, -11px -9px 11px 0px #E56A2B, -11px -9px 11px 0px #E56A2B, 5px 5px 15px 5px rgba(0, 0, 0, 0);
+  position: relative;
+  top: 1rem;
+}
+
+.spell-form {
+  display: flex;
+  gap: 4rem;
+  justify-content: center;
+}
+.spell-form legend {
+  color: #f7eedf;
+  font-size: 1.25rem;
+}
+
+.spell-target {
+  position: relative;
+  font-weight: 400;
+}
+.spell-target-star {
+  position: absolute;
+}
+.spell-target-star > input {
+  appearance: none;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 100%;
+  animation-name: glow;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  cursor: pointer;
+}
+.spell-target-star > input::before {
+  content: "";
+}
+.spell-target-star > input:checked {
+  background-color: red;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+.spell-target-star > input:checked::after {
+  content: "";
+}
+.spell-target-star-1 {
+  top: 2.75rem;
+  right: 4.5rem;
+}
+.spell-target-star-1 > input {
+  animation-delay: 1s;
+}
+.spell-target-star-2 {
+  top: 0.5rem;
+  left: 7.5rem;
+}
+.spell-target-star-2 > input {
+  animation-duration: 2.75s;
+}
+.spell-target-star-3 {
+  top: 2.25rem;
+}
+.spell-target-star-4 {
+  top: 5rem;
+  left: 3.5rem;
+}
+.spell-target-star-4 > input {
+  animation-delay: 0.5s;
+  animation-duration: 3.15s;
 }
 
 /*# sourceMappingURL=index.css.map */

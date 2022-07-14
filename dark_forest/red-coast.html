@@ -6,15 +6,34 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Montserrat:wght@100&display=swap" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="style/red-coast-style.css" type="text/css">
 	<title>Red Coast</title>
 </head>
 <body>
 	<main class="red-coast-main">
-		<section>
-			
-		</section>
+		<div>
+			<section class="red-coast-monitor-case">
+				<div class="red-coast-monitor-case-lower">
+					<div class="red-coast-monitor-screen">
+						<p>Enter the name of your civilization:</p>
+						<div class="input-wrapper">
+							C:> <input type="text" id="red-coast-input" autofocus>
+						</div>
+						<button id="red-coast-button">> SCREAM IT INTO THE VOID</button>
+						<script>
+							const input = document.querySelector('#red-coast-input');
+							const button = document.querySelector('#red-coast-button');
+							const req = new XMLHttpRequest();
+							button.addEventListener('click', () => {
+								request.open("POST", "/cgi"); //insert route to cgi
+								request.send({ value: input.value});
+							});
+						</script>
+					</div>
+				</div>
+			</section>
+		</div>
 	</main>
 </body>
 </html>
