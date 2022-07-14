@@ -407,3 +407,6 @@ void	Connection::resetConnection(void) {
 	remove(this->inputBufferName.c_str());
 	remove(this->cgiOutput.c_str());
 }
+
+int		Connection::getCurrectCode(void) { return this->_request.getCurrentCode(); }
+void	Connection::setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
