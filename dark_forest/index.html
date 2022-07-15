@@ -7,13 +7,19 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Montserrat:wght@100&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="index.css" type="text/css">
+	<link rel="stylesheet" href="style/index.css" type="text/css">
 	<title>Dark Forest</title>
 </head>
 <body>
 	<header>
 		<h1>Welcome to the Dark Forest</h1>
-		<h4>your stay here won't be long, believe me</h4>
+		<h4>your stay here, <span id="user-name"></span>, won't be long, believe me</h4>
+		<script>
+			const username = document.cookie.split('; ')
+			.find(row => row.startsWith('login='))
+			?.split('=')[1];;
+			document.querySelector('#user-name').textContent = username || 'stranger';
+		</script>
 	</header>
 	<section class="shooting-stars">
         <span></span>
@@ -41,36 +47,73 @@
 				叶文洁
 			</div>
 			<div class="visit-red-coast-img">
-				<img src="red-coast.jpeg">
+				<img src="img/red-coast.jpeg">
 			</div>
 		</section>
 		<div class="hieroglyphs">地球往事</div>
 		<div class="divider"></div>
 		<section class="send-receive-container">
 			<div class="send">
-				<p>
-					Since by now your days are numbered anyway you are welcomed to use the gravitational tube 
-					to send your primitive art or whatever to the outer space. Who knows maybe one day some advanced 
-					and sentimental civilization will include you guys into some catalogue of extinct species.
-				</p>
-					<input type="file" name="file-upload" id="file-upload">
+				<form method="post" action="upload" enctype="multipart/form-data">
+					<p>
+						Since by now your days are numbered anyway you are welcomed to use the gravitational tube 
+						to send your primitive art or whatever to the outer space. Who knows maybe one day some advanced 
+						and sentimental civilization will include you guys into some catalogue of extinct species.
+					</p>
+					<div class="send-control">
+						<input type="file" name="file-upload" id="file-upload">
+						<button>Send!</button>
+					</div>
+				</form>
 			</div>
 			<div class="receive">
-				<p>
-					Here you can try to receive something from the superior civilizations. 
-					But please don't cry once they are critical of your art.
-				</p>
-				<button>Just... listen</button>
+				<form action="response.html" method="get">
+					<p>
+						Here you can try to receive something from the superior civilizations. 
+						But please don't cry once they are critical of your art.
+					</p>
+					<button>Just... listen</button>
+				</form>
 			</div>
 		</section>
 		<div class="divider"></div>
 		<section class="send-spell">
 			<h2>Well, of course you don't want to leave the festivity of the cosmos alone, do you?</h2>
-			<form class="spell-form" method="delete">
-				<label for="spell-target">Choose the "lucky" ones to go with you</label>
-				<input type="text" name="spell-target" id="spell-target" placeholder="187J3X1">
-				<button>SEND THE SPELL</button>
-			</form>
+			<div class="spell-form">
+				<!-- <input type="text" name="spell-target" id="spell-target"> -->
+				<form id="spell-target">
+					<fieldset id="spell-target" class="spell-target">
+						<legend>Choose the "lucky" one to go with you</legend>
+						<div class="spell-target-star spell-target-star-1">
+							<label for="alpha-centauri">Alpha Centauri</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="alpha-centauri" id="alpha-centauri">
+						</div>
+						<div class="spell-target-star spell-target-star-2">
+							<label for="barnard-star">Barnard's Star</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="barnard-star" id="barnard-star">
+						</div>
+						<div class="spell-target-star spell-target-star-3">
+							<label for="wolf-359">Wolf 359</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="wolf-359" id="wolf-359" checked>
+						</div>
+						<div class="spell-target-star spell-target-star-4">
+							<label for="lalande-21185">Lalande 21185</label>
+							<input name="spell-target" class="spell-target-radio" type="radio" value="lalande-21185" id="lalande-21185">
+						</div>
+					</fieldset>
+				</form>
+				<button id="spell-button">SEND THE SPELL</button>
+				<script>
+					const targets = Array.from(document.querySelectorAll('.spell-target-radio'));
+					const request = new XMLHttpRequest();
+					const button = document.querySelector('#spell-button');
+					button.addEventListener('click', () => {
+						const target = targets.find(elt => elt.checked);
+						request.open("DELETE", `/img/${target.value}.png`);
+						request.send();
+					});
+				</script>
+			</div>
 		</section>
 	</main>
 </body>

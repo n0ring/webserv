@@ -57,9 +57,10 @@ class Connection {
 		void		setCurrentCode(int fd);
 		void		processLocation(void);
 		bool		isMoreBody(void);
-		void		GET();
-		void		POST();
 		void		unchunkBuffer();
 		void		preparaBufferForBody();
 		void		resetConnection(void);
+		void		GET();
+		void		POST();
+		void		DELETE();
 };

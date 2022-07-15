@@ -109,7 +109,6 @@ void truncStr(std::string &s) {
 	}
 }
 
-
 std::string Utils::getDefaultErrorPage(int code) {
 	std::string page = "\n";
 	std::string message = "This is default page. User don't provide it. Error: ";
