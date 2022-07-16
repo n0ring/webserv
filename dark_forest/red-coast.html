@@ -26,12 +26,11 @@
 							const button = document.querySelector('#red-coast-button');
 							const req = new XMLHttpRequest();
 							button.addEventListener('click', () => {
-								req.open("POST", "/red-coast"); //insert route to cgi
+								req.open("POST", "/red-coast");
 								req.send(input.value);
 								req.addEventListener("load", function () {
 									document.body.innerHTML = this.responseText;
 									});
-								// req.send({ value: input.value});
 							});
 						</script>
 					</div>

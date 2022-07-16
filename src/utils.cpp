@@ -111,18 +111,18 @@ void truncStr(std::string &s) {
 
 std::string Utils::getDefaultErrorPage(int code) {
 	std::string page = "\n";
-	std::string message = "This is default page. User don't provide it. Error: ";
+	std::string message = "This is the default page. User didn't provide it. Error: ";
 	page.append("\
 	<!DOCTYPE html>\
 		<html>\
 			<head>\
-				<meta charset='utf-8'>\
-				<meta http-equiv='X-UA-Compatible' content='IE=edge'>\
-				<title>Page Title</title>\
-				<meta name='viewport' content='width=device-width, initial-scale=1'>\
+				<meta charset=\'utf-8\'>\
+				<meta http-equiv=\'X-UA-Compatible' content=\'IE=edge\'>\
+				<title>Error!</title>\
+				<meta name=\'viewport\' content=\'width=device-width, initial-scale=1\'>\
 			</head>\
 		<body style=\"background: black;\">\
-			<h1 style=\"color: blueviolet;  margin: auto; width: 50%\">");
+			<h1 style=\"margin: 8rem auto; width: fit-content; padding: 3rem; font-size: 2.05rem; border-radius: 15px; border: 1px dashed; color: #f7eedf; font-family: monospace; text-align: center;\">");
 	page.append(message);
 	page.append(std::to_string(code) + " " + this->getResponceName(code));
 	page.append("</h1>\
