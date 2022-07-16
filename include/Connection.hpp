@@ -53,13 +53,14 @@ class Connection {
 		void		executeOrder66();
 		void		saveBody();
 		std::string getErrorPageName(int code);
-		int			getCurrectCode(void) { return this->_request.getCurrentCode(); }
-		void		setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}
+		int			getCurrectCode(void);
+		void		setCurrentCode(int fd);
 		void		processLocation(void);
 		bool		isMoreBody(void);
-		void		GET();
-		void		POST();
 		void		unchunkBuffer();
 		void		preparaBufferForBody();
 		void		resetConnection(void);
+		void		GET();
+		void		POST();
+		void		DELETE();
 };

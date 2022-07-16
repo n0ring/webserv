@@ -1,5 +1,12 @@
 #include <unistd.h>
 #include "Connection.hpp"
+#include "utils.hpp"
+
+bool	userAuthorized(VHost *vhost, Request *req) {
+	return (vhost->getServerName() == "dark-forest.ru"
+		&& !req->getParamByName("Cookie").empty() 
+		&& req->getParamByName("Cookie").find("login=") != std::string::npos);
+}
 
 Connection::Connection(int listenner, int fd, VHost& vH, Utils* nUtils) : 
 		_responce(nUtils),
@@ -71,7 +78,7 @@ void Connection::processLocation() {
 		return ;
 	}
 	if (this->_request.getParamByName("Transfer-Encoding") == "chunked") {
-		this->unchunkBuffer();	
+		this->unchunkBuffer();
 	}
 	this->_request.setCurrentCode(CODE_OK);
 	if (this->currentLoc->isCgi() || this->_request.getParamByName("Method") == "POST") {
@@ -141,8 +148,21 @@ int Connection::receiveData() {  // viHost
 	// tmp.append(buf, ret);
 	// std::cout << tmp << std::endl;
 	// std::cout << "-----------buffer-in-end--------------" << std::endl;
-
 	this->_request.setHeader(this->buffer_in);
+
+	//handle login situation in order to set cookies
+	if (!userAuthorized(this->_vHost, &(this->_request))
+		&& this->_request.getParamByName("Referer").find("login") != std::string::npos) 
+		{
+			std::string tmp;
+			tmp.append(buf, ret);
+			std::size_t keyPos = tmp.find("login=");
+			if (keyPos != std::string::npos) {
+				std::string keyValuePair = tmp.substr(keyPos);
+				keyValuePair.erase(keyValuePair.length() - 4);
+				this->_responce.setParamToHeader("Set-Cookie: " + keyValuePair + "; Path=/;");
+			}
+	}
 	if (this->_request.getHeader().empty() == false && this->_request.getCurrentCode() == 0) {
 		this->checkForVhostChange();
 		this->_vHost->setLocation(this->_request, this->routeObj, &this->currentLoc);
@@ -218,15 +238,34 @@ std::string Connection::getErrorPageName(int code) {
 	return pageName;
 }
 
-
-
 void Connection::GET() {
 	std::string route = this->_request.getParamByName("Route");
+	
+	if (!userAuthorized(this->_vHost, &(this->_request))
+	&& this->routeObj.finalPathToFile.find("index.html") != std::string::npos) {
+			this->_responce.setParamToHeader("Location: login/login.html");
+			if (!this->currentLoc->getParamByName("redirect").empty()) {
+				this->_request.setCurrentCode(this->currentLoc->getRedirectCode()); // if not redirect??? 
+			}
+	}
 	if (this->currentLoc && route == this->currentLoc->getLocationName()
 			&& this->currentLoc->getParamByName("autoindex") == "on") {
 		this->bodyOut = FileList::getFileListHTML(this->currentLoc->getParamByName("root"), route);
 	} else {
 		this->_request.setFileNameToSend(this->routeObj.finalPathToFile);
+	}
+}
+
+void Connection::DELETE() {
+	int res = remove(this->routeObj.finalPathToFile.c_str());
+	std::string index = this->currentLoc->getParamByName("index");
+	if (res < 0)
+		this->_request.setCurrentCode(404);
+	else if (index.empty())
+		this->_request.setCurrentCode(204);
+	else {
+		this->_request.setCurrentCode(200);
+		this->_request.setFileNameToSend(index);
 	}
 }
 
@@ -294,7 +333,6 @@ void Connection::executeOrder66() { // all data recieved
 	else {
 		std::string method = this->_request.getParamByName("Method");
 		if (!method.compare("GET")) {
-			// std::cout << "Method GET" << std::endl;
 			this->GET();
 		}
 		else if (!method.compare("POST")) {
@@ -303,6 +341,7 @@ void Connection::executeOrder66() { // all data recieved
 		}
 		else if (!method.compare("DELETE")) {
 			std::cout << "Method DELETE" << std::endl;
+			this->DELETE();
 		}
 	}
 }
@@ -411,3 +450,6 @@ void	Connection::resetConnection(void) {
 	remove(this->inputBufferName.c_str());
 	remove(this->cgiOutput.c_str());
 }
+
+int		Connection::getCurrectCode(void) { return this->_request.getCurrentCode(); }
+void	Connection::setCurrentCode(int fd) { this->_request.setCurrentCode(fd);}

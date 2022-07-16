@@ -31,6 +31,25 @@
 	}
   }
 
+@mixin glow-effect($spread) {
+	box-shadow: 0 0 2px white, 0 0 3px white,
+	  0 0 4px rgb(230, 187, 173), 0 0 5px $spread rgb(230, 187, 173),
+	  0 0 5px $spread rgb(255, 0, 76), 0 0 8px $spread rgb(255, 0, 76), 
+	  0 0 12px $spread rgb(255, 0, 76), 0 0 20px $spread rgb(255, 0, 76),
+	  0 0 30px $spread rgb(230, 187, 173), 0 0 40px $spread rgb(230, 187, 173),
+	  0 0 50px $spread white, 0 0 60px $spread white,
+	  0 0 80px white, 0 0 100px white;  
+  }
+  
+  @keyframes glow {
+	from {
+	  @include glow-effect(0px);
+	}  
+	to {
+		@include glow-effect(3px);
+	}
+  }
+
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
@@ -69,11 +88,20 @@ button {
 body {
 	background-color: #100E12;
 	font-family: 'Finlandica', sans-serif;
-	color: #100E12;
+	color: rgb(247, 238, 223);
 	padding-bottom: 13rem;
 	b {
 		font-weight: 600;
 	}
+}
+
+.forty-two-answer {
+	width: 70%;
+	margin: 3rem auto;
+	line-height: 1.5rem;
+	padding: 2.75rem;
+	border: .25rem dashed rgba(247, 238, 223, .5);
+	border-radius: 2rem;
 }
 
 .shooting-stars {
@@ -188,7 +216,7 @@ body {
 }
 
 header {
-	background: url(rainbow-vortex.svg);
+	background: url(/img/rainbow-vortex.svg);
 	background-repeat: no-repeat;
 	background-size: cover;
 	color: #100E12; 
@@ -303,15 +331,13 @@ header {
 		border-right: 3px dotted rgba(#E56A2B, 0.3);
 		padding-right: 1rem;
 
-		input {
-			&::file-selector-button{
+		input::file-selector-button, button {
 				border: 1px solid rgb(247, 238, 223);
 				background-color: #100E12;
 				color:rgb(247, 238, 223);
 				padding: .35rem;
 				border-radius: 3px;
 				cursor: pointer;
-			}
 		}
 	}
 
@@ -340,24 +366,18 @@ header {
 	margin-top: 2rem;
 
 	h2 {
-		margin-bottom: 0.75rem;
+		margin-bottom: 1.75rem;
 	}
 
-	form {
+	div {
 		label {
-			font-size: 1.25rem;
+			font-size: .85rem;
 			text-shadow: none;
-			font-weight: 600;
-		}
-
-		input {
-			border: 1px solid #B8373E;
-			background-color: #100E12;
+			font-weight: 400;
 		}
 
 		button {
 			font-family: inherit;
-			margin: 3rem auto 0;
 			font-weight: 600;
 			display: block;
 			border: none;
@@ -369,6 +389,82 @@ header {
 			cursor: pointer;
 			text-shadow: 3px 3px 6px rgba(#E56A2B, 1);
 			box-shadow: 4px -4px 15px 0px #CC453E, 12px -11px 7px 0px #D04C38, 20px -5px 7px 0px #E56A2B, 20px 6px 7px 0px #E56A2B, 13px 12px 17px 0px #D04C38, 2px 17px 17px 0px #CC453E, -9px 21px 18px 0px #E56A2B, -9px 6px 11px 0px #CC453E, -11px -9px 11px 0px #E56A2B, -11px -9px 11px 0px #E56A2B, 5px 5px 15px 5px rgba(0,0,0,0);
+			position: relative;
+			top: 1rem;
+		}
+	}
+}
+
+.spell-form {
+	display: flex;
+	gap: 4rem;
+	justify-content: center;
+	legend {
+		color: rgb(247, 238, 223);
+		font-size: 1.25rem;
+	}
+}
+
+.spell-target {
+	position: relative;
+	font-weight: 400;
+
+	&-star {
+		position: absolute;
+
+		& > input {
+			appearance: none;
+			width: .5rem;
+			height: .5rem;
+			background: rgba(white, 0.8);
+			border-radius: 100%;
+			animation-name: glow;
+			animation-duration: 3s;
+			animation-iteration-count: infinite;
+			animation-direction: alternate;
+			cursor: pointer;
+
+			&::before {
+				content: "";
+			}
+
+			&:checked {
+				background-color: red;
+				height: .5rem;
+				width: .5rem;
+				&::after {
+					content: "";
+				}
+			}
+		}
+
+		&-1 {
+			top: 2.75rem;
+			right: 4.5rem;
+
+			& > input {
+				animation-delay: 1s;
+			}
+		}
+		&-2 {
+			top: .5rem;
+			left: 7.5rem;
+
+			& > input {
+				animation-duration: 2.75s;
+			}
+		}
+		&-3 {
+			top: 2.25rem;
+		}
+		&-4 {
+			top: 5rem;
+			left: 3.5rem;
+
+			& > input {
+				animation-delay: .5s;
+				animation-duration: 3.15s;
+			}
 		}
 	}
 }

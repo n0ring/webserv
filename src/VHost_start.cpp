@@ -179,6 +179,14 @@ void VHost::toString() {
 	}
 }
 
+void	VHost::addHostSamePort(VHost newHost) {
+	this->vHostsWithSamePort.push_back(newHost);
+}
+
+int			VHost::getPort(void) const { return this->_port; }
+std::string	VHost::getServerName(void) const {return this->_serverName; }
+std::string	VHost::getHost(void) const {return this->_ip; }
+
 // void VHost::toString() {
 // 	std::cout << "<--Server Config-->" << std::endl;
 // 	std::cout << "Port: " << this->_port << std::endl;

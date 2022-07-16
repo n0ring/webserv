@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "sass --watch input.scss index.css",
-	"dev2": "sass --watch red-coast-input.scss red-coast-style.css"
+    "dev": "sass --watch style/input.scss style/index.css",
+	"dev2": "sass --watch style/red-coast-input.scss style/red-coast-style.css"
   },
   "author": "",
   "license": "ISC"
