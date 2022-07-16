@@ -48,7 +48,7 @@ class VHost {
 		std::string	_ip; // from cfg
 		std::string	_serverName; // from cfg
 		int 		_backlog; // from cfg ?? 
-		int 		_maxBody; // from cfg
+		long int 		_maxBody; // from cfg
 		std::map<int, std::string>	errorPages;
 
 		int			_listener;
@@ -82,7 +82,7 @@ class VHost {
 
 		// procccccesssssss..
 		int			getListener(void) const;
-		int			getMaxBody() const { return this->_maxBody;}
+		long int	getMaxBody() const;
 		int			acceptNewConnection();
 		std::string	getErrorPage(int code);
 		void		setLocation(Request& request, routeParams& routeObj, location **currentLoc);

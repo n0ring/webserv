@@ -38,37 +38,32 @@ std::string getPageHeader(std::string& path, std::string& route) {
 
 std::string getItemHtml(std::string& filename, std::string& path) {
 	std::string item;
-	(void)filename;
+	std::string path_for_link = path == "/" ? "" : path;
+
 	item.append("<li>");
-	item.append("<a href=\"" +filename + "\">" + filename);
+	item.append("<a href=\"" + path_for_link  + "/" + filename + "\">" + filename);
 	item.append("</li>");
-	(void) path;
 	return item;
 }
 
-void	setHtml(std::string& html, std::vector<std::string>& list, std::string& path,
+void	setHtml(std::string& html, std::vector<std::string>& list, std::string& root,
 			std::string& route) {
-	for (size_t i = 0; i < list.size(); i++) {
-		std::cout << list[i] << std::endl;
-	}
-	html.append(getPageHeader(path, route));
+	html.append(getPageHeader(root, route));
 	html.append("<ul>");
 
 	for (size_t i = 0; i < list.size(); i++) {
-		html.append(getItemHtml(list[i], path));
+		html.append(getItemHtml(list[i], route));
 	}
 
 	html.append("</ul>\n");
-	(void)path;
 }
 
 
-std::string  FileList::getFileListHTML(std::string dir, std::string route) {
+std::string  FileList::getFileListHTML(std::string root, std::string route) {
 	std::string 				html;
 	std::vector<std::string>	list;
 
-	getList(dir, list);
-	setHtml(html, list, dir, route);
-	std::cout << html << std::endl;
+	getList(root, list);
+	setHtml(html, list, root, route);
 	return html;
 }

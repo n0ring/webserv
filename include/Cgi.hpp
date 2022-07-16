@@ -1,6 +1,7 @@
 #pragma once
 
 #include "iostream" // string
+#include <signal.h>
 // #include "Location.hpp" 
 // #include "VHost.hpp"
 #include "Connection.hpp"

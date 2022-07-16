@@ -46,6 +46,8 @@
 #define CODE_GATEWAY_TIMEOUT 504
 #define CODE_HTTP_VERSION_NOT_SUPPORTED 505
 
+#define TIMEOUT_CGI -42
+
 pollfd make_fd(int fd, int event); // inline? 
 
 

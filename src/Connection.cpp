@@ -3,9 +3,12 @@
 #include "utils.hpp"
 
 bool	userAuthorized(VHost *vhost, Request *req) {
-	return (vhost->getServerName() == "dark-forest.ru"
-		&& !req->getParamByName("Cookie").empty() 
-		&& req->getParamByName("Cookie").find("login=") != std::string::npos);
+	if ((vhost->getServerName() == "dark-forest.ru"
+		&& (!req->getParamByName("Cookie").empty() 
+		|| req->getParamByName("Cookie").find("login=") != std::string::npos))) {
+			return false;
+	}
+	return true;
 }
 
 Connection::Connection(int listenner, int fd, VHost& vH, Utils* nUtils) : 
@@ -56,7 +59,7 @@ int Connection::getFd() const {
 }
 
 void Connection::processLocation() {
-	int contentLen;
+	long int contentLen;
 
 	stringToNum(this->_request.getParamByName("Content-Length"), contentLen);
 
@@ -124,7 +127,7 @@ void Connection::unchunkBuffer() {
 			break;
 		}
 	}
-	std::cout << "Unchucnked: " << newBuff << std::endl;
+	// std::cout << "Unchucnked: " << newBuff << std::endl;
 	this->buffer_in = newBuff;
 }
 
@@ -159,7 +162,7 @@ int Connection::receiveData() {  // viHost
 			std::size_t keyPos = tmp.find("login=");
 			if (keyPos != std::string::npos) {
 				std::string keyValuePair = tmp.substr(keyPos);
-				keyValuePair.erase(keyValuePair.length() - 4);
+				keyValuePair.erase(keyValuePair.length() - 2);
 				this->_responce.setParamToHeader("Set-Cookie: " + keyValuePair + "; Path=/;");
 			}
 	}
@@ -243,10 +246,9 @@ void Connection::GET() {
 	
 	if (!userAuthorized(this->_vHost, &(this->_request))
 	&& this->routeObj.finalPathToFile.find("index.html") != std::string::npos) {
-			this->_responce.setParamToHeader("Location: login/login.html");
-			if (!this->currentLoc->getParamByName("redirect").empty()) {
-				this->_request.setCurrentCode(this->currentLoc->getRedirectCode()); // if not redirect??? 
-			}
+			this->_responce.setParamToHeader("Location: /login");
+			this->_request.setCurrentCode(CODE_TEMPORARY_REDIRECT); // if not redirect??? 
+		return ;
 	}
 	if (this->currentLoc && route == this->currentLoc->getLocationName()
 			&& this->currentLoc->getParamByName("autoindex") == "on") {
@@ -260,11 +262,11 @@ void Connection::DELETE() {
 	int res = remove(this->routeObj.finalPathToFile.c_str());
 	std::string index = this->currentLoc->getParamByName("index");
 	if (res < 0)
-		this->_request.setCurrentCode(404);
+		this->_request.setCurrentCode(CODE_NOT_FOUND);
 	else if (index.empty())
-		this->_request.setCurrentCode(204);
+		this->_request.setCurrentCode(CODE_NO_CONTENT);
 	else {
-		this->_request.setCurrentCode(200);
+		this->_request.setCurrentCode(CODE_OK);
 		this->_request.setFileNameToSend(index);
 	}
 }
@@ -298,7 +300,6 @@ void Connection::POST() {
 	}
 	this->ofs.close();
 	ifs.open(this->inputBufferName);
-	// name == route? 
 	ofss.open(uploadPath, std::ofstream::out | std::ofstream::trunc); // where get file name? 
 	if (ofss.is_open() && ifs.is_open()) {
 		ofss << ifs.rdbuf();
@@ -321,7 +322,7 @@ void Connection::executeOrder66() { // all data recieved
 		remove(this->cgiOutput.c_str());
 		this->ofs.close();
 		int ret = Cgi::start(*this->currentLoc, this->inputBufferName, this->cgiOutput, this->_request);
-		if (ret == -42) {
+		if (ret == TIMEOUT_CGI) {
 			this->setCurrentCode(CODE_GATEWAY_TIMEOUT);
 			return ;
 		}

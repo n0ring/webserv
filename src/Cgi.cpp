@@ -1,34 +1,5 @@
 #include "Cgi.hpp"
 
-void	Cgi::findPathToApp(std::string& pathToApp, std::string& fileToExec) {
-	std::ifstream	ifs;
-	char			c;
-	std::string		line;
-
-	return ;
-	ifs.open(fileToExec);
-	if (!ifs.is_open()) {
-		std::cout << "cgi file not open" << std::endl;
-		return ;
-	}
-	while (!ifs.eof()) {
-		c = ifs.get();
-		if (c == '\n') {
-			if (line.find("#!") == std::string::npos) {
-				line.clear();
-				continue;
-			}
-			break;
-		}
-		else {
-			line.push_back(c);
-		}
-	}
-	if (line.find("#!") != std::string::npos) {
-		pathToApp = line.substr(line.find("/"));
-	}
-}
-
 void setEnv(std::vector<std::string>& envVector, Request& request) {
 	char *pwd = getenv("PWD");
 	envVector.push_back("REQUEST_METHOD=" + request.getParamByName("Method"));
@@ -86,9 +57,6 @@ int	Cgi::start(location &loc, const std::string& tmpInputFile, const std::string
 
 	if (loc.params.count("bin")) {
 		pathToApp.append("/" + loc.params["bin"]);
-	} else {
-		// error?? 
-		findPathToApp(pathToApp, fileToExec);
 	}
 	if (access(pathToApp.c_str(), X_OK) == 0) {
 		argv.push_back((char *) pathToApp.c_str());
@@ -110,10 +78,9 @@ int	Cgi::start(location &loc, const std::string& tmpInputFile, const std::string
 			waitExec--;
 		}
 		if (waitExec == 0) {
-			std::cout << "-42" << std::endl;
-			return -42;
+			kill(pid, SIGKILL);
+			return TIMEOUT_CGI;
 		}
-		std::cout << "cgi norm" << std::endl;
 
 		if (WIFEXITED(status))
 			return WEXITSTATUS(status);

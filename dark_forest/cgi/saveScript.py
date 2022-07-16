@@ -97,6 +97,7 @@ try:
     print("<center><br></br>")
     print("<h1>Success!</h1>")
     print("</center>")
+		
 except Exception as e:
     print("Content-Type: text/html")
     print("")

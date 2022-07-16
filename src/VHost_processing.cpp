@@ -133,3 +133,5 @@ std::string VHost::getErrorPage(int code) {
 	}
 	return "";
 }
+
+long int	VHost::getMaxBody() const { return this->_maxBody;}
