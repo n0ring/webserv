@@ -3,12 +3,11 @@
 #include "utils.hpp"
 
 bool	userAuthorized(VHost *vhost, Request *req) {
-	if ((vhost->getServerName() == "dark-forest.ru"
+	if (vhost->getServerName() != "dark-forest.ru")
+		return true;
+	return ((vhost->getServerName() == "dark-forest.ru"
 		&& (!req->getParamByName("Cookie").empty() 
-		|| req->getParamByName("Cookie").find("login=") != std::string::npos))) {
-			return false;
-	}
-	return true;
+		|| req->getParamByName("Cookie").find("login=") != std::string::npos)));
 }
 
 Connection::Connection(int listenner, int fd, VHost& vH, Utils* nUtils) : 

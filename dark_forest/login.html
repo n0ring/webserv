@@ -8,17 +8,17 @@
     <title>Start a session</title>
 </head>
 <body>
-    <form action="" method="POST" enctype="text/plain">
+    <form action="" method="POST" enctype="text/plain" class="login-form">
         <label for="login-input">Enter your name to start a personalized session</label>
         <input type="text" id="login-input" required name="login">
         <button type="submit" id="submit-button">Send</button>
-		<script>
-			const req = new XMLHttpRequest();
-			document.querySelector('#submit-button').addEventListener('click', () => {
-				req.open('GET', '/index.html');
-				req.send();
-			})
-		</script>
     </form>
+    <a href="index.html" class="link-home invisible">Enter the dark forest</a>
+    <script>
+        if (document.cookie.split('; ').find(row => row.startsWith('login='))) {
+            document.querySelector('.login-form').classList.add('invisible');
+            document.querySelector('.link-home').classList.remove('invisible');
+        }
+    </script>
 </body>
 </html>

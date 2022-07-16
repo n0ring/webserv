@@ -111,6 +111,10 @@
 						const target = targets.find(elt => elt.checked);
 						request.open("DELETE", `/img/${target.value}.png`);
 						request.send();
+						request.addEventListener("load", function () {
+							if (this.responseText)
+								document.body.innerHTML = this.responseText;
+						});
 					});
 				</script>
 			</div>

@@ -29,8 +29,8 @@ std::string getPageHeader(std::string& path, std::string& route) {
 	res.append(path);
 	res.append("</title>\
 </head>\
-<body style=\"background: black;\">\
-	<h1 style=\"color: blueviolet;  margin: auto; width: 50%\">Index of ");
+<body style=\"background: black; color: #f7eedf; font-family: monospace;\">\
+	<h1 style=\"margin: 2rem auto 1rem; width: 50%; font-size: 2.05rem;\">Index of ");
 	res.append(route);
 	res.append("</h1>");
 	return res;
@@ -41,7 +41,7 @@ std::string getItemHtml(std::string& filename, std::string& path) {
 	std::string path_for_link = path == "/" ? "" : path;
 
 	item.append("<li>");
-	item.append("<a href=\"" + path_for_link  + "/" + filename + "\">" + filename);
+	item.append("<a style=\"text-decoration: none; color: inherit;\" href=\"" + path_for_link  + "/" + filename + "\">" + filename);
 	item.append("</li>");
 	return item;
 }
@@ -49,7 +49,7 @@ std::string getItemHtml(std::string& filename, std::string& path) {
 void	setHtml(std::string& html, std::vector<std::string>& list, std::string& root,
 			std::string& route) {
 	html.append(getPageHeader(root, route));
-	html.append("<ul>");
+	html.append("<ul style=\"font-size: 1.55rem; color: #f7eedf;\">");
 
 	for (size_t i = 0; i < list.size(); i++) {
 		html.append(getItemHtml(list[i], route));

@@ -421,3 +421,51 @@ header h1 {
 }
 
 /*# sourceMappingURL=index.css.map */
+
+.link-home {
+  text-decoration: none;
+  color: #100E12;
+  background: url(/img/rainbow-vortex.svg);
+  background-repeat: no-repeat;
+  background-size: cover;
+  width: fit-content;
+  padding: 3rem;
+  font-size: 3.25rem;
+  border-radius: 15px;
+  display: block;
+  font-weight: 600;
+  margin: 8rem auto;
+}
+
+.invisible {
+  display: none !important;
+}
+
+.login-form {
+  margin: 8rem auto;
+  width: fit-content;
+  padding: 3rem;
+  font-size: 2.05rem;
+  border-radius: 15px;
+  border: 1px dashed;
+  display: flex;
+  gap: 5px;
+}
+
+.login-form > input {
+  border: 1px solid #f7eedf;
+  background-color: #100E12;
+  color: #f7eedf;
+  padding: 0.35rem;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.login-form > button {
+  border: 1px solid #f7eedf;
+  background-color: #B8373E;
+  color: #f7eedf;
+  padding: 0.35rem;
+  border-radius: 3px;
+  cursor: pointer;
+}
