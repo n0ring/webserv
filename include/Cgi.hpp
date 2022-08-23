@@ -1,6 +1,7 @@
 #pragma once
 
 #include "iostream" // string
+#include <signal.h>
 // #include "Location.hpp" 
 // #include "VHost.hpp"
 #include "Connection.hpp"
@@ -13,6 +14,6 @@ class Cgi {
 ;
 	public:
 		static	void preprocessCgi(Connection& connect);	
-		static	int	start(location &loc, std::string& tmpInputFile,
-				std::string& tmpOutputFile, Request& request);
+		static	int	start(location &loc, const std::string& tmpInputFile,
+				const std::string& tmpOutputFile, Request& request);
 };

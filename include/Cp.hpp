@@ -10,7 +10,7 @@
 class ConnectionPool {
 	private:
 		std::map<int, Connection>	_pool;
-
+		Utils						utils;
 	public:
 		ConnectionPool();
 		~ConnectionPool(void);

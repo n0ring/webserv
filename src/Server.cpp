@@ -31,25 +31,28 @@ void Server::setupServers(std::string configName) {
 	parser.parseConfig(this->_vHosts, configName);
 	std::cout << "Servers: " << std::endl;
 	for (int i = 0; i < (int) this->_vHosts.size(); i++) {
-		this->_vHosts[i].toString();
-		this->fds.push_back(make_fd(this->_vHosts[i].setup(), POLLIN));
+		int listenerSocket = this->_vHosts[i].setup();
+		if (listenerSocket != -1) {
+			this->fds.push_back(make_fd(listenerSocket, POLLIN));
+			this->_vHosts[i].toString();	
+		}
 	}
 }
-
 
 void	Server::start(std::string configName) {
 	std::vector<pollfd>::iterator it;
 	bool							readyForWork = false;
+
 	this->setupServers(configName);
-	if (this->_vHosts.size() > 0) {
+	if (!this->fds.empty()) {
 		readyForWork = true;
+	} else {
+		std::cerr << "no vHosts for server" << std::endl;
 	}
-	else {
-		std::cerr << "no vHosts" << std::endl;
-	}
-	while (readyForWork) { //////////// !!!!!!!!
+	signal(SIGPIPE, SIG_IGN);
+	while (readyForWork) {
 		this->nfds = this->fds.size();
-		showVector(this->fds, *this, this->nfds);
+		// showVector(this->fds, *this, this->nfds);
 		if (poll(&(this->fds[0]), this->nfds, NO_TIMEOUT) < 0 ) {
 			return perror("poll");
 		}

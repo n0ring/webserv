@@ -1,20 +1,44 @@
 #include "Responce.hpp"
 
 
-Responce::Responce(void) {
+Responce::Responce(Utils* nUtils) {
+	this->utils = nUtils;
 	this->fileLen = 0;
 	this->headerSended = 0;
 	this->bodySended = 0;
 	this->code = 0;
-	this->contentLength = 0;	
 }
 
+Responce::~Responce(void) {
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
+}
+
+void Responce::resetObj() {
+	this->_header.clear();
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
+	this->fileLen = 0;
+	this->headerSended = 0;
+	this->bodySended = 0;
+	this->code = 0;
+	this->MIME.clear();
+	this->fileExtToSend.clear();
+	this->headerObj.reset();
+}
 
 void Responce::setHeader(std::string header) {
 	this->_header = header;
 }
 
-bool Responce::prepareFileToSend(std::string fileName) {
+bool Responce::prepareFileToSend(std::string fileName, std::string& bodyOut) {
+	this->fileLen += bodyOut.size();
+	if (!bodyOut.empty()) {
+		this->fileExtToSend = "html";
+		return true;
+	}
 	if (fileName.empty()) {
 		std::cout << "no file to send" << std::endl;
 		return true;
@@ -26,14 +50,11 @@ bool Responce::prepareFileToSend(std::string fileName) {
 	if (this->ifs.is_open() == false) {
 		return false;
 	}
+	// count file size
 	this->ifs.seekg (0, ifs.end);
 	this->fileLen = this->ifs.tellg();
 	ifs.seekg(0, ifs.beg);
 	this->fileExtToSend = fileName.substr(fileName.find_last_of(".") + 1);
-	std::cout << fileName << " filelen: " << this->fileLen << std::endl;
-	if (this->fileLen == 0)  {
-		return false;
-	}
 	return true;
 }
 
@@ -45,16 +66,18 @@ size_t Responce::getHeaderSize() {
 	return this->_header.length();
 }
 
-size_t Responce::fillBuffer(char *buf) {
+size_t Responce::fillBuffer(char *buf, std::string& bodyOut) {
 	size_t shiftHead = 0;
 	size_t shiftBody = this->bodySended;
 
 	// std::cout << "file pos in fill buffer: " << this->ifs.tellg() << std::endl;
 
 	if (this->headerSended < this->getHeaderSize()) {
-		this->headerSended += shiftHead = this->_header.copy(buf, BUFFER);
+		this->headerSended += shiftHead = this->_header.copy(buf, BUFFER, this->headerSended);
 	}
-	if (this->ifs.is_open() && shiftHead < BUFFER && this->bodySended < this->fileLen) {
+	if (!bodyOut.empty() && shiftHead < BUFFER) {
+		this->bodySended += bodyOut.copy(buf + shiftHead, BUFFER - shiftHead, this->bodySended);
+	} else if (this->ifs.is_open() && shiftHead < BUFFER && this->bodySended < this->fileLen) {
 		this->ifs.read(buf + shiftHead, BUFFER - shiftHead);
 		this->bodySended = this->ifs.eof() ? this->fileLen : (size_t) this->ifs.tellg(); 
 	}
@@ -66,19 +89,7 @@ size_t Responce::fillBuffer(char *buf) {
 	return shiftHead + (this->bodySended - shiftBody);
 }
 
-void Responce::resetObj() {
-	this->_header.clear();
-	this->ifs.close();
-	this->fileLen = 0;
-	this->headerSended = 0;
-	this->bodySended = 0;
-	this->code = 0;
-	this->contentLength = 0;
-	this->contentType.clear();
-	this->MIME.clear();
-	this->fileExtToSend.clear();
-	this->headerObj.reset();
-}
+
 
 void Responce::setCode(int c) {
 	this->code = c;
@@ -106,16 +117,21 @@ std::string Responce::getCgiHeader(void) {
 std::string getCurrentTime(void) {
 	char buf[1000];
 	time_t now = time(0);
-	struct tm tm = *gmtime(&now);
+	struct tm tm = *localtime(&now);
 	strftime(buf, sizeof buf, "%a, %d %b %Y %H:%M:%S %Z", &tm);
  	return std::string(buf);
+
+
+	time_t my_time = time(NULL);
+  
+    // ctime() used to give the present time
+	return ctime(&my_time);
 }
 
 void Responce::createHeader(location* loc) {
 	(void) loc;
-
-	Mime::set(this->fileExtToSend, this->MIME);
-	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " OK");
+	this->MIME = this->utils->getMime(this->fileExtToSend);
+	this->headerObj.setStatus("HTTP/1.1 " + std::to_string(this->code) + " " + this->utils->getResponceName(this->code));
 	if (this->fileLen) {
 		this->headerObj.setContentType("Content-Type: " + this->MIME);
 		this->headerObj.setContentLength("Content-Length: " + std::to_string(this->fileLen));
@@ -124,16 +140,23 @@ void Responce::createHeader(location* loc) {
 	this->headerObj.setParam("Date: " + getCurrentTime());
 	this->_header = this->headerObj.getHeaderStr();
 	std::cout << GREEN << "-----header to send------" << std::endl;
-	std::cout << this->_header << RESET << std::endl;
+	std::cout << this->_header << std::endl;
+	std::cout << GREEN << "-----end of header to send------" << RESET << std::endl;
 }
 
-void	Responce::setCgiHeaderToResponce(std::string& cgiHeader, bool& isCgiHeaderValid) {
+void	Responce::setCgiHeaderToResponce(std::string& cgiHeader) {
 	if (cgiHeader.empty()) {
 		return ;
 	}
-	this->headerObj.checkCgiHeader(cgiHeader, isCgiHeaderValid);
+	this->headerObj.checkCgiHeader(cgiHeader);
 }
 
 void	Responce::setParamToHeader(std::string param) {
 	this->headerObj.setParam(param);
+}
+
+void	Responce::closeOutputFile(void) {
+	if (this->ifs.is_open()) {
+		this->ifs.close();
+	}
 }

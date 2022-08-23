@@ -69,6 +69,14 @@
 		"utility": "cpp",
 		"vector": "cpp",
 		"filesystem": "cpp",
-		"*.cgi_input4": "cpp"
+		"*.cgi_input4": "cpp",
+		"testupload": "cpp",
+		"__bits": "cpp",
+		"clocale": "cpp",
+		"compare": "cpp",
+		"concepts": "cpp",
+		"variant": "cpp",
+		"__functional_03": "cpp",
+		"memory_resource": "cpp"
 	}
 }

@@ -1,17 +1,11 @@
 #include "VHost.hpp"
 
 // ver. 3 of route parsing (full path. start to search and remove last parts)
+// ver. 3.1 change logic for cgi location. root is root. cgi is full path to exec file
 
 int VHost::getListener(void) const {
 	return this->_listener;
 }
-
-/*
-foo://example.com:8042 /over/there/file.fl?name=ferret
-\_/   \______________/ \_________/ \_________/ \__/
- |           |            |            |        |
-scheme     authority       path        query   fragment
-*/
 
 void setQueryString(routeParams& params) {
 	size_t queryStringStart = params.fullRoute.find("?");
@@ -77,7 +71,7 @@ void setFinalPathToFile(VHost::locations_iter it, routeParams& params) {
 		params.finalPathToFile.append("/");
 		params.finalPathToFile.append(it->getParamByName("index"));
 	}
-	std::cout << RED << "final route path: " << params.finalPathToFile << std::endl;
+	// std::cout << RED << "final route path: " << params.finalPathToFile << RESET << std::endl;
 }
 
 VHost::locations_iter	VHost::getLocation(routeParams& params) {
@@ -94,7 +88,10 @@ VHost::locations_iter	VHost::getLocation(routeParams& params) {
 	}
 	it = findLocationMatch(this->locations, params.ext);
 	if (it == ite) {
-		it =  findLocationMatch(this->locations, "/");
+		it = findLocationMatch(this->locations, "/");
+	}
+	if (params.ext.empty()) {
+		return ite;
 	}
 	setFinalPathToFile(it, params);
 	return it;
@@ -136,3 +133,5 @@ std::string VHost::getErrorPage(int code) {
 	}
 	return "";
 }
+
+long int	VHost::getMaxBody() const { return this->_maxBody;}

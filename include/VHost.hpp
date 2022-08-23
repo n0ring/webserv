@@ -48,7 +48,7 @@ class VHost {
 		std::string	_ip; // from cfg
 		std::string	_serverName; // from cfg
 		int 		_backlog; // from cfg ?? 
-		int 		_maxBody; // from cfg
+		long int 		_maxBody; // from cfg
 		std::map<int, std::string>	errorPages;
 
 		int			_listener;
@@ -70,27 +70,25 @@ class VHost {
 		~VHost(void);
 
 		// setup before start
-		void	setNewLocation(std::vector<std::string> params);
-		void	setLocationParam(std::vector<std::string> params);
-		void	setServerParams(std::vector<std::string> params);
-		void	validate();
-		int		setup(void);
-		int			getPort(void) const { return this->_port; }
-		std::string	getServerName(void) const {return this->_serverName; }
-		std::string	getHost(void) const {return this->_ip; }
-		void	addHostSamePort(VHost newHost) {
-			this->vHostsWithSamePort.push_back(newHost);
-		}
+		void		setNewLocation(std::vector<std::string> params);
+		void		setLocationParam(std::vector<std::string> params);
+		void		setServerParams(std::vector<std::string> params);
+		void		validate();
+		int			setup(void);
+		int			getPort(void) const;
+		std::string	getServerName(void) const;
+		std::string	getHost(void) const;
+		void		addHostSamePort(VHost newHost);
 
 		// procccccesssssss..
 		int			getListener(void) const;
-		int			getMaxBody() const { return this->_maxBody;}
+		long int	getMaxBody() const;
 		int			acceptNewConnection();
 		std::string	getErrorPage(int code);
-		void	setLocation(Request& request, routeParams& routeObj, location **currentLoc);
-		VHost*	changeVhost(std::string& hostName);
+		void		setLocation(Request& request, routeParams& routeObj, location **currentLoc);
+		VHost*		changeVhost(std::string& hostName);
+		void		setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it);
 		locations_iter 	getLocation(routeParams& params);
-		void			setRouteParamByDirSearch(routeParams& params, size_t i, VHost::locations_iter& it);
 
 		// delete this
 		void toString();

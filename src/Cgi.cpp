@@ -1,34 +1,5 @@
 #include "Cgi.hpp"
 
-void	Cgi::findPathToApp(std::string& pathToApp, std::string& fileToExec) {
-	std::ifstream	ifs;
-	char			c;
-	std::string		line;
-
-	return ;
-	ifs.open(fileToExec);
-	if (!ifs.is_open()) {
-		std::cout << "cgi file not open" << std::endl;
-		return ;
-	}
-	while (!ifs.eof()) {
-		c = ifs.get();
-		if (c == '\n') {
-			if (line.find("#!") == std::string::npos) {
-				line.clear();
-				continue;
-			}
-			break;
-		}
-		else {
-			line.push_back(c);
-		}
-	}
-	if (line.find("#!") != std::string::npos) {
-		pathToApp = line.substr(line.find("/"));
-	}
-}
-
 void setEnv(std::vector<std::string>& envVector, Request& request) {
 	char *pwd = getenv("PWD");
 	envVector.push_back("REQUEST_METHOD=" + request.getParamByName("Method"));
@@ -43,7 +14,7 @@ void setEnv(std::vector<std::string>& envVector, Request& request) {
 	}
 }
 
-void child(std::string& tmpInputFile, std::string& tmpOutputFile,
+void child(const std::string& tmpInputFile, const std::string& tmpOutputFile,
 			std::vector<char *>& argv,  Request& request) {
 	int	ofd, ifd;
 	std::vector<std::string> envVector;
@@ -54,7 +25,6 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 		env[i] = (char *) envVector[i].c_str();
 	}
 	env[envVector.size()] = NULL;
-
 	remove(tmpOutputFile.c_str());
 	ofd = open(tmpOutputFile.c_str(), O_RDWR | O_CREAT | O_TRUNC, 777);
 	ifd = open(tmpInputFile.c_str(), O_RDONLY);
@@ -77,16 +47,16 @@ void child(std::string& tmpInputFile, std::string& tmpOutputFile,
 	}
 }
 
-int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputFile, Request& request) { // return exit status
+int	Cgi::start(location &loc, const std::string& tmpInputFile, const std::string& tmpOutputFile, Request& request) { // return exit status
 	std::string			pathToApp;
 	int					pid, status;
 	std::vector<char *>	argv;
-	std::string			fileToExec = loc.params["root"] + "/" + loc.params["cgi"];
+	std::string			fileToExec = loc.params["cgi"];
+	int 				waitExec = 1000;
+
 
 	if (loc.params.count("bin")) {
 		pathToApp.append("/" + loc.params["bin"]);
-	} else {
-		findPathToApp(pathToApp, fileToExec);
 	}
 	if (access(pathToApp.c_str(), X_OK) == 0) {
 		argv.push_back((char *) pathToApp.c_str());
@@ -103,7 +73,15 @@ int	Cgi::start(location &loc, std::string& tmpInputFile, std::string& tmpOutputF
 		child(tmpInputFile, tmpOutputFile, argv, request);
 	}
 	else {
-		waitpid(pid, &status, 0);
+		while (waitpid(pid, &status, WNOHANG) == 0 && waitExec) {
+			usleep(1000);
+			waitExec--;
+		}
+		if (waitExec == 0) {
+			kill(pid, SIGKILL);
+			return TIMEOUT_CGI;
+		}
+
 		if (WIFEXITED(status))
 			return WEXITSTATUS(status);
 	}

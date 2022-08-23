@@ -29,7 +29,7 @@ VHost & VHost::operator=(VHost const &other) {
 		this->_address = other._address;
 		this->_addrlen = other._addrlen;
 		this->vHostsWithSamePort = other.vHostsWithSamePort;
-		this->locations= other.locations;
+		this->locations = other.locations;
 		this->errorPages = other.errorPages;
 	}
 	return *this;
@@ -41,8 +41,8 @@ int VHost::setup(void) {
 
 	int	rec = bind(this->_listener, &_address, this->_addrlen);
 	if (rec == -1) {
-		perror("Can't bind params: ");
-		std::cout << this->_ip << ":" << this->_port << std::endl; 
+		std::cerr << "For " << this->_ip << ":" << this->_port; 
+		perror(" can't bind params");
 		return (-1);
 	}
 	rec = listen(_listener, _backlog);
@@ -82,7 +82,6 @@ int		VHost::acceptNewConnection() {
 	if (newSocket < 0) {
 		return -1;
 	}
-	std::cout << "accepting connect on fd " << this->_listener << std::endl;
 	fcntl(newSocket, F_SETFL, O_NONBLOCK);
 	return newSocket;
 }
@@ -99,6 +98,8 @@ void VHost::setNewLocation(std::vector<std::string> params) {
 
 void	setErrorPages(std::map<int, std::string>& errorMap,
 						std::vector<std::string> params) {
+	int code;
+
 	truncStr(params.back());
 	size_t posToChange = params.back().find("*");
 	if (posToChange == std::string::npos) {
@@ -106,7 +107,7 @@ void	setErrorPages(std::map<int, std::string>& errorMap,
 		return ;
 	}
 	for (size_t i = 1; i < params.size() - 1; i++) {
-		int code = std::stoi(params[i]);
+		stringToNum(params[i], code);
 		std::string pathRaw =  params.back();
 		errorMap[code] = pathRaw.replace(posToChange, 1, params[i]);
 	}
@@ -126,7 +127,7 @@ void VHost::setServerParams(std::vector<std::string> params) {
 		return ;
 	}
 	if (params.front().compare("port") == 0) {
-		this->_port = std::stoi(params.back());
+		stringToNum(params.back(), this->_port);
 		return ;
 	}
 	if (params.front().compare("server_name") == 0) {
@@ -134,7 +135,7 @@ void VHost::setServerParams(std::vector<std::string> params) {
 		return ;
 	}
 	if (params.front().compare("max_client_body_size") == 0) {
-		this->_maxBody = std::stoi(params.back());
+		stringToNum(params.back(), this->_maxBody);
 		return ;
 	}
 }
@@ -153,7 +154,7 @@ void VHost::setLocationParam(std::vector<std::string> inputParams) {
 		return ;
 	}
 	if (inputParams.front().compare("redirect") == 0 && inputParams.size() == 3) {
-		this->locations.back().redirectCode = std::stoi(inputParams[1]);
+		stringToNum(inputParams[1], this->locations.back().redirectCode);
 	} else {
 		truncStr(inputParams.back());
 	}
@@ -161,32 +162,13 @@ void VHost::setLocationParam(std::vector<std::string> inputParams) {
 }
 
 void VHost::validate() {
-	// check index in dirs location 
-	// check for names > 1 if [0] != *
-	// check for file formats != dirs
-	// root has to start with /
-	// dir name has to start with / (/test)
-	// valid methods (only 3)
-	// post only for cgi location
-	bool isValid = true;
-	// if (this->_ip.empty()) {
-	// 	isValid = false;
-	// 	std::cerr << "Ip address not found" << std::endl;		
-	// }
-	// if (this->_port == -1) {
-	// 	isValid = false;
-	// 	std::cerr << "Port not found" << std::endl;		
-	// }
-	// if (this->_maxBody == -1) {
-	// 	isValid = false;
-	// 	std::cerr << "Max body size not found" << std::endl;		
-	// }
-	if (this->locations.size() == 0) {
-		isValid = false;
-		std::cerr << "Locations not found" << std::endl;		
-	}
-	if (!isValid) {
-		exit(-1);
+	// on location only index or autoindex
+	if (this->getHost().empty()) exitWithMsg("Host (ip) not found");
+	if (this->getPort() == -1) exitWithMsg("Port not found");
+	if (this->locations.size() == 0) exitWithMsg("Locations not found");
+	if (this->_maxBody == -1) exitWithMsg("Max body nit found");
+	for (size_t i = 0; i < this->locations.size(); i++) {
+		this->locations[i].validate();
 	}
 }
 
@@ -196,6 +178,14 @@ void VHost::toString() {
 		this->vHostsWithSamePort[i].toString();
 	}
 }
+
+void	VHost::addHostSamePort(VHost newHost) {
+	this->vHostsWithSamePort.push_back(newHost);
+}
+
+int			VHost::getPort(void) const { return this->_port; }
+std::string	VHost::getServerName(void) const {return this->_serverName; }
+std::string	VHost::getHost(void) const {return this->_ip; }
 
 // void VHost::toString() {
 // 	std::cout << "<--Server Config-->" << std::endl;

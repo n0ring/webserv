@@ -40,7 +40,7 @@ class Server {
 		std::vector<pollfd>	fds;
 		int					nfds;
 
-		void			setupServers(std::string configName);
+		void	setupServers(std::string configName);
 		VHost	&getVHost(int fd);
 	public: 
 		Server(void);

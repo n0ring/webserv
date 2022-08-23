@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <map>
+#include "utils.hpp"
 
 #define RESET   "\033[0m"
 #define BLACK   "\033[30m"      /* Black */
@@ -25,79 +26,20 @@ class location {
 		std::map<int, std::string>			errorPages;
 		int									redirectCode;
 	public:
-		location(void) {
-			this->redirectCode = 307;
-		}
+		location(void) {}
+		location(location const & other);
+		location& operator=(location const & other);
 
-		std::string	getParamByName(std::string param) {
-			if (this->params.count(param)) {
-				return this->params[param];
-			}
-			return "";
-		}
+		std::string	getParamByName(std::string param);
+		bool isLocationMatch(std::string &route);
 
-		bool isLocationMatch(std::string &route) {
-			std::vector<std::string>::iterator start = this->names.begin();
-			std::vector<std::string>::iterator end = this->names.end();
-			if ((*start).compare("*") == 0) {
-				start++;
-			}
-			if (std::find(start, end, route) != end) {
-				return true;
-			}
-			return false;
-		}
-
-		bool isMethodAllow(std::string& method) {
-			std::vector<std::string>::iterator it;
-			it = std::find(this->methods.begin(), this->methods.end(), method);
-			return it != this->methods.end();
-		}
-
-		std::string getFileName(std::vector<std::string> &params) {
-			std::string fileName;
-			if (params.size() == 3) { // has file  root + dir 
-				fileName = this->params["root"] + "/" + params[1] + "." + params[0];
-			} 
-			else { // only dir
-				fileName = this->params["root"] + "/" + this->params["index"];
-			}
-			if (fileName[0] == '/') fileName.erase(0, 1);
-			return fileName;
-		}
-
-		bool isFormars() {
-			return this->names.size() > 1;
-		}
-
-		bool isCgi() { return  (this->params.count("cgi")); }
-
-		bool hasErrorPage(void) { return !this->errorPages.empty();}
-		std::string getErrorPage(int code) { 
-			if (this->errorPages.count(code)) {
-				return this->errorPages[code];
-			}
-			return "";
-		 }
-
-		 int getRedirectCode(void) { return this->redirectCode; }
-
-
-		void toString() {
-			std::cout << GREEN << "Location: { " << RESET << std::endl;
-			std::cout << "Names: [ ";
-			for (size_type i = 0; i < this->names.size(); i++) {
-				std::cout << this->names[i] << " ";
-			}
-			std::cout << "]" << std::endl;
-			std::cout << "Root: " << this->params["root"] << std::endl;
-			std::cout << "Methods: [ ";
-			for (size_type i = 0; i < this->methods.size(); i++) {
-				std::cout << this->methods[i] << " ";
-			}
-			std::cout << "]" << std::endl;
-			std::cout << "autoindex: " << this->params["autoindex"] << std::endl;
-			std::cout << "index: " << this->params["index"] << std::endl;
-			std::cout << GREEN << " } " << RESET << std::endl;
-	}
+		bool isMethodAllow(std::string& method);
+		bool isCgi();
+		bool hasErrorPage(void);
+		std::string getErrorPage(int code);
+		int getRedirectCode(void);
+		std::string getLocationName();
+		void validate(void);
+		void toString();
+		bool	isMaxBodyExceeded(int bodyLen);
 };

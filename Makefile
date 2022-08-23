@@ -9,6 +9,8 @@ SRC		=	$(addprefix src/,	main.cpp\
 								Responce.cpp\
 								Cgi.cpp\
 								Header.cpp\
+								FileList.cpp\
+								Location.cpp\
 								utils.cpp)
 
 OBJDIR	=	obj
@@ -38,6 +40,7 @@ fclean			:	clean
 					rm -f $(NAME)
 
 x				:	all
+					~/clean.sh
 					./$(NAME) config.conf
 
 leaks			:	all

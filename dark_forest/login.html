@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="../style/index.css" type="text/css">
+    <title>Start a session</title>
+</head>
+<body>
+    <form action="" method="POST" enctype="text/plain" class="login-form">
+        <label for="login-input">Enter your name to start a personalized session</label>
+        <input type="text" id="login-input" required name="login">
+        <button type="submit" id="submit-button">Send</button>
+    </form>
+    <a href="index.html" class="link-home invisible">Enter the dark forest</a>
+    <script>
+        if (document.cookie.split('; ').find(row => row.startsWith('login='))) {
+            document.querySelector('.login-form').classList.add('invisible');
+            document.querySelector('.link-home').classList.remove('invisible');
+        }
+    </script>
+</body>
+</html>
