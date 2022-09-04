@@ -4,7 +4,7 @@ Multiplexing is provided by poll function.
 
 It has GET, POST, and DELETE methods. Also server capable to execute CGI scripts in any language.
 
-![tern (2)](https://user-images.githubusercontent.com/98221398/188319311-02a2351e-5f64-4edd-a898-6fec92701061.gif)
+![Untitled (1)](https://user-images.githubusercontent.com/98221398/188321163-3e8a4490-95e3-41aa-a748-0651c49c3084.gif)
 
 
 Program take a configuration file as argument or use a default path.
